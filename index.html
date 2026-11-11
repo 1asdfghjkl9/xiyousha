@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>西游杀 — 卡牌闯关</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d0a06;--gold:#c9a84c;--gold-br:#e8c96a;--gold-dim:#7a6438;--red:#c84040;--red-d:#8a2828;--green:#3aa050;--blue:#4a8ac8;--purple:#8850c0;--orange:#c88838;--teal:#2a9890;--gray:#989088;--text:#e8e0d0;--text-dim:#998878;--card-w:56px;--card-h:80px;--glow-gold:0 0 20px rgba(201,168,76,.3);--shadow-card:0 4px 12px rgba(0,0,0,.5);--shadow-panel:0 2px 8px rgba(0,0,0,.4)}
+body{background:
+repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(201,168,76,.015) 20px,rgba(201,168,76,.015) 21px),
+radial-gradient(ellipse at 50% 0%,#2a1808 0%,transparent 50%),
+radial-gradient(ellipse at 50% 100%,#1a1208 0%,transparent 50%),
+#0d0a06;
+color:var(--text);font-family:"Microsoft YaHei","PingFang SC",sans-serif;min-height:100vh;overflow-x:hidden}
+.hidden{display:none!important}
+#app{max-width:480px;margin:0 auto;min-height:100vh;position:relative}
+.screen{min-height:100vh;display:flex;flex-direction:column}
+
+/* Title */
+#title-screen{align-items:center;justify-content:center;text-align:center;background:
+radial-gradient(circle at 50% 40%,rgba(201,168,76,.08) 0%,transparent 60%),
+linear-gradient(135deg,#2a1810,#1a1008),#0d0a06}
+.game-title{font-size:2.8em;color:var(--gold-br);text-shadow:0 0 40px rgba(201,168,76,.5),0 0 80px rgba(201,168,76,.2),0 2px 4px rgba(0,0,0,.8);margin-bottom:8px;letter-spacing:.2em;font-weight:bold;background:linear-gradient(180deg,#f0d878,#c9a84c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(201,168,76,.4))}
+.game-sub{font-size:.95em;color:var(--text-dim);margin-bottom:30px;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.btn{padding:10px 32px;font-size:1em;border:1px solid var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.2),rgba(201,168,76,.08));color:var(--gold-br);border-radius:6px;cursor:pointer;transition:all .2s;margin:5px;letter-spacing:.05em;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 6px rgba(0,0,0,.4);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.btn:hover{background:linear-gradient(180deg,rgba(201,168,76,.35),rgba(201,168,76,.18));box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 0 16px rgba(201,168,76,.4),0 2px 8px rgba(0,0,0,.5)}
+.btn:active{transform:translateY(1px)}
+.btn-sm{padding:6px 14px;font-size:.85em;border:1px solid var(--gold-dim);background:linear-gradient(180deg,rgba(201,168,76,.12),rgba(201,168,76,.05));color:var(--text);border-radius:5px;cursor:pointer;margin:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 3px rgba(0,0,0,.3);transition:all .15s}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold-br);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 10px rgba(201,168,76,.25)}
+.btn-sm:disabled{opacity:.3;cursor:not-allowed}
+
+/* Story */
+#story-screen{align-items:center;justify-content:center;text-align:center;padding:30px 20px}
+.story-title{font-size:1.5em;color:var(--gold-br);margin-bottom:12px}
+.story-text{font-size:1em;line-height:1.8;max-width:420px;margin-bottom:25px;color:#c8c0b0}
+.story-chapter{color:var(--orange);font-size:.9em;margin-bottom:8px}
+
+/* Battle — SanGuoSha mobile style */
+#battle-screen{padding:0;gap:0;background:
+repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(201,168,76,.01) 30px,rgba(201,168,76,.01) 31px),
+radial-gradient(ellipse at 50% 50%,rgba(40,28,12,.3) 0%,transparent 70%),
+linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
+.battle-header{text-align:center;padding:4px 8px;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.battle-header .chapter{color:var(--orange);font-size:.75em}
+.battle-header .title{color:var(--gold-br);font-size:1em;font-weight:bold}
+.phase-indicator{font-size:.7em;padding:1px 8px;border-radius:10px;background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold-br);white-space:nowrap}
+.phase-indicator.enemy-turn{background:rgba(200,64,64,.15);border-color:var(--red-d);color:#e87878}
+.phase-indicator.discard{background:rgba(152,144,136,.15);border-color:var(--gray);color:#b0a898}
+.char-row{display:flex;align-items:center;gap:8px;padding:6px 10px}
+.char-avatar{width:44px;height:44px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:1.4em;flex-shrink:0;background:rgba(0,0,0,.4);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);position:relative}
+.char-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.char-avatar.enemy{border-color:var(--red-d);background:radial-gradient(circle,#3a1818,#1a0808);box-shadow:0 0 0 1px rgba(138,40,40,.5),0 0 12px rgba(138,40,40,.3),0 2px 6px rgba(0,0,0,.4)}
+.char-avatar.player{border-color:var(--gold-dim);background:radial-gradient(circle,#2a2218,#181208);box-shadow:0 0 0 1px rgba(122,100,56,.5),0 0 12px rgba(201,168,76,.2),0 2px 6px rgba(0,0,0,.4)}
+.char-info-block{flex:1;min-width:0}
+.char-name-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.char-name{font-size:.95em;font-weight:bold}
+.char-name.enemy{color:#e87878}
+.char-name.player{color:var(--gold-br)}
+.hp-wrap{display:inline-flex;align-items:center;gap:4px}
+.hp-bar-track{width:80px;height:12px;background:#0a0804;border:1px solid rgba(80,60,30,.5);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+.hp-bar-fill{height:100%;border-radius:6px;transition:width .3s;position:relative}
+.hp-bar-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.25),transparent);border-radius:6px 6px 0 0}
+.hp-bar-fill.high{background:linear-gradient(90deg,#2a8030,#3aa050);box-shadow:0 0 6px rgba(58,160,80,.4)}
+.hp-bar-fill.mid{background:linear-gradient(90deg,#c8a030,#e8c040);box-shadow:0 0 6px rgba(232,192,64,.4)}
+.hp-bar-fill.low{background:linear-gradient(90deg,#a02020,#c84040);box-shadow:0 0 6px rgba(200,64,64,.5);animation:hpLowPulse 1.5s ease-in-out infinite}
+@keyframes hpLowPulse{0%,100%{opacity:1}50%{opacity:.7}}
+.hp-text{font-size:.8em;color:var(--text-dim)}
+.equip-slots{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.equip-tag{font-size:.68em;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.equip-tag.weapon{background:rgba(200,136,56,.2);border:1px solid var(--orange);color:#d8a060}
+.equip-tag.armor{background:rgba(42,152,144,.15);border:1px solid var(--teal);color:#4aaaa0}
+.equip-tag.mount{background:rgba(152,144,136,.15);border:1px solid var(--gray);color:#b0a898}
+.judge-tag{font-size:.68em;padding:1px 6px;border-radius:3px;background:rgba(200,64,64,.15);border:1px solid var(--red-d);color:#d87878;white-space:nowrap}
+.enemy-area{background:linear-gradient(180deg,rgba(20,8,8,.6),rgba(15,6,6,.4));border-bottom:1px solid rgba(80,30,30,.3);box-shadow:inset 0 -1px 0 rgba(0,0,0,.3)}
+.enemy-hand{display:flex;gap:2px;padding:3px 10px 5px;min-height:32px;flex-wrap:nowrap;overflow-x:auto}
+.card-back{width:22px;height:32px;flex-shrink:0;background:linear-gradient(135deg,#3a2a10 0%,#2a1c08 50%,#1a1408 100%);border:1px solid var(--gold-dim);border-radius:3px;position:relative;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.card-back::before{content:'';position:absolute;inset:2px;border:1px solid rgba(201,168,76,.15);border-radius:2px;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(201,168,76,.04) 3px,rgba(201,168,76,.04) 4px)}
+.card-back::after{content:'';position:absolute;top:50%;left:50%;width:8px;height:8px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(201,168,76,.2),transparent);border-radius:50%}
+.battlefield{min-height:50px;max-height:80px;display:flex;align-items:center;justify-content:center;gap:8px;padding:4px;background:radial-gradient(ellipse at center,rgba(201,168,76,.03),transparent 70%),rgba(0,0,0,.15);overflow:hidden;position:relative;border-top:1px solid rgba(60,50,30,.15);border-bottom:1px solid rgba(60,50,30,.15)}
+.battlefield .field-card{width:42px;height:60px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.6em;font-weight:bold;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.battlefield .field-card.from-player{animation:fieldCardFromPlayer .4s ease-out}
+.battlefield .field-card.from-enemy{animation:fieldCardFromEnemy .4s ease-out}
+.battlefield .field-label{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:.5em;color:var(--text-dim);white-space:nowrap}
+@keyframes fieldCardFromPlayer{0%{transform:translateY(60px) scale(.5);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes fieldCardFromEnemy{0%{transform:translateY(-60px) scale(.5);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+.battle-log{flex:1;background:rgba(0,0,0,.25);padding:4px 10px;overflow-y:auto;font-size:.78em;line-height:1.5;min-height:40px;max-height:80px}
+.battle-log p{margin:1px 0}
+.log-system{color:var(--orange)}
+.log-player{color:#7ab8e8}
+.log-enemy{color:#e87878}
+.log-damage{color:#ff6b6b}
+.log-heal{color:var(--green)}
+.player-area{background:linear-gradient(180deg,rgba(18,14,8,.5),rgba(22,18,10,.7));border-top:1px solid rgba(60,50,30,.3);box-shadow:inset 0 1px 0 rgba(201,168,76,.05)}
+.player-hand{display:flex;gap:3px;padding:8px 10px 4px;min-height:var(--card-h);flex-wrap:nowrap;overflow-x:auto;justify-content:center}
+.card{width:var(--card-w);height:var(--card-h);border-radius:5px;padding:3px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:transform .15s,box-shadow .15s;user-select:none;position:relative;flex-shrink:0;box-shadow:var(--shadow-card);overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;border:1px solid rgba(255,255,255,.08);border-radius:4px;pointer-events:none;z-index:1}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(255,255,255,.06),transparent);pointer-events:none;z-index:1;border-radius:5px 5px 0 0}
+.card:hover{transform:translateY(-10px);box-shadow:0 8px 24px rgba(201,168,76,.5),0 0 0 1px rgba(201,168,76,.3);z-index:10}
+.card.disabled{opacity:.35;cursor:not-allowed;filter:grayscale(.5)}
+.card.disabled:hover{transform:none;box-shadow:var(--shadow-card)}
+.card.basic-sha{border:1.5px solid var(--red);background:linear-gradient(160deg,#3a1410 0%,#2a0e08 50%,#1a0806 100%)}
+.card.basic-shan{border:1.5px solid var(--blue);background:linear-gradient(160deg,#10203a 0%,#0a1428 50%,#080a1a 100%)}
+.card.basic-tao{border:1.5px solid var(--green);background:linear-gradient(160deg,#103a18 0%,#0a2810 50%,#081a08 100%)}
+.card.trick{border:1.5px solid var(--purple);background:linear-gradient(160deg,#28143a 0%,#1a0e28 50%,#14081a 100%)}
+.card.delay{border:1.5px solid var(--red-d);background:linear-gradient(160deg,#2a1010 0%,#1a0808 50%,#140606 100%)}
+.card.equip-weapon{border:1.5px solid var(--orange);background:linear-gradient(160deg,#3a2810 0%,#2a1c08 50%,#1a1408 100%)}
+.card.equip-armor{border:1.5px solid var(--teal);background:linear-gradient(160deg,#102820 0%,#0a1c14 50%,#081a14 100%)}
+.card.equip-mount{border:1.5px solid var(--gray);background:linear-gradient(160deg,#1a1a18 0%,#121210 50%,#0e0e0a 100%)}
+.card-corner{font-size:.58em;text-align:left;line-height:1;padding:1px;z-index:2;position:relative;text-shadow:0 1px 1px rgba(0,0,0,.8)}
+.card-corner.red{color:#e85050}
+.card-corner.black{color:#b0a898}
+.card-name{font-size:.72em;text-align:center;font-weight:bold;line-height:1.1;flex:1;display:flex;align-items:center;justify-content:center;padding:2px;z-index:2;position:relative;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.card-desc{font-size:.48em;text-align:center;color:#a09080;overflow:hidden;line-height:1.1;padding:0 1px;z-index:2;position:relative}
+.card-selected{box-shadow:0 0 20px var(--gold-br),0 0 40px rgba(201,168,76,.3),inset 0 0 10px rgba(201,168,76,.1)!important;transform:translateY(-12px)!important;border-color:var(--gold-br)!important}
+.actions{display:flex;gap:6px;justify-content:center;padding:4px 10px 6px;flex-wrap:wrap}
+.skill-btn{padding:4px 10px;font-size:.8em;border:1px solid var(--purple);background:linear-gradient(180deg,rgba(136,80,192,.2),rgba(136,80,192,.08));color:#b890d8;border-radius:5px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 3px rgba(0,0,0,.3);transition:all .15s;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.skill-btn:hover:not(:disabled){background:linear-gradient(180deg,rgba(136,80,192,.35),rgba(136,80,192,.15));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 10px rgba(136,80,192,.3)}
+.skill-btn:disabled{opacity:.3;cursor:not-allowed}
+.buff-list{font-size:.72em;color:var(--orange);margin:2px 0}
+.char-avatar.targetable{border-color:var(--gold-br)!important;box-shadow:0 0 12px var(--gold-br);animation:targetPulse 1s ease-in-out infinite}
+@keyframes targetPulse{0%,100%{box-shadow:0 0 8px var(--gold-br)}50%{box-shadow:0 0 20px var(--gold-br)}}
+.equip-mini{width:20px;height:28px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:.45em;font-weight:bold;cursor:help;position:relative;flex-shrink:0;overflow:hidden}
+.equip-mini.weapon{border:1px solid var(--orange);background:rgba(200,136,56,.2);color:#d8a060}
+.equip-mini.armor{border:1px solid var(--teal);background:rgba(42,152,144,.15);color:#4aaaa0}
+.equip-mini.mount{border:1px solid var(--gray);background:rgba(152,144,136,.15);color:#b0a898}
+.equip-mini .eq-tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:var(--text);padding:3px 6px;border-radius:3px;font-size:.8em;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.equip-mini:hover .eq-tip{opacity:1}
+.player-hand{display:flex;gap:2px;padding:8px 10px 4px;min-height:var(--card-h);flex-wrap:nowrap;overflow-x:auto;justify-content:center;perspective:600px}
+
+/* ====== Animations & Effects ====== */
+@keyframes cardDraw{0%{transform:translateX(-200px) rotate(-15deg);opacity:0}100%{transform:translateX(0) rotate(0);opacity:1}}
+@keyframes cardPlay{0%{transform:translateY(0) scale(1);opacity:1}40%{transform:translateY(-40px) scale(1.15);opacity:1}100%{transform:translateY(-80px) scale(.5);opacity:0}}
+@keyframes cardDiscard{0%{transform:scale(1);opacity:1}100%{transform:scale(.3) rotate(20deg);opacity:0}}
+@keyframes damageFlash{0%,100%{background:transparent}30%{background:rgba(200,40,40,.35)}}
+@keyframes healGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(58,160,80,.6)}}
+@keyframes screenShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+@keyframes skillPulse{0%,100%{box-shadow:0 0 0 rgba(136,80,192,0)}50%{box-shadow:0 0 25px rgba(136,80,192,.7)}}
+@keyframes hpBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+@keyframes turnGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 15px rgba(201,168,76,.5)}}
+@keyframes fadeInUp{0%{transform:translateY(15px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes enemyEnter{0%{transform:translateY(-30px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes cardFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+@keyframes glowBorder{0%,100%{border-color:var(--gold-dim)}50%{border-color:var(--gold-br)}}
+.anim-draw{animation:cardDraw .4s ease-out}
+.anim-play{animation:cardPlay .5s ease-in forwards}
+.anim-discard{animation:cardDiscard .35s ease-in forwards}
+.fx-damage{animation:damageFlash .4s ease-out}
+.fx-heal{animation:healGlow .6s ease-out}
+.fx-shake{animation:screenShake .4s ease-out}
+.fx-skill{animation:skillPulse .6s ease-out}
+.fx-hpchange{animation:hpBounce .3s ease-out}
+.fx-turn{animation:turnGlow .8s ease-out}
+.fx-fadein{animation:fadeInUp .3s ease-out}
+.fx-enemy-enter{animation:enemyEnter .5s ease-out}
+.fx-flip{animation:cardFlip .4s ease-out}
+.fx-glow-border{animation:glowBorder 1s ease-in-out}
+.card-entering{animation:cardDraw .35s ease-out}
+/* damage float */
+@keyframes floatUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:0}}
+.dmg-float{position:absolute;font-size:1.2em;font-weight:bold;color:#ff4444;text-shadow:0 0 8px rgba(255,68,68,.6),0 2px 2px rgba(0,0,0,.8);animation:floatUp 1s ease-out forwards;pointer-events:none;z-index:60;left:50%;transform:translateX(-50%)}
+.dmg-float.heal{color:#44ff66;text-shadow:0 0 8px rgba(68,255,102,.6),0 2px 2px rgba(0,0,0,.8)}
+/* target highlight */
+@keyframes targetHintPulse{0%,100%{box-shadow:0 0 0 rgba(200,64,64,0)}50%{box-shadow:0 0 20px rgba(200,64,64,.8)}}
+.target-hint{animation:targetHintPulse .6s ease-in-out infinite}
+/* boss entrance */
+@keyframes bossEntry{0%{transform:scale(0) rotate(-180deg);opacity:0}60%{transform:scale(1.2) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.boss-entry{animation:bossEntry .8s ease-out}
+/* card flip reveal */
+@keyframes flipReveal{0%{transform:rotateY(180deg) scale(.8);opacity:0}50%{transform:rotateY(90deg) scale(1);opacity:.5}100%{transform:rotateY(0) scale(1);opacity:1}}
+.flip-reveal{animation:flipReveal .5s ease-out}
+#fx-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.turn-tag{font-size:.65em;padding:1px 5px;border-radius:3px;background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold-br)}
+.turn-tag.enemy{background:rgba(200,64,64,.15);border-color:var(--red-d);color:#d87878}
+
+/* Response modal */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-box{background:linear-gradient(180deg,#2a2018,#1a140e);border:1px solid var(--gold);border-radius:10px;padding:18px 20px;max-width:360px;text-align:center;box-shadow:0 0 40px rgba(201,168,76,.3),0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05)}
+.modal-title{font-size:1em;color:var(--gold-br);margin-bottom:8px}
+.modal-text{font-size:.9em;margin-bottom:12px;line-height:1.6;color:#c8c0b0}
+.modal-buttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* Event */
+#event-screen{align-items:center;justify-content:center;text-align:center;padding:30px 20px}
+.event-choices{display:flex;flex-direction:column;gap:8px;max-width:380px;margin:15px auto}
+.event-choice{padding:12px;border:1px solid var(--gold-dim);background:linear-gradient(180deg,rgba(201,168,76,.08),rgba(201,168,76,.03));border-radius:6px;cursor:pointer;transition:all .2s;text-align:left;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.event-choice:hover{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.15),rgba(201,168,76,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 12px rgba(201,168,76,.2)}
+
+/* Level select */
+#level-screen{padding:15px}
+.level-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:5px;margin-top:12px}
+.level-btn{padding:6px 3px;border:1px solid var(--gold-dim);background:linear-gradient(180deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border-radius:5px;cursor:pointer;font-size:.72em;text-align:center;transition:all .15s;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.level-btn:hover{border-color:var(--gold)}
+.level-btn.locked{opacity:.3;cursor:not-allowed}
+.level-btn.tutorial{border-color:var(--orange)}
+.level-btn.plot{border-color:#888}
+.level-btn.light{border-color:var(--green)}
+.level-btn.boss{border-color:var(--red)}
+.level-btn.event{border-color:var(--purple)}
+.level-btn.finale{border-color:var(--gold);background:rgba(201,168,76,.1)}
+.level-btn.current{border-color:var(--gold);border-width:2px}
+
+/* Game over / victory */
+#over-screen,#victory-screen{align-items:center;justify-content:center;text-align:center}
+.over-title{font-size:1.8em;margin-bottom:12px}
+.over-title.lose{color:var(--red)}
+.over-title.win{color:var(--gold-br)}
+
+/* Char select */
+.char-select{display:flex;gap:12px;justify-content:center;margin:15px 0;flex-wrap:wrap}
+.char-card{padding:12px;border:1.5px solid var(--gold-dim);background:linear-gradient(180deg,rgba(28,22,18,.85),rgba(20,16,12,.8));border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;min-width:110px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.4)}
+.char-card:hover{border-color:var(--gold)}
+.char-card.selected{border-color:var(--gold-br);box-shadow:0 0 12px rgba(201,168,76,.3)}
+.char-card.injured{opacity:.4;cursor:not-allowed}
+.char-card .ch-name{font-size:1em;color:var(--gold-br);margin-bottom:4px}
+.char-card .ch-hp{font-size:.8em;color:var(--green)}
+.char-card .ch-skill{font-size:.68em;color:var(--text-dim);margin-top:3px}
+
+@media(max-width:600px){
+:root{--card-w:50px;--card-h:72px}
+.card-name{font-size:.68em}
+.card-desc{font-size:.46em}
+.game-title{font-size:2em}
+.char-avatar{width:38px;height:38px;font-size:1.1em}
+.card-back{width:18px;height:26px}
+.hp-bar-track{width:60px}
+}
+@media(prefers-reduced-motion:reduce){
+.card,.btn,.event-choice,.char-card{transition:none}
+.card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- 标题界面 -->
+<div id="title-screen" class="screen">
+<h1 class="game-title">西 游 杀</h1>
+<p class="game-sub">取经路上的八十一难，一牌一战，皆系天命</p>
+<div>
+<button class="btn" onclick="SND.init();startNewGame()">新的旅程</button>
+<button class="btn" id="continue-btn" style="display:none" onclick="continueGame()">继续游戏</button>
+</div>
+<p style="margin-top:20px;font-size:.85em;color:var(--dim)">玩法照搬三国杀标准版 · 手牌改名不改效果</p>
+</div>
+
+<!-- 剧情界面 -->
+<div id="story-screen" class="screen hidden">
+<p class="story-chapter" id="story-chapter"></p>
+<h2 class="story-title" id="story-title"></h2>
+<p class="story-text" id="story-text"></p>
+<button class="btn" id="story-btn" onclick="afterStory()">继续</button>
+</div>
+
+<!-- 角色选择界面 -->
+<div id="charselect-screen" class="screen hidden">
+<h2 class="story-title">选择出战角色</h2>
+<div class="char-select" id="char-select-cards"></div>
+<p style="font-size:.85em;color:var(--dim)">未出战的角色将在休息中恢复体力</p>
+</div>
+
+<!-- 战斗界面 -->
+<div id="battle-screen" class="screen hidden">
+<div class="battle-header">
+<span class="chapter" id="bt-chapter"></span>
+<span class="title" id="bt-title"></span>
+<span class="phase-indicator" id="phase-ind"></span>
+</div>
+<div class="enemy-area" id="enemy-area">
+<div class="char-row">
+<div class="char-avatar enemy" id="enemy-avatar">👹</div>
+<div class="char-info-block">
+<div class="char-name-row">
+<span class="char-name enemy" id="enemy-name"></span>
+<span class="hp-wrap"><span class="hp-bar-track"><span class="hp-bar-fill" id="enemy-hpbar"></span></span><span class="hp-text" id="enemy-hptext"></span></span>
+<span id="enemy-buffs"></span>
+</div>
+<div class="equip-slots" id="enemy-equips"></div>
+</div>
+</div>
+<div class="enemy-hand" id="enemy-hand"></div>
+</div>
+<div class="battlefield" id="battlefield"></div>
+<div class="battle-log" id="battle-log"></div>
+<div class="player-area">
+<div class="char-row">
+<div class="char-avatar player" id="player-avatar">🐵</div>
+<div class="char-info-block">
+<div class="char-name-row">
+<span class="char-name player" id="player-name"></span>
+<span class="hp-wrap"><span class="hp-bar-track"><span class="hp-bar-fill" id="player-hpbar"></span></span><span class="hp-text" id="player-hptext"></span></span>
+<span id="player-buffs"></span>
+</div>
+<div class="equip-slots" id="player-equips"></div>
+<div id="player-judge"></div>
+</div>
+</div>
+<div class="player-hand" id="player-hand"></div>
+<div class="actions" id="player-actions">
+<button class="btn-sm" id="end-turn-btn" onclick="endPlayerTurn()">结束回合</button>
+</div>
+</div>
+</div>
+
+<!-- 响应弹窗 -->
+<div class="modal-overlay hidden" id="response-modal">
+<div class="modal-box">
+<p class="modal-title" id="response-title"></p>
+<p class="modal-text" id="response-text"></p>
+<div class="modal-buttons" id="response-buttons"></div>
+</div>
+</div>
+
+<!-- 事件界面 -->
+<div id="event-screen" class="screen hidden">
+<p class="story-chapter" id="event-chapter"></p>
+<h2 class="story-title" id="event-title"></h2>
+<p class="story-text" id="event-text"></p>
+<div class="event-choices" id="event-choices"></div>
+</div>
+
+<!-- 关卡选择 -->
+<div id="level-screen" class="screen hidden">
+<h2 class="story-title">关卡选择</h2>
+<button class="btn-sm" onclick="showScreen('title-screen')">返回</button>
+<div class="level-grid" id="level-grid"></div>
+</div>
+
+<!-- 失败界面 -->
+<div id="over-screen" class="screen hidden">
+<h2 class="over-title lose" id="over-title">败北</h2>
+<p class="story-text" id="over-text"></p>
+<div>
+<button class="btn" onclick="retryLevel()">重试本关</button>
+<button class="btn" onclick="showLevelSelect()">关卡选择</button>
+</div>
+</div>
+
+<!-- 胜利界面 -->
+<div id="victory-screen" class="screen hidden">
+<h2 class="over-title win">通关！</h2>
+<p class="story-text">历经八十一难，终于取得真经，功德圆满！</p>
+<button class="btn" onclick="location.reload()">重新开始</button>
+</div>
+
+</div>
+<div id="fx-overlay"></div>
+
+<script>
+try{
+"use strict";
+
+// ==================== Boss头像映射 ====================
+const CHAR_SVG={wukong:"sunwukong",bajie:"zhubajie",shaseng:"shawujing"};
+const BOSS_SVG={"如来佛祖":"rulaifo","黑熊精":"heixiongjing","红孩儿":"honghaier","蝎子精":"xiezijing","牛魔王":"niumowang","牛魔王·现原形":"niumowang","黄眉大王":"huangmei","黄眉大王·强化":"huangmei","老鼋":"laoyuan","白骨精":"baigujing","灵感大王":"linggan","六耳猕猴":"liuer","铁扇公主":"tieshan","蜘蛛精":"zhizhujing","独角兕大王":"dujiaosi"};
+var CHAR_SVG_DFU={
+  "baigujing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJvbmVCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMWEyOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzE4MGExNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODA0MGEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvbmVXaGl0ZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjBlOGQ4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZDhjOGI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2E4OTg4OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCNib25lQmcpIiBzdHJva2U9IiNiODkwZDgiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzc4NDhhMCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtZGFzaGFycmF5PSI0LDMiLz4KICAKICA8IS0tIFdoaXRlIGJvbmUgZGVtb24gLSBlbGVnYW50IGZlbWFsZSBza3VsbCBzcGlyaXQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA4MikiPgogICAgPCEtLSBTa3VsbCBmYWNlIGJhc2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI4IiBmaWxsPSJ1cmwoI2JvbmVXaGl0ZSkiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuOSIvPgogICAgPCEtLSBDaGVla2JvbmVzIChob2xsb3cpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xMiIgY3k9IjUiIHJ4PSI1IiByeT0iNyIgZmlsbD0iIzVhNDgzOCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTIiIGN5PSI1IiByeD0iNSIgcnk9IjciIGZpbGw9IiM1YTQ4MzgiIG9wYWNpdHk9IjAuNCIvPgogICAgPCEtLSBFeWUgc29ja2V0cyAoZGVlcCwgZ2xvd2luZyBwdXJwbGUpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii04IiBjeT0iLTUiIHJ4PSI2IiByeT0iNyIgZmlsbD0iIzFhMGExNCIvPgogICAgPGVsbGlwc2UgY3g9IjgiIGN5PSItNSIgcng9IjYiIHJ5PSI3IiBmaWxsPSIjMWEwYTE0Ii8+CiAgICA8IS0tIEdsb3dpbmcgZXllcyAtLT4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjIuNSIgZmlsbD0iI2I4OTBkOCIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9Ii01IiByPSIyLjUiIGZpbGw9IiNiODkwZDgiLz4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjEiIGZpbGw9IiNlOGM4ZmYiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSItNSIgcj0iMSIgZmlsbD0iI2U4YzhmZiIvPgogICAgPCEtLSBOb3NlIGNhdml0eSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIsMiBMIDAsOCBMIDIsMiBaIiBmaWxsPSIjNWE0ODM4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gVGVldGggcm93IC0tPgogICAgPHJlY3QgeD0iLTEwIiB5PSIxMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjYm9uZVdoaXRlKSIgc3Ryb2tlPSIjOGE3ODQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPGxpbmUgeDE9Ii02IiB5MT0iMTIiIHgyPSItNiIgeTI9IjE4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8bGluZSB4MT0iLTIiIHkxPSIxMiIgeDI9Ii0yIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSIyIiB5MT0iMTIiIHgyPSIyIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSI2IiB5MT0iMTIiIHgyPSI2IiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwhLS0gRmxvd2luZyB3aGl0ZSBoYWlyIC0tPgogICAgPHBhdGggZD0iTSAtMjAsLTE1IFEgLTMwLC0xMCAtMzUsNSBRIC0zMCwxMCAtMjUsNSBRIC0yMiwwIC0xOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDxwYXRoIGQ9Ik0gMjAsLTE1IFEgMzAsLTEwIDM1LDUgUSAzMCwxMCAyNSw1IFEgMjIsMCAxOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgb3JuYW1lbnRzIC0tPgogICAgPGNpcmNsZSBjeD0iLTE4IiBjeT0iMTAiIHI9IjIiIGZpbGw9IiNjOGMwYjAiIG9wYWNpdHk9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTgiIGN5PSIxMCIgcj0iMiIgZmlsbD0iI2M4YzBiMCIgb3BhY2l0eT0iMC42Ii8+CiAgPC9nPgogIAogIDwhLS0gRmxvd2luZyB3aGl0ZSByb2JlcyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiPgogICAgPHBhdGggZD0iTSAtMjgsMCBRIDAsOCAyOCwwIEwgMzUsNDAgUSAwLDUwIC0zNSw0MCBaIiBmaWxsPSIjZDhkMGM4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjciLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgcGF0dGVybiAtLT4KICAgIDxnIG9wYWNpdHk9IjAuNCIgZmlsbD0iI2I4YjBhMCI+CiAgICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9IjE1IiByPSIyIi8+CiAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIyMCIgcj0iMiIvPgogICAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjE1IiByPSIyIi8+CiAgICA8L2c+CiAgICA8IS0tIEZsb3dpbmcgcmliYm9ucyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTMwLDEwIFEgLTQwLDI1IC0zNSw0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDhkMGM4IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTSAzMCwxMCBRIDQwLDI1IDM1LDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkOGQwYzgiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC40Ii8+CiAgPC9nPgogIAogIDwhLS0gRWVyaWUgcHVycGxlIG1vb25saWdodCAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMTUiIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuMDgiLz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4MiIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjYjg5MGQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+55m96aqo57K+PC90ZXh0PgogIAogIDxnIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
+  "dujiaosi":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InJoaW5vQmciIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxODE4MTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMwYTBhMGEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDQwNDA0Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyaGlub1NraW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzVhNTg1OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzNhMzgzOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxYTE4MTgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjcmhpbm9CZykiIHN0cm9rZT0iIzg4ODg4OCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWE1ODU4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gUmhpbm8gaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDgwKSI+CiAgICA8IS0tIEhlYWQgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyOCIgcnk9IjI1IiBmaWxsPSJ1cmwoI3JoaW5vU2tpbikiIHN0cm9rZT0iIzFhMTgxOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gSG9ybiAoc2luZ2xlIGhvcm4gLSDni6zop5IpIC0tPgogICAgPHBhdGggZD0iTSAwLC0xNSBMIC00LC0zNSBMIDQsLTM1IFoiIGZpbGw9IiM5YTk4OTAiIHN0cm9rZT0iIzVhNTg1OCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gSG9ybiByaWRnZXMgLS0+CiAgICA8bGluZSB4MT0iLTIiIHkxPSItMjIiIHgyPSIyIiB5Mj0iLTIyIiBzdHJva2U9IiM1YTU4NTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8bGluZSB4MT0iLTMiIHkxPSItMjgiIHgyPSIzIiB5Mj0iLTI4IiBzdHJva2U9IiM1YTU4NTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIFNub3V0IC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIxMiIgcng9IjE2IiByeT0iMTAiIGZpbGw9IiMzYTM4MzgiIHN0cm9rZT0iIzFhMTgxOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gTm9zdHJpbHMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTUiIGN5PSIxMCIgcng9IjIiIHJ5PSIxLjUiIGZpbGw9IiMwYTBhMGEiLz4KICAgIDxlbGxpcHNlIGN4PSI1IiBjeT0iMTAiIHJ4PSIyIiByeT0iMS41IiBmaWxsPSIjMGEwYTBhIi8+CiAgICA8IS0tIFNtYWxsIGZpZXJjZSBleWVzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xMCIgY3k9Ii0yIiByeD0iMy41IiByeT0iMyIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGVsbGlwc2UgY3g9IjEwIiBjeT0iLTIiIHJ4PSIzLjUiIHJ5PSIzIiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItMTAiIGN5PSItMiIgcj0iMS41IiBmaWxsPSIjYzhhMDQwIi8+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9Ii0yIiByPSIxLjUiIGZpbGw9IiNjOGEwNDAiLz4KICAgIDwhLS0gVGhpY2sgYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xNCwtNiBMIC02LC03IiBzdHJva2U9IiMxYTE4MTgiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPHBhdGggZD0iTSA2LC03IEwgMTQsLTYiIHN0cm9rZT0iIzFhMTgxOCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgICA8IS0tIEZvbGRlZCBlYXJzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0yNiIgY3k9Ii0yIiByeD0iNSIgcnk9IjgiIGZpbGw9InVybCgjcmhpbm9Ta2luKSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IC0yNiAtMikiLz4KICAgIDxlbGxpcHNlIGN4PSIyNiIgY3k9Ii0yIiByeD0iNSIgcnk9IjgiIGZpbGw9InVybCgjcmhpbm9Ta2luKSIgdHJhbnNmb3JtPSJyb3RhdGUoMTUgMjYgLTIpIi8+CiAgPC9nPgogIAogIDwhLS0gRGFyayBhcm1vciAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiPgogICAgPHBhdGggZD0iTSAtMjUsMCBRIDAsMTAgMjUsMCBMIDMwLDM1IFEgMCw0NSAtMzAsMzUgWiIgZmlsbD0iIzJhMjgyOCIgc3Ryb2tlPSIjMWExODE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSDph5HliJrnkKIgKEdvbGRlbiBSaW5nKSBlbWJsZW0gLS0+CiAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMTgiIHI9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMTgiIHI9IjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzg4ODg4OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPueLrOinkuWFleWkp+eOizwvdGV4dD4KICAKICA8ZyBmaWxsPSIjODg4ODg4IiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "heixiongjing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJlYXJCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzFhMTIwOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzBhMDYwNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwNDAyMDEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImRhcmtGdXIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNhMjgxOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzJhMTgwOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxYTBlMDQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjYmVhckJnKSIgc3Ryb2tlPSIjOGEyODI4IiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkyIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTE4MTgiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWRhc2hhcnJheT0iNCwzIi8+CiAgCiAgPCEtLSBCbGFjayBiZWFyIGhlYWQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA4MCkiPgogICAgPCEtLSBIZWFkIChyb3VuZCwgYnVsa3kpIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMzAiIHJ5PSIyOCIgZmlsbD0idXJsKCNkYXJrRnVyKSIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBTbm91dCAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMTAiIHJ4PSIxNCIgcnk9IjEwIiBmaWxsPSIjM2EyODE4IiBzdHJva2U9IiMxYTBhMDQiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIE5vc2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjYiIHJ4PSI1IiByeT0iNCIgZmlsbD0iIzFhMGEwNCIvPgogICAgPCEtLSBHbG93aW5nIHJlZCBleWVzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xMCIgY3k9Ii00IiByeD0iNSIgcnk9IjYiIGZpbGw9IiNjODQwNDAiIHN0cm9rZT0iIzhhMjgyOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxlbGxpcHNlIGN4PSIxMCIgY3k9Ii00IiByeD0iNSIgcnk9IjYiIGZpbGw9IiNjODQwNDAiIHN0cm9rZT0iIzhhMjgyOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9Ii00IiByPSIyLjUiIGZpbGw9IiNmZjZiNmIiLz4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iLTQiIHI9IjIuNSIgZmlsbD0iI2ZmNmI2YiIvPgogICAgPCEtLSBFeWUgZ2xvdyAtLT4KICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9Ii00IiByPSIxIiBmaWxsPSIjZmZhYWFhIi8+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9Ii00IiByPSIxIiBmaWxsPSIjZmZhYWFhIi8+CiAgICA8IS0tIFNtYWxsIHJvdW5kIGVhcnMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTI0IiBjeT0iLTE4IiByeD0iOCIgcnk9IjciIGZpbGw9InVybCgjZGFya0Z1cikiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxlbGxpcHNlIGN4PSIyNCIgY3k9Ii0xOCIgcng9IjgiIHJ5PSI3IiBmaWxsPSJ1cmwoI2RhcmtGdXIpIiBzdHJva2U9IiMxYTBhMDQiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIElubmVyIGVhcnMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTI0IiBjeT0iLTE4IiByeD0iNCIgcnk9IjMiIGZpbGw9IiMyYTE4MDgiLz4KICAgIDxlbGxpcHNlIGN4PSIyNCIgY3k9Ii0xOCIgcng9IjQiIHJ5PSIzIiBmaWxsPSIjMmExODA4Ii8+CiAgICA8IS0tIFRlZXRoIChmYW5ncykgLS0+CiAgICA8cGF0aCBkPSJNIC02LDE2IEwgLTgsMjIgTCAtNCwyMCBaIiBmaWxsPSIjZThlMGQwIi8+CiAgICA8cGF0aCBkPSJNIDYsMTYgTCA4LDIyIEwgNCwyMCBaIiBmaWxsPSIjZThlMGQwIi8+CiAgICA8IS0tIERhcmsgbWlzdCAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMCIgcng9IjMyIiByeT0iMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M4NDA0MCIgc3Ryb2tlLXdpZHRoPSIwLjMiIG9wYWNpdHk9IjAuMyIvPgogIDwvZz4KICAKICA8IS0tIERhcmsgaXJvbiBhcm1vciAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyNSkiPgogICAgPHBhdGggZD0iTSAtMjIsMCBRIDAsMTAgMjIsMCBMIDI4LDM1IFEgMCw0NSAtMjgsMzUgWiIgZmlsbD0iIzJhMTgxOCIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBBcm1vciBzcGlrZXMgLS0+CiAgICA8cGF0aCBkPSJNIC0xNSwxMCBMIC0xOCw1IEwgLTEyLDUgWiIgZmlsbD0iIzVhMzAzMCIvPgogICAgPHBhdGggZD0iTSAwLDE1IEwgLTMsMTAgTCAzLDEwIFoiIGZpbGw9IiM1YTMwMzAiLz4KICAgIDxwYXRoIGQ9Ik0gMTUsMTAgTCAxOCw1IEwgMTIsNSBaIiBmaWxsPSIjNWEzMDMwIi8+CiAgICA8IS0tIEJsYWNrIGlyb24gc3BlYXIgaGludCAtLT4KICAgIDxyZWN0IHg9IjEzMCIgeT0iODAiIHdpZHRoPSIyIiBoZWlnaHQ9IjUwIiBmaWxsPSIjM2EyODE4IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMzAsIC0xMCkgcm90YXRlKDE1KSIvPgogIDwvZz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4MiIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOGEyODI4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+6buR54aK57K+PC90ZXh0PgogIAogIDxnIGZpbGw9IiM4YTI4MjgiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
+  "honghaier":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImZpcmVCZyIgY3g9IjUwJSIgY3k9IjQ1JSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNhMTQwOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzFhMDYwNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwYTAyMDIiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImZpcmVTa2luIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjg4NDAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiNlODUwMjAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjYTAyODEwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJmbGFtZUhhaXIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmZTg0MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjMwJSIgc3RvcC1jb2xvcj0iI2ZmODgwMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjcwJSIgc3RvcC1jb2xvcj0iI2U4NDAwMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNhMDIwMDAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjZmlyZUJnKSIgc3Ryb2tlPSIjZTg0MDAwIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkyIiBmaWxsPSJub25lIiBzdHJva2U9IiNhMDI4MTAiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWRhc2hhcnJheT0iNCwzIi8+CiAgCiAgPCEtLSBGbGFtZSBhdXJhIC0tPgogIDxnIG9wYWNpdHk9IjAuMyI+CiAgICA8cGF0aCBkPSJNIDEwMCwyNSBRIDg1LDM1IDgwLDUwIFEgNzUsMzUgNzAsNDUgUSA2NSw1NSA2MCw1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmY2NjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gMTAwLDI1IFEgMTE1LDM1IDEyMCw1MCBRIDEyNSwzNSAxMzAsNDUgUSAxMzUsNTUgMTQwLDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjY2MDAiIHN0cm9rZS13aWR0aD0iMiIvPgogIDwvZz4KICAKICA8IS0tIFJlZCBCb3kgaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDc1KSI+CiAgICA8IS0tIEhhaXIgKGZsYW1lcykgLS0+CiAgICA8cGF0aCBkPSJNIC0xOCwtMTUgUSAtMjUsLTI1IC0yMCwtMzAgUSAtMTUsLTM1IC0xMCwtMjggUSAtNSwtMzggMCwtMzAgUSA1LC0zOCAxMCwtMjggUSAxNSwtMzUgMjAsLTMwIFEgMjUsLTI1IDE4LC0xNSBaIiBmaWxsPSJ1cmwoI2ZsYW1lSGFpcikiIG9wYWNpdHk9IjAuOCIvPgogICAgPCEtLSBUb3Aga25vdCAo5Y+M5Lir6au7KSAtLT4KICAgIDxlbGxpcHNlIGN4PSItOCIgY3k9Ii0yOCIgcng9IjUiIHJ5PSI2IiBmaWxsPSJ1cmwoI2ZsYW1lSGFpcikiIG9wYWNpdHk9IjAuNyIvPgogICAgPGVsbGlwc2UgY3g9IjgiIGN5PSItMjgiIHJ4PSI1IiByeT0iNiIgZmlsbD0idXJsKCNmbGFtZUhhaXIpIiBvcGFjaXR5PSIwLjciLz4KICAgIDwhLS0gRmFjZSAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMCIgcng9IjIwIiByeT0iMjIiIGZpbGw9InVybCgjZmlyZVNraW4pIiBzdHJva2U9IiNhMDI4MTAiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8IS0tIE1pc2NoaWV2b3VzIGV5ZXMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTciIGN5PSItMiIgcng9IjMuNSIgcnk9IjQiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDxlbGxpcHNlIGN4PSI3IiBjeT0iLTIiIHJ4PSIzLjUiIHJ5PSI0IiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItNiIgY3k9Ii0yIiByPSIxLjUiIGZpbGw9IiNmZmU4NDAiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSItMiIgcj0iMS41IiBmaWxsPSIjZmZlODQwIi8+CiAgICA8IS0tIEV5ZWJyb3dzIChyYWlzZWQsIG1pc2NoaWV2b3VzKSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTEyLC04IFEgLTcsLTEwIC0zLC03IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTEwMDAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8cGF0aCBkPSJNIDMsLTcgUSA3LC0xMCAxMiwtOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWExMDAwIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPCEtLSBNb3V0aCAoc21pcmtpbmcpIC0tPgogICAgPHBhdGggZD0iTSAtNSw4IFEgMCw2IDYsOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWExMDAwIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPCEtLSBSZWQgYmx1c2ggbWFya3MgLS0+CiAgICA8Y2lyY2xlIGN4PSItMTIiIGN5PSI1IiByPSIzIiBmaWxsPSIjZmY0NDAwIiBvcGFjaXR5PSIwLjMiLz4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iNSIgcj0iMyIgZmlsbD0iI2ZmNDQwMCIgb3BhY2l0eT0iMC4zIi8+CiAgICA8IS0tIEVhcnMgKHBvaW50ZWQpIC0tPgogICAgPHBhdGggZD0iTSAtMjAsLTIgTCAtMjQsLTggTCAtMjAsLTQgWiIgZmlsbD0idXJsKCNmaXJlU2tpbikiLz4KICAgIDxwYXRoIGQ9Ik0gMjAsLTIgTCAyNCwtOCBMIDIwLC00IFoiIGZpbGw9InVybCgjZmlyZVNraW4pIi8+CiAgPC9nPgogIAogIDwhLS0gUmVkIGFuZCBnb2xkIGFybW9yIChjaGlsZC1zaXplZCkgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCAxMTApIj4KICAgIDxwYXRoIGQ9Ik0gLTIwLDAgUSAwLDggMjAsMCBMIDI1LDMwIFEgMCw0MCAtMjUsMzAgWiIgZmlsbD0iI2M4NDA0MCIgc3Ryb2tlPSIjOGEyODI4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBHb2xkIHRyaW0gLS0+CiAgICA8cGF0aCBkPSJNIC0yMCwwIFEgMCw4IDIwLDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U4Yzk2YSIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8IS0tIEZpcmUgc3BlYXIgLS0+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMCwgLTEwKSByb3RhdGUoMTUpIj4KICAgICAgPHJlY3QgeD0iLTAuOCIgeT0iLTI1IiB3aWR0aD0iMS42IiBoZWlnaHQ9IjUwIiBmaWxsPSIjOGEyODI4Ii8+CiAgICAgIDwhLS0gU3BlYXIgaGVhZCAoZmxhbWUtc2hhcGVkKSAtLT4KICAgICAgPHBhdGggZD0iTSAwLC0zMCBMIDQsLTIyIEwgMCwtMTggTCAtNCwtMjIgWiIgZmlsbD0iI2ZmNDQwMCIgc3Ryb2tlPSIjZTg0MDAwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgICA8IS0tIEZsYW1lIHRyYWlsIC0tPgogICAgICA8cGF0aCBkPSJNIC0yLC0yOCBRIC01LC0yMCAtMywtMTUgTSAyLC0yOCBRIDUsLTIwIDMsLTE1IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjg4MDAiIHN0cm9rZS13aWR0aD0iMC44IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwvZz4KICA8L2c+CiAgCiAgPCEtLSBTYW1hZGhpIGZpcmUgcGFydGljbGVzIC0tPgogIDxnIGZpbGw9IiNmZjY2MDAiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSI1NSIgY3k9IjEyMCIgcj0iMS41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNDUiIGN5PSIxMzAiIHI9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjY1IiBjeT0iMTUwIiByPSIxIi8+CiAgICA8Y2lyY2xlIGN4PSIxNDAiIGN5PSIxNTUiIHI9IjEuNSIvPgogICAgPGNpcmNsZSBjeD0iNTAiIGN5PSI5MCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iMTU1IiBjeT0iOTUiIHI9IjEiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iI2U4NDAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPue6ouWtqeWEvzwvdGV4dD4KICAKICA8ZyBmaWxsPSIjZTg0MDAwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "huangmei":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InllbGxvd0JnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmEyODEwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMTgxNDA4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA4MDgwNCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ieWVsbG93Um9iZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYzhhODQwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjOGE3ODIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzVhNDgxMCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCN5ZWxsb3dCZykiIHN0cm9rZT0iI2M4YTg0MCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGE3ODIwIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gWWVsbG93IEJyb3cgS2luZyBoZWFkIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgNzUpIj4KICAgIDwhLS0gSGVhZCAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMCIgcng9IjIyIiByeT0iMjUiIGZpbGw9IiNiODk4NTAiIHN0cm9rZT0iIzVhNDgxMCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gWWVsbG93IGJyb3cgYmFuZCAtLT4KICAgIDxyZWN0IHg9Ii0yMCIgeT0iLTEyIiB3aWR0aD0iNDAiIGhlaWdodD0iNSIgZmlsbD0idXJsKCN5ZWxsb3dSb2JlKSIgc3Ryb2tlPSIjNWE0ODEwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBTaW5pc3RlciBleWVzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii04IiBjeT0iLTIiIHJ4PSI0IiByeT0iNSIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGVsbGlwc2UgY3g9IjgiIGN5PSItMiIgcng9IjQiIHJ5PSI1IiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItNyIgY3k9Ii0yIiByPSIyIiBmaWxsPSIjYzhhODQwIi8+CiAgICA8Y2lyY2xlIGN4PSI5IiBjeT0iLTIiIHI9IjIiIGZpbGw9IiNjOGE4NDAiLz4KICAgIDwhLS0gVGhpY2sgZXllYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xNCwtOCBMIC00LC0xMCIgc3Ryb2tlPSIjM2EyODEwIiBzdHJva2Utd2lkdGg9IjIuNSIvPgogICAgPHBhdGggZD0iTSA0LC0xMCBMIDE0LC04IiBzdHJva2U9IiMzYTI4MTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+CiAgICA8IS0tIE5vc2UgLS0+CiAgICA8cGF0aCBkPSJNIC0yLDQgTCAwLDEwIEwgMyw0IFoiIGZpbGw9IiM5YTc4MzAiIG9wYWNpdHk9IjAuNSIvPgogICAgPCEtLSBTbWlya2luZyBtb3V0aCAtLT4KICAgIDxwYXRoIGQ9Ik0gLTYsMTIgUSAwLDkgNywxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2EyODEwIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPCEtLSBFYXJzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0yMiIgY3k9IjIiIHJ4PSI0IiByeT0iNyIgZmlsbD0iI2I4OTg1MCIgc3Ryb2tlPSIjNWE0ODEwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPGVsbGlwc2UgY3g9IjIyIiBjeT0iMiIgcng9IjQiIHJ5PSI3IiBmaWxsPSIjYjg5ODUwIiBzdHJva2U9IiM1YTQ4MTAiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgPC9nPgogIAogIDwhLS0gWWVsbG93IHJvYmUgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCAxMTApIj4KICAgIDxwYXRoIGQ9Ik0gLTI1LDAgUSAwLDggMjUsMCBMIDMwLDM1IFEgMCw0NSAtMzAsMzUgWiIgZmlsbD0idXJsKCN5ZWxsb3dSb2JlKSIgc3Ryb2tlPSIjNWE0ODEwIiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC45Ii8+CiAgICA8IS0tIEdvbGQgdHJpbSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTI1LDAgUSAwLDggMjUsMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZThjOTZhIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSDkurrnp43ooosgKEh1bWFuIFNlZWQgQmFnKSAtLT4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLCAxNSkiPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSI4IiByeT0iMTAiIGZpbGw9IiM1YTQ4MTAiIHN0cm9rZT0iIzNhMjgxMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMiIgcng9IjYiIHJ5PSIzIiBmaWxsPSIjM2EyODEwIiBvcGFjaXR5PSIwLjUiLz4KICAgICAgPCEtLSBCYWcgb3BlbmluZyAtLT4KICAgICAgPHBhdGggZD0iTSAtNiwtOCBRIDAsLTEyIDYsLTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U4Yzk2YSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgICAgPCEtLSBNeXN0aWNhbCBnbG93IGZyb20gYmFnIC0tPgogICAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMyIgZmlsbD0iI2M4YTg0MCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8L2c+CiAgPC9nPgogIAogIDwhLS0g6YeR6ZOZIChHb2xkZW4gQ3ltYmFscykgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjAsIDEyMCkiPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMTAiIHJ5PSIzIiBmaWxsPSJ1cmwoI3llbGxvd1JvYmUpIiBzdHJva2U9IiM1YTQ4MTAiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8cGF0aCBkPSJNIC0xMCwwIFEgLTgsOCAwLDEwIFEgOCw4IDEwLDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCN5ZWxsb3dSb2JlKSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8L2c+CiAgCiAgPCEtLSBEYXJrIGVuZXJneSBwYXJ0aWNsZXMgLS0+CiAgPGcgZmlsbD0iI2M4YTg0MCIgb3BhY2l0eT0iMC40Ij4KICAgIDxjaXJjbGUgY3g9IjcwIiBjeT0iODAiIHI9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjEzMCIgY3k9Ijg1IiByPSIxLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE0MCIgY3k9IjE0MCIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iNjUiIGN5PSIxNDUiIHI9IjEiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iI2M4YTg0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPum7hOecieWkp+eOizwvdGV4dD4KICAKICA8ZyBmaWxsPSIjYzhhODQwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "laoyuan":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InR1cnRsZUJnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMGExYTE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMDQxMDBlIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyMDgwNiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0idHVydGxlU2tpbiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNGE4YTY4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjMmE2MDQ4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzFhMzgyOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic2hlbGxHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNhNWE0OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzJhNDgzOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxYTMwMjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjdHVydGxlQmcpIiBzdHJva2U9IiMyYTgwMzAiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhNTAxOCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtZGFzaGFycmF5PSI0LDMiLz4KICAKICA8IS0tIE9sZCBUdXJ0bGUgaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDc1KSI+CiAgICA8IS0tIFdyaW5rbGVkIG9sZCBoZWFkIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMjQiIHJ5PSIyMiIgZmlsbD0idXJsKCN0dXJ0bGVTa2luKSIgc3Ryb2tlPSIjMWEzODI4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBXcmlua2xlcyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTE1LC04IFEgLTEwLC02IC01LC04IiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTM4MjgiIHN0cm9rZS13aWR0aD0iMC40Ii8+CiAgICA8cGF0aCBkPSJNIDUsLTggUSAxMCwtNiAxNSwtOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEzODI4IiBzdHJva2Utd2lkdGg9IjAuNCIvPgogICAgPHBhdGggZD0iTSAtMTIsNSBRIC02LDMgMCw1IFEgNiwzIDEyLDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMzgyOCIgc3Ryb2tlLXdpZHRoPSIwLjQiLz4KICAgIDwhLS0gQW5jaWVudCB3aXNlIGV5ZXMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTgiIGN5PSItMiIgcng9IjQiIHJ5PSI0IiBmaWxsPSIjMGExYTA4Ii8+CiAgICA8ZWxsaXBzZSBjeD0iOCIgY3k9Ii0yIiByeD0iNCIgcnk9IjQiIGZpbGw9IiMwYTFhMDgiLz4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTIiIHI9IjIiIGZpbGw9IiMyYTgwMzAiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSItMiIgcj0iMiIgZmlsbD0iIzJhODAzMCIvPgogICAgPGNpcmNsZSBjeD0iLTgiIGN5PSItMiIgcj0iMC44IiBmaWxsPSIjYWFmZjgwIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iLTIiIHI9IjAuOCIgZmlsbD0iI2FhZmY4MCIvPgogICAgPCEtLSBMb25nIGV5ZWJyb3dzIChhbmNpZW50KSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTE0LC02IFEgLTEwLC0xMCAtNCwtNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYTBhMDkwIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPHBhdGggZD0iTSA0LC03IFEgMTAsLTEwIDE0LC02IiBmaWxsPSJub25lIiBzdHJva2U9IiNhMGEwOTAiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8IS0tIEJlYWstbGlrZSBtb3V0aCAtLT4KICAgIDxwYXRoIGQ9Ik0gLTQsOCBRIDAsNiA0LDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMzgyOCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8IS0tIExvbmcgYmVhcmQgKGFuY2llbnQpIC0tPgogICAgPHBhdGggZD0iTSAtOCwxMiBRIC0xMCwyMCAtOCwyNSBNIDAsMTMgUSAwLDIyIDAsMjggTSA4LDEyIFEgMTAsMjAgOCwyNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYTBhMDkwIiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC42Ii8+CiAgPC9nPgogIAogIDwhLS0gVHVydGxlIHNoZWxsICjlt6jlpKfpvp/lo7MpIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgMTIwKSI+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjEwIiByeD0iMzUiIHJ5PSIyOCIgZmlsbD0idXJsKCNzaGVsbEdyYWQpIiBzdHJva2U9IiMxYTMwMjAiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPCEtLSBTaGVsbCBoZXhhZ29uYWwgcGF0dGVybiAtLT4KICAgIDxnIG9wYWNpdHk9IjAuNSIgc3Ryb2tlPSIjMWEzMDIwIiBzdHJva2Utd2lkdGg9IjAuNSIgZmlsbD0ibm9uZSI+CiAgICAgIDxwYXRoIGQ9Ik0gLTIwLDAgTCAwLC01IEwgMjAsMCBMIDIwLDE1IEwgMCwyMCBMIC0yMCwxNSBaIi8+CiAgICAgIDxwYXRoIGQ9Ik0gLTIwLDE1IEwgMCwyMCBMIDIwLDE1Ii8+CiAgICAgIDxwYXRoIGQ9Ik0gLTIwLDAgTCAtMjAsMTUiLz4KICAgICAgPHBhdGggZD0iTSAwLC01IEwgMCwyMCIvPgogICAgICA8cGF0aCBkPSJNIDIwLDAgTCAyMCwxNSIvPgogICAgPC9nPgogICAgPCEtLSBTaGVsbCBnbG93IChhbmNpZW50IHBvd2VyKSAtLT4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSI4IiByPSIxMiIgZmlsbD0iIzJhODAzMCIgb3BhY2l0eT0iMC4xNSIvPgogIDwvZz4KICAKICA8IS0tIFdhdGVyIHJpcHBsZXMgLS0+CiAgPGcgb3BhY2l0eT0iMC4zIiBzdHJva2U9IiMyYTgwMzAiIHN0cm9rZS13aWR0aD0iMC41IiBmaWxsPSJub25lIj4KICAgIDxwYXRoIGQ9Ik0gNDAsMTUwIFEgNjAsMTQ4IDgwLDE1MCBRIDEwMCwxNTIgMTIwLDE1MCBRIDE0MCwxNDggMTYwLDE1MCIvPgogICAgPHBhdGggZD0iTSA0MCwxNjAgUSA2MCwxNTggODAsMTYwIFEgMTAwLDE2MiAxMjAsMTYwIFEgMTQwLDE1OCAxNjAsMTYwIi8+CiAgPC9nPgogIAogIDwhLS0g57uP5LmmIChCdWRkaGlzdCBzY3JpcHR1cmVzKSBvbiBzaGVsbCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiIG9wYWNpdHk9IjAuNCI+CiAgICA8cmVjdCB4PSItNSIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjgiIGZpbGw9IiNjOWE4NGMiIHJ4PSIxIi8+CiAgICA8bGluZSB4MT0iLTMiIHkxPSI3IiB4Mj0iMyIgeTI9IjciIHN0cm9rZT0iIzVhNDgxOCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSItMyIgeTE9IjkiIHgyPSIzIiB5Mj0iOSIgc3Ryb2tlPSIjNWE0ODE4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPGxpbmUgeDE9Ii0zIiB5MT0iMTEiIHgyPSIzIiB5Mj0iMTEiIHN0cm9rZT0iIzVhNDgxOCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODUiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzJhODAzMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPuiAgem8izwvdGV4dD4KICAKICA8ZyBmaWxsPSIjMmE4MDMwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "linggan":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImZpc2hCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBhMWEyYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzA0MTAxYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMjA4MTAiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImZpc2hTa2luIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0YTdhYjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiMyYTUwOTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWEzMDYwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI2Zpc2hCZykiIHN0cm9rZT0iIzJhOTg5MCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWE2MDU4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gSW5zcGlyYXRpb24gS2luZyAoRmlzaCBEZW1vbikgaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDc4KSI+CiAgICA8IS0tIEZpc2ggY3Jvd24vY3Jlc3QgLS0+CiAgICA8cGF0aCBkPSJNIC0xNSwtMTggUSAtMjAsLTI1IC0xMCwtMjggUSAwLC0zMiAxMCwtMjggUSAyMCwtMjUgMTUsLTE4IFoiIGZpbGw9InVybCgjZmlzaFNraW4pIiBzdHJva2U9IiMxYTMwNjAiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIEhlYWQgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI1IiBmaWxsPSJ1cmwoI2Zpc2hTa2luKSIgc3Ryb2tlPSIjMWEzMDYwIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBJY2UgY3J5c3RhbHMgb24gZmFjZSAtLT4KICAgIDxnIG9wYWNpdHk9IjAuNCIgZmlsbD0iIzhhY2FmZiI+CiAgICAgIDxwYXRoIGQ9Ik0gLTEwLC01IEwgLTEyLC04IEwgLTgsLTggWiIvPgogICAgICA8cGF0aCBkPSJNIDEwLDMgTCA4LDYgTCAxMiw2IFoiLz4KICAgIDwvZz4KICAgIDwhLS0gRXllcyAoY29sZCBibHVlKSAtLT4KICAgIDxlbGxpcHNlIGN4PSItOCIgY3k9Ii0zIiByeD0iNCIgcnk9IjUiIGZpbGw9IiMwYTFhMmEiLz4KICAgIDxlbGxpcHNlIGN4PSI4IiBjeT0iLTMiIHJ4PSI0IiByeT0iNSIgZmlsbD0iIzBhMWEyYSIvPgogICAgPGNpcmNsZSBjeD0iLTgiIGN5PSItMyIgcj0iMiIgZmlsbD0iIzhhY2FmZiIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9Ii0zIiByPSIyIiBmaWxsPSIjOGFjYWZmIi8+CiAgICA8IS0tIEdpbGxzIC0tPgogICAgPHBhdGggZD0iTSAtMTgsMiBRIC0yMCw4IC0xNywxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEzMDYwIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPHBhdGggZD0iTSAxOCwyIFEgMjAsOCAxNywxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEzMDYwIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBNb3V0aCAtLT4KICAgIDxwYXRoIGQ9Ik0gLTUsMTAgUSAwLDggNSwxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGExYTJhIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDwhLS0gRmlzaCBmaW4gZWFycyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIyLC01IFEgLTI4LC0xMCAtMjYsNSBRIC0yMiwwIC0yMCwtMiBaIiBmaWxsPSJ1cmwoI2Zpc2hTa2luKSIgc3Ryb2tlPSIjMWEzMDYwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPHBhdGggZD0iTSAyMiwtNSBRIDI4LC0xMCAyNiw1IFEgMjIsMCAyMCwtMiBaIiBmaWxsPSJ1cmwoI2Zpc2hTa2luKSIgc3Ryb2tlPSIjMWEzMDYwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogIDwvZz4KICAKICA8IS0tIEljZS1ibHVlIHJvYmVzIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgMTE1KSI+CiAgICA8cGF0aCBkPSJNIC0yNSwwIFEgMCw4IDI1LDAgTCAzMCwzNSBRIDAsNDUgLTMwLDM1IFoiIGZpbGw9IiMxYTMwNjAiIHN0cm9rZT0iIzBhMTgzMCIgc3Ryb2tlLXdpZHRoPSIwLjgiIG9wYWNpdHk9IjAuOSIvPgogICAgPCEtLSBJY2UgY3J5c3RhbCBwYXR0ZXJuIC0tPgogICAgPGcgb3BhY2l0eT0iMC41IiBmaWxsPSIjOGFjYWZmIj4KICAgICAgPHBhdGggZD0iTSAtOCwxMiBMIC0xMCwxNiBMIC02LDE2IFogTSAtOCwxMiBMIC04LDE4IE0gLTEwLDE0IEwgLTYsMTQiLz4KICAgICAgPHBhdGggZD0iTSA4LDE4IEwgNiwyMiBMIDEwLDIyIFogTSA4LDE4IEwgOCwyNCBNIDYsMjAgTCAxMCwyMCIvPgogICAgPC9nPgogIDwvZz4KICAKICA8IS0tIEljZS9mcm9zdCBwYXJ0aWNsZXMgLS0+CiAgPGcgZmlsbD0iIzhhY2FmZiIgb3BhY2l0eT0iMC41Ij4KICAgIDxjaXJjbGUgY3g9IjU1IiBjeT0iODUiIHI9IjEuNSIvPgogICAgPGNpcmNsZSBjeD0iMTQ1IiBjeT0iOTAiIHI9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjE1MCIgY3k9IjE0MCIgcj0iMS41Ii8+CiAgICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjE0NSIgcj0iMSIvPgogICAgPHBhdGggZD0iTSA2MCw2MCBMIDYyLDY0IEwgNTgsNjQgWiIgZmlsbD0iIzhhY2FmZiIgb3BhY2l0eT0iMC4zIi8+CiAgICA8cGF0aCBkPSJNIDE0MCwxNjAgTCAxNDIsMTY0IEwgMTM4LDE2NCBaIiBmaWxsPSIjOGFjYWZmIiBvcGFjaXR5PSIwLjMiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzJhOTg5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPueBteaEn+Wkp+eOizwvdGV4dD4KICAKICA8ZyBmaWxsPSIjMmE5ODkwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "liuer":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Im1hY2FxdWVCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzFhMWExOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzBhMGEwOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwNDA0MDIiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Im1hY2FxdWVTa2luIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2YTYwNTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM0YTQwMzgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMmEyMDE4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI21hY2FxdWVCZykiIHN0cm9rZT0iIzg4ODg4OCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWE1ODU4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gU2l4LUVhcmVkIE1hY2FxdWUgKG1pcnJvciBvZiBTdW4gV3Vrb25nIGJ1dCBkYXJrZXIpIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgNzgpIj4KICAgIDwhLS0gRGFyayB2ZXJzaW9uIG9mIHBob2VuaXggY3Jvd24gLS0+CiAgICA8cGF0aCBkPSJNIC0yMiwwIFEgLTI4LC0xNSAtMTgsLTIwIFEgLTEyLC0yNSAtOCwtMTggTCAwLC0yMiBMIDgsLTE4IFEgMTIsLTI1IDE4LC0yMCBRIDI4LC0xNSAyMiwwIFoiIGZpbGw9IiM1YTQ4MzgiIHN0cm9rZT0iIzNhMzAyOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSItMTIiIHI9IjMiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDwhLS0gTW9ua2V5IGZhY2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI2IiBmaWxsPSJ1cmwoI21hY2FxdWVTa2luKSIgc3Ryb2tlPSIjMmEyMDE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBIZWFydCBmYWNlIGFyZWEgKGRhcmtlcikgLS0+CiAgICA8cGF0aCBkPSJNIC0xNSwtOCBRIC0xMiw1IDAsMTIgUSAxMiw1IDE1LC04IFEgOCwtMyAwLC01IFEgLTgsLTMgLTE1LC04IFoiIGZpbGw9IiM1YTQ4MzgiIG9wYWNpdHk9IjAuNCIvPgogICAgPCEtLSBTaXggZWFycyAoa2V5IGZlYXR1cmUgLSDlha3ogLMpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0yMiIgY3k9Ii0yIiByeD0iNCIgcnk9IjYiIGZpbGw9InVybCgjbWFjYXF1ZVNraW4pIiBzdHJva2U9IiMyYTIwMTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMjIiIGN5PSItMiIgcng9IjQiIHJ5PSI2IiBmaWxsPSJ1cmwoI21hY2FxdWVTa2luKSIgc3Ryb2tlPSIjMmEyMDE4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBFeHRyYSBlYXJzIChoaWRkZW4sIHNtYWxsZXIpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xOCIgY3k9IjgiIHJ4PSIzIiByeT0iNSIgZmlsbD0idXJsKCNtYWNhcXVlU2tpbikiIHN0cm9rZT0iIzJhMjAxOCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNiIvPgogICAgPGVsbGlwc2UgY3g9IjE4IiBjeT0iOCIgcng9IjMiIHJ5PSI1IiBmaWxsPSJ1cmwoI21hY2FxdWVTa2luKSIgc3Ryb2tlPSIjMmEyMDE4IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC42Ii8+CiAgICA8ZWxsaXBzZSBjeD0iLTEyIiBjeT0iMTQiIHJ4PSIyIiByeT0iNCIgZmlsbD0idXJsKCNtYWNhcXVlU2tpbikiIG9wYWNpdHk9IjAuNCIvPgogICAgPGVsbGlwc2UgY3g9IjEyIiBjeT0iMTQiIHJ4PSIyIiByeT0iNCIgZmlsbD0idXJsKCNtYWNhcXVlU2tpbikiIG9wYWNpdHk9IjAuNCIvPgogICAgPCEtLSBFeWVzIChkYXJrLCBzaW5pc3RlciAtIHVubGlrZSBXdWtvbmcncyBnb2xkZW4pIC0tPgogICAgPGVsbGlwc2UgY3g9Ii03IiBjeT0iLTMiIHJ4PSI0IiByeT0iNSIgZmlsbD0iIzFhMGEwNCIgc3Ryb2tlPSIjNWEzMDEwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPGVsbGlwc2UgY3g9IjciIGN5PSItMyIgcng9IjQiIHJ5PSI1IiBmaWxsPSIjMWEwYTA0IiBzdHJva2U9IiM1YTMwMTAiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSItNyIgY3k9Ii0zIiByPSIyIiBmaWxsPSIjODg4ODg4Ii8+CiAgICA8Y2lyY2xlIGN4PSI3IiBjeT0iLTMiIHI9IjIiIGZpbGw9IiM4ODg4ODgiLz4KICAgIDxjaXJjbGUgY3g9Ii03IiBjeT0iLTMiIHI9IjAuOCIgZmlsbD0iI2NjY2NjYyIvPgogICAgPGNpcmNsZSBjeD0iNyIgY3k9Ii0zIiByPSIwLjgiIGZpbGw9IiNjY2NjY2MiLz4KICAgIDwhLS0gRXllYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xMiwtOSBRIC03LC0xMiAtMywtOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPHBhdGggZD0iTSAzLC05IFEgNywtMTIgMTIsLTkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz4KICAgIDwhLS0gTW91dGggKHNtaXJraW5nKSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTUsOCBRIDAsNiA1LDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPC9nPgogIAogIDwhLS0gRGFyayBhcm1vciAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiPgogICAgPHBhdGggZD0iTSAtMjAsMCBRIDAsMTAgMjAsMCBMIDI1LDM1IFEgMCw0NSAtMjUsMzUgWiIgZmlsbD0iIzJhMjgyOCIgc3Ryb2tlPSIjMWExODE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBEYXJrIHN0YWZmIChmYWtlIFJ1eWkgSmluZ3UgQmFuZykgLS0+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMCwgLTEwKSByb3RhdGUoMjApIj4KICAgICAgPHJlY3QgeD0iLTEiIHk9Ii0zMCIgd2lkdGg9IjIiIGhlaWdodD0iNjAiIGZpbGw9IiMzYTM4MzgiLz4KICAgICAgPHJlY3QgeD0iLTIiIHk9Ii0yNSIgd2lkdGg9IjQiIGhlaWdodD0iMiIgZmlsbD0iIzVhNTg1OCIvPgogICAgICA8cmVjdCB4PSItMiIgeT0iMjAiIHdpZHRoPSI0IiBoZWlnaHQ9IjIiIGZpbGw9IiM1YTU4NTgiLz4KICAgIDwvZz4KICA8L2c+CiAgCiAgPCEtLSBTaGFkb3cvZGFya25lc3MgYXVyYSAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4NSIgcj0iMzUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNSIvPgogIAogIDx0ZXh0IHg9IjEwMCIgeT0iMTgyIiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiM4ODg4ODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj7lha3ogLPnjJXnjLQ8L3RleHQ+CiAgCiAgPGcgZmlsbD0iIzg4ODg4OCIgb3BhY2l0eT0iMC41Ij4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjgiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjE5MiIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9IjEwMCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTkyIiBjeT0iMTAwIiByPSIyIi8+CiAgPC9nPgo8L3N2Zz4=",
+  "niumowang":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJ1bGxCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMGEwOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzE4MDQwNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODAyMDIiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJ1bGxTa2luIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM4YTQwMzAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM1YTI4MTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjM2ExODA4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJkYXJrR29sZEFybW9yIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNjOWE4NGMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM4YTY4MjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjNWE0ODE4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI2J1bGxCZykiIHN0cm9rZT0iIzhhMjgyOCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWExODE4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gQnVsbCBEZW1vbiBLaW5nIGhlYWQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA3OCkiPgogICAgPCEtLSBMYXJnZSBjdXJ2ZWQgaG9ybnMgLS0+CiAgICA8cGF0aCBkPSJNIC0yMiwtMTUgUSAtMzUsLTI1IC00MCwtMTAgUSAtMzUsLTUgLTI4LC0xMCBaIiBmaWxsPSJ1cmwoI2RhcmtHb2xkQXJtb3IpIiBzdHJva2U9IiM1YTQ4MTgiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8cGF0aCBkPSJNIDIyLC0xNSBRIDM1LC0yNSA0MCwtMTAgUSAzNSwtNSAyOCwtMTAgWiIgZmlsbD0idXJsKCNkYXJrR29sZEFybW9yKSIgc3Ryb2tlPSIjNWE0ODE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBIb3JuIHJpZGdlcyAtLT4KICAgIDxsaW5lIHgxPSItMzAiIHkxPSItMTgiIHgyPSItMjgiIHkyPSItMTIiIHN0cm9rZT0iIzVhNDgxOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxsaW5lIHgxPSIzMCIgeTE9Ii0xOCIgeDI9IjI4IiB5Mj0iLTEyIiBzdHJva2U9IiM1YTQ4MTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICAKICAgIDwhLS0gQnVsbCBoZWFkIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMjYiIHJ5PSIyNCIgZmlsbD0idXJsKCNidWxsU2tpbikiIHN0cm9rZT0iIzNhMTgwOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gU25vdXQgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjEwIiByeD0iMTQiIHJ5PSI5IiBmaWxsPSIjNWEyODE4IiBzdHJva2U9IiMzYTE4MDgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIE5vc2UgcmluZyAtLT4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIxMyIgcj0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2RhcmtHb2xkQXJtb3IpIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPCEtLSBOb3N0cmlscyAtLT4KICAgIDxlbGxpcHNlIGN4PSItNCIgY3k9IjExIiByeD0iMS41IiByeT0iMiIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGVsbGlwc2UgY3g9IjQiIGN5PSIxMSIgcng9IjEuNSIgcnk9IjIiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDwhLS0gRmllcmNlIGdsb3dpbmcgZXllcyAtLT4KICAgIDxlbGxpcHNlIGN4PSItOSIgY3k9Ii00IiByeD0iNSIgcnk9IjUiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDxlbGxpcHNlIGN4PSI5IiBjeT0iLTQiIHJ4PSI1IiByeT0iNSIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGNpcmNsZSBjeD0iLTkiIGN5PSItNCIgcj0iMi41IiBmaWxsPSIjYzg0MDQwIi8+CiAgICA8Y2lyY2xlIGN4PSI5IiBjeT0iLTQiIHI9IjIuNSIgZmlsbD0iI2M4NDA0MCIvPgogICAgPGNpcmNsZSBjeD0iLTkiIGN5PSItNCIgcj0iMSIgZmlsbD0iI2ZmODg4OCIvPgogICAgPGNpcmNsZSBjeD0iOSIgY3k9Ii00IiByPSIxIiBmaWxsPSIjZmY4ODg4Ii8+CiAgICA8IS0tIFRoaWNrIGJyb3dzIC0tPgogICAgPHBhdGggZD0iTSAtMTYsLTEwIEwgLTQsLTEyIiBzdHJva2U9IiMxYTBhMDQiIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPHBhdGggZD0iTSA0LC0xMiBMIDE2LC0xMCIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjMiLz4KICAgIDwhLS0gQnVsbCBlYXJzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0yNiIgY3k9IjAiIHJ4PSI2IiByeT0iMTAiIGZpbGw9InVybCgjYnVsbFNraW4pIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjAgLTI2IDApIi8+CiAgICA8ZWxsaXBzZSBjeD0iMjYiIGN5PSIwIiByeD0iNiIgcnk9IjEwIiBmaWxsPSJ1cmwoI2J1bGxTa2luKSIgdHJhbnNmb3JtPSJyb3RhdGUoMjAgMjYgMCkiLz4KICAgIDwhLS0gVHVza3MgLS0+CiAgICA8cGF0aCBkPSJNIC04LDE4IEwgLTEwLDI0IEwgLTYsMjIgWiIgZmlsbD0iI2U4ZTBkMCIvPgogICAgPHBhdGggZD0iTSA4LDE4IEwgMTAsMjQgTCA2LDIyIFoiIGZpbGw9IiNlOGUwZDAiLz4KICA8L2c+CiAgCiAgPCEtLSBEYXJrIGdvbGRlbiBwbGF0ZSBhcm1vciAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDExOCkiPgogICAgPHBhdGggZD0iTSAtMjUsMCBRIDAsMTAgMjUsMCBMIDMyLDM1IFEgMCw0NSAtMzIsMzUgWiIgZmlsbD0idXJsKCNkYXJrR29sZEFybW9yKSIgc3Ryb2tlPSIjNWE0ODE4IiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC45Ii8+CiAgICA8IS0tIEFybW9yIHBsYXRlcyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIwLDUgTCAwLDEyIEwgMjAsNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWE0ODE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBCdWxsIGVtYmxlbSBvbiBjaGVzdCAtLT4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIxOCIgcj0iNiIgZmlsbD0iIzNhMTgwOCIgc3Ryb2tlPSIjOGEyODI4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPHBhdGggZD0iTSAtNCwxNSBRIC0yLDEyIDAsMTQgUSAyLDEyIDQsMTUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M4NDA0MCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICA8L2c+CiAgCiAgPCEtLSBHaWFudCBiYXR0bGUgYXhlIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE0NSwgMTAwKSByb3RhdGUoMjApIj4KICAgIDxyZWN0IHg9Ii0xLjUiIHk9Ii0zMCIgd2lkdGg9IjMiIGhlaWdodD0iNjAiIGZpbGw9IiM1YTQ4MTgiIHN0cm9rZT0iIzNhMjgxMCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwhLS0gQXhlIGJsYWRlIC0tPgogICAgPHBhdGggZD0iTSAtMTIsLTI1IFEgLTE4LC0yMCAtMTUsLTEwIEwgLTMsLTggTCAtMywtMjIgWiIgZmlsbD0idXJsKCNkYXJrR29sZEFybW9yKSIgc3Ryb2tlPSIjNWE0ODE4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPHBhdGggZD0iTSAxMiwtMjUgUSAxOCwtMjAgMTUsLTEwIEwgMywtOCBMIDMsLTIyIFoiIGZpbGw9InVybCgjZGFya0dvbGRBcm1vcikiIHN0cm9rZT0iIzVhNDgxOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzhhMjgyOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPueJm+mtlOeOizwvdGV4dD4KICAKICA8ZyBmaWxsPSIjOGEyODI4IiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "rulaifo":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImZvQmciIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMzYTMwMDgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMxYTE0MDQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGEwODAyIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnb2xkQm9keSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZlODkwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZThjOTZhIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlhNzgzOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iaGFsbyIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNTAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmZTg5MCIgc3RvcC1vcGFjaXR5PSIwLjQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI3MCUiIHN0b3AtY29sb3I9IiNlOGM5NmEiIHN0b3Atb3BhY2l0eT0iMC4xIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2U4Yzk2YSIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI2ZvQmcpIiBzdHJva2U9IiNlOGM5NmEiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtZGFzaGFycmF5PSI0LDMiLz4KICAKICA8IS0tIEJ1ZGRoYSBoYWxvIC0tPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI1MCIgZmlsbD0idXJsKCNoYWxvKSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI0MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZThjOTZhIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI0OCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4zIi8+CiAgCiAgPCEtLSBCdWRkaGEgaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDcyKSI+CiAgICA8IS0tIFVzaG5pc2hhICh0b3Brbm90KSAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTIyIiByeD0iOCIgcnk9IjYiIGZpbGw9InVybCgjZ29sZEJvZHkpIiBzdHJva2U9IiM5YTc4MzgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIEhlYWQgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMCIgcnk9IjI0IiBmaWxsPSJ1cmwoI2dvbGRCb2R5KSIgc3Ryb2tlPSIjOWE3ODM4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBVcm5hIChmb3JlaGVhZCBtYXJrKSAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTgiIHJ4PSIyIiByeT0iMyIgZmlsbD0iI2M4NDA0MCIgb3BhY2l0eT0iMC43Ii8+CiAgICA8IS0tIEV5ZXMgKGNsb3NlZCwgc2VyZW5lKSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTEwLC0yIFEgLTcsLTEgLTQsLTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVhMzAxMCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8cGF0aCBkPSJNIDQsLTIgUSA3LC0xIDEwLC0yIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTMwMTAiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPCEtLSBFeWVicm93cyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTEyLC03IFEgLTcsLTkgLTMsLTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVhMzAxMCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxwYXRoIGQ9Ik0gMywtNyBRIDcsLTkgMTIsLTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVhMzAxMCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gTm9zZSAtLT4KICAgIDxwYXRoIGQ9Ik0gMCwtNCBMIC0xLDQgTCAyLDQgWiIgZmlsbD0iI2Q0YTA1MCIgb3BhY2l0eT0iMC41Ii8+CiAgICA8IS0tIE1vdXRoIChzbGlnaHQgc21pbGUpIC0tPgogICAgPHBhdGggZD0iTSAtNCw4IFEgMCwxMCA0LDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVhMzAxMCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8IS0tIExvbmcgZWFybG9iZXMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTIwIiBjeT0iMiIgcng9IjQiIHJ5PSI4IiBmaWxsPSJ1cmwoI2dvbGRCb2R5KSIgc3Ryb2tlPSIjOWE3ODM4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPGVsbGlwc2UgY3g9IjIwIiBjeT0iMiIgcng9IjQiIHJ5PSI4IiBmaWxsPSJ1cmwoI2dvbGRCb2R5KSIgc3Ryb2tlPSIjOWE3ODM4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogIDwvZz4KICAKICA8IS0tIEJ1ZGRoYSByb2JlcyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDExMCkiPgogICAgPHBhdGggZD0iTSAtMjUsMCBRIDAsOCAyNSwwIEwgMzAsMzUgUSAwLDQ1IC0zMCwzNSBaIiBmaWxsPSJ1cmwoI2dvbGRCb2R5KSIgc3Ryb2tlPSIjOWE3ODM4IiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC45Ii8+CiAgICA8IS0tIFJvYmUgZm9sZHMgLS0+CiAgICA8cGF0aCBkPSJNIC0xNSw1IFEgLTEwLDI1IC04LDM1IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YTc4MzgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMCw4IFEgMCwyNSAwLDM4IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YTc4MzgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTUsNSBRIDEwLDI1IDgsMzUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzlhNzgzOCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPCEtLSBNdWRyYSBoYW5kIChtZWRpdGF0aW9uKSAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMjAiIHJ4PSIxMCIgcnk9IjUiIGZpbGw9InVybCgjZ29sZEJvZHkpIiBzdHJva2U9IiM5YTc4MzgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjgiLz4KICA8L2c+CiAgCiAgPCEtLSBMb3R1cyBwZWRlc3RhbCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDE1NSkiPgogICAgPHBhdGggZD0iTSAtMjAsMCBRIC0xNSwtNSAtMTAsLTMgUSAtNSwtOCAwLC01IFEgNSwtOCAxMCwtMyBRIDE1LC01IDIwLDAgWiIgZmlsbD0iI2U4Yzk2YSIgb3BhY2l0eT0iMC42IiBzdHJva2U9IiM5YTc4MzgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjIiIHJ4PSIyMiIgcnk9IjQiIGZpbGw9IiM5YTc4MzgiIG9wYWNpdHk9IjAuNSIvPgogIDwvZz4KICAKICA8IS0tIEdvbGRlbiByYXlzIC0tPgogIDxnIG9wYWNpdHk9IjAuMyIgc3Ryb2tlPSIjZThjOTZhIiBzdHJva2Utd2lkdGg9IjAuNSI+CiAgICA8bGluZSB4MT0iMTAwIiB5MT0iMzAiIHgyPSIxMDAiIHkyPSIxNSIvPgogICAgPGxpbmUgeDE9IjcwIiB5MT0iNTAiIHgyPSI1NSIgeTI9IjM1Ii8+CiAgICA8bGluZSB4MT0iMTMwIiB5MT0iNTAiIHgyPSIxNDUiIHkyPSIzNSIvPgogICAgPGxpbmUgeDE9IjYwIiB5MT0iODAiIHgyPSI0NSIgeTI9Ijc1Ii8+CiAgICA8bGluZSB4MT0iMTQwIiB5MT0iODAiIHgyPSIxNTUiIHkyPSI3NSIvPgogIDwvZz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4NSIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjZThjOTZhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+5aaC5p2l5L2b56WWPC90ZXh0PgogIAogIDxnIGZpbGw9IiNlOGM5NmEiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
+  "shawujing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNoYUJnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMWEyODIwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMGExNDA4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA0MDgwMiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYnJvbnplQXJtb3IiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzZhOGE3OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzRhNmE1OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYTNhMjgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InN0YWZmR3JhZFNoYSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM4YTlhODgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiM1YTZhNTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjM2E0YTM4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICAKICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI3NoYUJnKSIgc3Ryb2tlPSIjNGE4YTc4IiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkyIiBmaWxsPSJub25lIiBzdHJva2U9IiMyYTVhNDgiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWRhc2hhcnJheT0iNCwzIi8+CiAgCiAgPCEtLSBNb25rIGZhY2Ugd2l0aCBiZWFyZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDc4KSI+CiAgICA8IS0tIEZhY2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI2IiBmaWxsPSIjYTg5ODg4IiBzdHJva2U9IiM1YTQ4MzgiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8IS0tIERhcmsgc2tpbiB0aW50ICjok53ngbDoibLosIMpIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMjIiIHJ5PSIyNiIgZmlsbD0iIzRhNWE1MCIgb3BhY2l0eT0iMC4zIi8+CiAgICA8IS0tIEV5ZXMgKGNhbG0sIGRldGVybWluZWQpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii03IiBjeT0iLTMiIHJ4PSIzIiByeT0iNCIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGVsbGlwc2UgY3g9IjciIGN5PSItMyIgcng9IjMiIHJ5PSI0IiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItNiIgY3k9Ii0zIiByPSIxIiBmaWxsPSIjNGE4YTc4Ii8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iLTMiIHI9IjEiIGZpbGw9IiM0YThhNzgiLz4KICAgIDwhLS0gRXllYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xMiwtOSBRIC03LC0xMSAtMywtOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmEyMDEwIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPHBhdGggZD0iTSAzLC05IFEgNywtMTEgMTIsLTkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJhMjAxMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDwhLS0gTGFyZ2UgYmVhcmQgKOa1k+mhuykgLS0+CiAgICA8cGF0aCBkPSJNIC0xOCw1IFEgLTIyLDE1IC0xOCwyNSBRIC0xMCwzMCAwLDI4IFEgMTAsMzAgMTgsMjUgUSAyMiwxNSAxOCw1IFEgMTAsMTAgMCw4IFEgLTEwLDEwIC0xOCw1IFoiIGZpbGw9IiMzYTI4MTgiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gTW91dGggKGhpZGRlbiBpbiBiZWFyZCkgLS0+CiAgICA8cGF0aCBkPSJNIC00LDEwIFEgMCwxMiA0LDEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTMwMTAiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8IS0tIE1vbmsgbWFyayAo5oiS55akL+S9m+ePoCkgLS0+CiAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iLTE4IiByPSIyIiBmaWxsPSIjYzg0MDQwIiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gU2t1bGwgYmVhZCBuZWNrbGFjZSAo6aq36auF6aG56ZO+KSAtLT4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsIDIyKSI+CiAgICAgIDxjaXJjbGUgY3g9Ii0xMiIgY3k9IjAiIHI9IjIuNSIgZmlsbD0iI2U4ZTBkMCIgc3Ryb2tlPSIjOGE3ODQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgICA8Y2lyY2xlIGN4PSItNiIgY3k9IjIiIHI9IjIuNSIgZmlsbD0iI2U4ZTBkMCIgc3Ryb2tlPSIjOGE3ODQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMyIgcj0iMi41IiBmaWxsPSIjZThlMGQwIiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICAgIDxjaXJjbGUgY3g9IjYiIGN5PSIyIiByPSIyLjUiIGZpbGw9IiNlOGUwZDAiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgICAgPGNpcmNsZSBjeD0iMTIiIGN5PSIwIiByPSIyLjUiIGZpbGw9IiNlOGUwZDAiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwvZz4KICA8L2c+CiAgCiAgPCEtLSBCcm9uemUgYXJtb3IgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCAxMjApIj4KICAgIDxlbGxpcHNlIGN4PSItMTgiIGN5PSIwIiByeD0iMTIiIHJ5PSI4IiBmaWxsPSJ1cmwoI2Jyb256ZUFybW9yKSIgc3Ryb2tlPSIjMmEzYTI4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGVsbGlwc2UgY3g9IjE4IiBjeT0iMCIgcng9IjEyIiByeT0iOCIgZmlsbD0idXJsKCNicm9uemVBcm1vcikiIHN0cm9rZT0iIzJhM2EyOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDxwYXRoIGQ9Ik0gLTE1LDUgUSAwLDE1IDE1LDUgTCAxOCwyOCBRIDAsMzMgLTE4LDI4IFoiIGZpbGw9InVybCgjYnJvbnplQXJtb3IpIiBzdHJva2U9IiMyYTNhMjgiIHN0cm9rZS13aWR0aD0iMC44IiBvcGFjaXR5PSIwLjg1Ii8+CiAgICA8IS0tIENoZXN0IGVtYmxlbSAtLT4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIxNSIgcj0iMyIgZmlsbD0iIzRhOGE3OCIgb3BhY2l0eT0iMC43Ii8+CiAgPC9nPgogIAogIDwhLS0gRGVtb24tcXVlbGxpbmcgc3RhZmYgKOmZjeWmluWuneadlikgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTM1LCAxMDApIHJvdGF0ZSgxOCkiPgogICAgPHJlY3QgeD0iLTEuNSIgeT0iLTM1IiB3aWR0aD0iMyIgaGVpZ2h0PSI3MCIgZmlsbD0idXJsKCNzdGFmZkdyYWRTaGEpIiBzdHJva2U9IiMyYTNhMjgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8IS0tIE1vb24gYmxhZGUgY3Jlc2NlbnQgdG9wIC0tPgogICAgPHBhdGggZD0iTSAtNiwtMzggUSAwLC00NSA2LC0zOCBMIDQsLTM1IFEgMCwtMzggLTQsLTM1IFoiIGZpbGw9InVybCgjc3RhZmZHcmFkU2hhKSIgc3Ryb2tlPSIjMmEzYTI4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBPcm5hbWVudGFsIGJhbmRzIC0tPgogICAgPHJlY3QgeD0iLTIuNSIgeT0iLTI1IiB3aWR0aD0iNSIgaGVpZ2h0PSIyIiBmaWxsPSIjNmE4YTc4Ii8+CiAgICA8cmVjdCB4PSItMi41IiB5PSIyMCIgd2lkdGg9IjUiIGhlaWdodD0iMiIgZmlsbD0iIzZhOGE3OCIvPgogIDwvZz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4MCIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNGE4YTc4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+5rKZ5ZKM5bCaPC90ZXh0PgogIAogIDxnIGZpbGw9IiM0YThhNzgiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
+  "sunwukong":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Ind1a29uZ0JnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjM2EyYTA4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMmExODA0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBkMDgwMiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ29sZEFybW9yIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmU4OTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI0MCUiIHN0b3AtY29sb3I9IiNlOGM5NmEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI3MCUiIHN0b3AtY29sb3I9IiNjOWE4NGMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjN2E2NDM4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzdGFmZkdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZlODkwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZThjOTZhIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlhNzgzOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPCEtLSBDaXJjdWxhciBmcmFtZSAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk2IiBmaWxsPSJ1cmwoI3d1a29uZ0JnKSIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjMiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkyIiBmaWxsPSJub25lIiBzdHJva2U9IiM3YTY0MzgiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLWRhc2hhcnJheT0iNCwzIi8+CiAgCiAgPCEtLSBQaG9lbml4IGNyb3duICjlh6Tnv4XntKvph5HlhqApIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgNTUpIj4KICAgIDxwYXRoIGQ9Ik0gLTI1LDAgUSAtMzAsLTE1IC0yMCwtMjAgUSAtMTUsLTI1IC0xMCwtMTggTCAwLC0yMiBMIDEwLC0xOCBRIDE1LC0yNSAyMCwtMjAgUSAzMCwtMTUgMjUsMCBaIiBmaWxsPSJ1cmwoI2dvbGRBcm1vcikiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gQ3Jvd24gY2VudGVyIGpld2VsIC0tPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9Ii0xMiIgcj0iNCIgZmlsbD0iI2M4NDA0MCIgc3Ryb2tlPSIjZTg1MDUwIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBQaG9lbml4IHdpbmdzIC0tPgogICAgPHBhdGggZD0iTSAtMjUsLTUgUSAtMzUsLTEwIC0zOCwtMiBRIC0zMiwwIC0yNSwwIFoiIGZpbGw9InVybCgjZ29sZEFybW9yKSIgb3BhY2l0eT0iMC44Ii8+CiAgICA8cGF0aCBkPSJNIDI1LC01IFEgMzUsLTEwIDM4LC0yIFEgMzIsMCAyNSwwIFoiIGZpbGw9InVybCgjZ29sZEFybW9yKSIgb3BhY2l0eT0iMC44Ii8+CiAgPC9nPgogIAogIDwhLS0gTW9ua2V5IGZhY2UgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA5MCkiPgogICAgPCEtLSBGYWNlIHNoYXBlIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMjIiIHJ5PSIyNiIgZmlsbD0iI2M4YTA2MCIgc3Ryb2tlPSIjOGE2MDIwIiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBIZWFydC1zaGFwZWQgZmFjZSBhcmVhIC0tPgogICAgPHBhdGggZD0iTSAtMTUsLTggUSAtMTIsNSAwLDEyIFEgMTIsNSAxNSwtOCBRIDgsLTMgMCwtNSBRIC04LC0zIC0xNSwtOCBaIiBmaWxsPSIjZThjODk4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gR29sZGVuIGV5ZXMgKOeBq+ecvOmHkeedmykgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTciIGN5PSItMyIgcng9IjQiIHJ5PSI1IiBmaWxsPSIjZmZlODkwIiBzdHJva2U9IiNjODQwNDAiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iNyIgY3k9Ii0zIiByeD0iNCIgcnk9IjUiIGZpbGw9IiNmZmU4OTAiIHN0cm9rZT0iI2M4NDA0MCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxjaXJjbGUgY3g9Ii03IiBjeT0iLTMiIHI9IjIiIGZpbGw9IiNjODQwNDAiLz4KICAgIDxjaXJjbGUgY3g9IjciIGN5PSItMyIgcj0iMiIgZmlsbD0iI2M4NDA0MCIvPgogICAgPCEtLSBQdXBpbHMgZ2xvdyAtLT4KICAgIDxjaXJjbGUgY3g9Ii03IiBjeT0iLTMiIHI9IjEiIGZpbGw9IiNmZmU4OTAiLz4KICAgIDxjaXJjbGUgY3g9IjciIGN5PSItMyIgcj0iMSIgZmlsbD0iI2ZmZTg5MCIvPgogICAgPCEtLSBFeWVicm93cyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTEyLC05IFEgLTcsLTEyIC0zLC05IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTMwMTAiIHN0cm9rZS13aWR0aD0iMS4yIi8+CiAgICA8cGF0aCBkPSJNIDMsLTkgUSA3LC0xMiAxMiwtOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWEzMDEwIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPCEtLSBNb3V0aCAtLT4KICAgIDxwYXRoIGQ9Ik0gLTUsOCBRIDAsMTEgNSw4IiBmaWxsPSJub25lIiBzdHJva2U9IiM1YTMwMTAiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPCEtLSBFYXJzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0yMiIgY3k9Ii0yIiByeD0iNCIgcnk9IjYiIGZpbGw9IiNjOGEwNjAiIHN0cm9rZT0iIzhhNjAyMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxlbGxpcHNlIGN4PSIyMiIgY3k9Ii0yIiByeD0iNCIgcnk9IjYiIGZpbGw9IiNjOGEwNjAiIHN0cm9rZT0iIzhhNjAyMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICA8L2c+CiAgCiAgPCEtLSBHb2xkZW4gYXJtb3Igc2hvdWxkZXJzIC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgMTI1KSI+CiAgICA8ZWxsaXBzZSBjeD0iLTE4IiBjeT0iMCIgcng9IjEyIiByeT0iOCIgZmlsbD0idXJsKCNnb2xkQXJtb3IpIiBzdHJva2U9IiM3YTY0MzgiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTgiIGN5PSIwIiByeD0iMTIiIHJ5PSI4IiBmaWxsPSJ1cmwoI2dvbGRBcm1vcikiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gQXJtb3IgY2hlc3QgLS0+CiAgICA8cGF0aCBkPSJNIC0xNSw1IFEgMCwxNSAxNSw1IEwgMTgsMjUgUSAwLDMwIC0xOCwyNSBaIiBmaWxsPSJ1cmwoI2dvbGRBcm1vcikiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjgiIG9wYWNpdHk9IjAuOCIvPgogICAgPCEtLSBDaGVzdCBlbWJsZW0gLS0+CiAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMTUiIHI9IjQiIGZpbGw9IiNjODQwNDAiIG9wYWNpdHk9IjAuNyIvPgogIDwvZz4KICAKICA8IS0tIFJ1eWkgSmluZ3UgQmFuZyAo5aaC5oSP6YeR566N5qOSKSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMzUsIDEwMCkgcm90YXRlKDIwKSI+CiAgICA8cmVjdCB4PSItMS41IiB5PSItNDAiIHdpZHRoPSIzIiBoZWlnaHQ9IjgwIiBmaWxsPSJ1cmwoI3N0YWZmR3JhZCkiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwhLS0gR29sZCBiYW5kcyAtLT4KICAgIDxyZWN0IHg9Ii0yLjUiIHk9Ii0zNSIgd2lkdGg9IjUiIGhlaWdodD0iMyIgZmlsbD0iI2M5YTg0YyIvPgogICAgPHJlY3QgeD0iLTIuNSIgeT0iMzIiIHdpZHRoPSI1IiBoZWlnaHQ9IjMiIGZpbGw9IiNjOWE4NGMiLz4KICAgIDwhLS0gRW5kIGNhcHMgLS0+CiAgICA8cmVjdCB4PSItMi41IiB5PSItNDAiIHdpZHRoPSI1IiBoZWlnaHQ9IjQiIGZpbGw9IiNjOWE4NGMiIHN0cm9rZT0iIzdhNjQzOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxyZWN0IHg9Ii0yLjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSI0IiBmaWxsPSIjYzlhODRjIiBzdHJva2U9IiM3YTY0MzgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgPC9nPgogIAogIDwhLS0gTmFtZSAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjE4MCIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZThjOTZhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+5a2Z5oKf56m6PC90ZXh0PgogIAogIDwhLS0gRGVjb3JhdGl2ZSBib3JkZXIgZG90cyAtLT4KICA8ZyBmaWxsPSIjYzlhODRjIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "tieshan":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImZhbkJnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmExODE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMTgwYzBjIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA4MDQwNCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iamFkZVNraW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2U4YzhhMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2M4YTA3MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM5YTcwNTAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Imlyb25GYW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNmE1ODQ4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjNGEzODI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzJhMTgwOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCNmYW5CZykiIHN0cm9rZT0iI2M4NDA0MCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGEyODI4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gUHJpbmNlc3MgSXJvbiBGYW4gaGVhZCAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDcyKSI+CiAgICA8IS0tIFBob2VuaXggaGFpciBvcm5hbWVudCAtLT4KICAgIDxwYXRoIGQ9Ik0gLTE1LC0yMCBRIC0xMCwtMjggMCwtMjUgUSAxMCwtMjggMTUsLTIwIFEgMTAsLTE4IDAsLTE2IFEgLTEwLC0xOCAtMTUsLTIwIFoiIGZpbGw9IiNjODQwNDAiIHN0cm9rZT0iIzhhMjgyOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gSGFpciAoZGFyaykgLS0+CiAgICA8cGF0aCBkPSJNIC0yMiwtMTUgUSAtMjgsLTUgLTI1LDEwIFEgLTIwLC01IC0xOCwtMTAgWiIgZmlsbD0iIzFhMGEwNCIvPgogICAgPHBhdGggZD0iTSAyMiwtMTUgUSAyOCwtNSAyNSwxMCBRIDIwLC01IDE4LC0xMCBaIiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8IS0tIEZhY2UgKGJlYXV0aWZ1bCkgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMCIgcnk9IjI0IiBmaWxsPSJ1cmwoI2phZGVTa2luKSIgc3Ryb2tlPSIjOGE2MDQ4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBBbG1vbmQgZXllcyAoZmllcmNlIGJlYXV0eSkgLS0+CiAgICA8cGF0aCBkPSJNIC0xMiwtMyBRIC04LC02IC00LC0zIFEgLTgsLTEgLTEyLC0zIFoiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDxwYXRoIGQ9Ik0gNCwtMyBRIDgsLTYgMTIsLTMgUSA4LC0xIDQsLTMgWiIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGNpcmNsZSBjeD0iLTgiIGN5PSItMyIgcj0iMS41IiBmaWxsPSIjYzg0MDQwIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iLTMiIHI9IjEuNSIgZmlsbD0iI2M4NDA0MCIvPgogICAgPCEtLSBEZWxpY2F0ZSBleWVicm93cyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTEyLC04IFEgLTgsLTEwIC00LC04IiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTBhMDQiIHN0cm9rZS13aWR0aD0iMS4yIi8+CiAgICA8cGF0aCBkPSJNIDQsLTggUSA4LC0xMCAxMiwtOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPCEtLSBSZWQgbGlwcyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTQsOCBRIDAsNiA0LDggUSAwLDEwIC00LDggWiIgZmlsbD0iI2M4NDA0MCIgc3Ryb2tlPSIjOGEyODI4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPCEtLSBOb3NlIC0tPgogICAgPHBhdGggZD0iTSAwLC0yIEwgLTEsNCBMIDIsNCBaIiBmaWxsPSIjYjg5MDZhIiBvcGFjaXR5PSIwLjQiLz4KICAgIDwhLS0gRWFycmluZ3MgLS0+CiAgICA8Y2lyY2xlIGN4PSItMjAiIGN5PSI1IiByPSIyIiBmaWxsPSIjYzg0MDQwIiBzdHJva2U9IiM4YTI4MjgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjUiIHI9IjIiIGZpbGw9IiNjODQwNDAiIHN0cm9rZT0iIzhhMjgyOCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICA8L2c+CiAgCiAgPCEtLSBSZWQgYW5kIGdvbGQgcm9iZXMgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCAxMTApIj4KICAgIDxwYXRoIGQ9Ik0gLTI1LDAgUSAwLDggMjUsMCBMIDMwLDM1IFEgMCw0NSAtMzAsMzUgWiIgZmlsbD0iIzhhMjgyOCIgc3Ryb2tlPSIjNWExODE4IiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC45Ii8+CiAgICA8cGF0aCBkPSJNIC0yNSwwIFEgMCw4IDI1LDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U4Yzk2YSIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICA8L2c+CiAgCiAgPCEtLSBCYW5hbmEgTGVhZiBGYW4gKOiKreiVieaJhykgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQ1LCA5NSkgcm90YXRlKDE1KSI+CiAgICA8IS0tIEZhbiBoYW5kbGUgLS0+CiAgICA8cmVjdCB4PSItMSIgeT0iMjAiIHdpZHRoPSIyIiBoZWlnaHQ9IjIwIiBmaWxsPSIjNWEzMDEwIiBzdHJva2U9IiMzYTE4MDgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8IS0tIEZhbiBsZWFmIC0tPgogICAgPHBhdGggZD0iTSAtMjIsLTIwIFEgLTI1LC01IC0yMCwxNSBMIDIwLDE1IFEgMjUsLTUgMjIsLTIwIFEgMTAsLTI1IDAsLTIyIFEgLTEwLC0yNSAtMjIsLTIwIFoiIGZpbGw9InVybCgjaXJvbkZhbikiIHN0cm9rZT0iIzJhMTgwOCIgc3Ryb2tlLXdpZHRoPSIwLjgiLz4KICAgIDwhLS0gRmFuIHJpYnMgLS0+CiAgICA8bGluZSB4MT0iMCIgeTE9IjE1IiB4Mj0iLTE4IiB5Mj0iLTE4IiBzdHJva2U9IiMyYTE4MDgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8bGluZSB4MT0iMCIgeTE9IjE1IiB4Mj0iLTEwIiB5Mj0iLTIyIiBzdHJva2U9IiMyYTE4MDgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8bGluZSB4MT0iMCIgeTE9IjE1IiB4Mj0iMCIgeTI9Ii0yMyIgc3Ryb2tlPSIjMmExODA4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSIxNSIgeDI9IjEwIiB5Mj0iLTIyIiBzdHJva2U9IiMyYTE4MDgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8bGluZSB4MT0iMCIgeTE9IjE1IiB4Mj0iMTgiIHkyPSItMTgiIHN0cm9rZT0iIzJhMTgwOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gRmFuIGVkZ2UgZ29sZCB0cmltIC0tPgogICAgPHBhdGggZD0iTSAtMjIsLTIwIFEgLTI1LC01IC0yMCwxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPHBhdGggZD0iTSAyMiwtMjAgUSAyNSwtNSAyMCwxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBXaW5kIHN3aXJsIC0tPgogICAgPHBhdGggZD0iTSAtNSw1IFEgMCwwIDUsNSBRIDAsMTAgLTUsNSBaIiBmaWxsPSIjNGE4YWM4IiBvcGFjaXR5PSIwLjMiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMSIgZmlsbD0iI2M4NDA0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPumTgeaJh+WFrOS4uzwvdGV4dD4KICAKICA8ZyBmaWxsPSIjYzg0MDQwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "xiezijing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNjb3JwQmciIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxYTI4MjAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMwYTE0MDgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDQwODAyIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzY29ycFNraW4iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzZhOGE1OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzRhNmEzOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYTQ4MTgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjc2NvcnBCZykiIHN0cm9rZT0iIzJhOTg5MCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWE2ODU4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gU2NvcnBpb24gRGVtb24gLSBmZW1hbGUgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA3NSkiPgogICAgPCEtLSBIYWlyIChkYXJrIGdyZWVuKSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIwLC0xNSBRIC0yOCwtNSAtMjUsMTAgUSAtMjIsMCAtMTgsLTggWiIgZmlsbD0iIzFhMjgxMCIvPgogICAgPHBhdGggZD0iTSAyMCwtMTUgUSAyOCwtNSAyNSwxMCBRIDIyLDAgMTgsLTggWiIgZmlsbD0iIzFhMjgxMCIvPgogICAgPCEtLSBTY29ycGlvbiBhbnRlbm5hL2hvcm4gb3JuYW1lbnRzIC0tPgogICAgPHBhdGggZD0iTSAtOCwtMjAgUSAtMTIsLTI1IC0xMCwtMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJhOTg5MCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8cGF0aCBkPSJNIDgsLTIwIFEgMTIsLTI1IDEwLC0zMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmE5ODkwIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDwhLS0gRmFjZSAtLT4KICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iMCIgcng9IjIwIiByeT0iMjMiIGZpbGw9InVybCgjc2NvcnBTa2luKSIgc3Ryb2tlPSIjMmE0ODE4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPCEtLSBTZWR1Y3RpdmUgeWV0IGRhbmdlcm91cyBleWVzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii03IiBjeT0iLTMiIHJ4PSI0IiByeT0iNSIgZmlsbD0iIzFhMGEwNCIvPgogICAgPGVsbGlwc2UgY3g9IjciIGN5PSItMyIgcng9IjQiIHJ5PSI1IiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItNyIgY3k9Ii0zIiByPSIyIiBmaWxsPSIjMmE5ODkwIi8+CiAgICA8Y2lyY2xlIGN4PSI3IiBjeT0iLTMiIHI9IjIiIGZpbGw9IiMyYTk4OTAiLz4KICAgIDxjaXJjbGUgY3g9Ii03IiBjeT0iLTMiIHI9IjAuOCIgZmlsbD0iIzhhZmZmZiIvPgogICAgPGNpcmNsZSBjeD0iNyIgY3k9Ii0zIiByPSIwLjgiIGZpbGw9IiM4YWZmZmYiLz4KICAgIDwhLS0gRXllYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xMiwtOCBRIC03LC0xMCAtMywtOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEwYTA0IiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPHBhdGggZD0iTSAzLC04IFEgNywtMTAgMTIsLTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMGEwNCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz4KICAgIDwhLS0gTGlwcyAocHVycGxlIHRpbnQpIC0tPgogICAgPHBhdGggZD0iTSAtNCw4IFEgMCw2IDQsOCBRIDAsMTAgLTQsOCBaIiBmaWxsPSIjNWEzMDMwIiBzdHJva2U9IiMzYTE4MTgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8IS0tIE5vc2UgLS0+CiAgICA8cGF0aCBkPSJNIDAsLTIgTCAtMSw0IEwgMiw0IFoiIGZpbGw9IiM0YTZhMzgiIG9wYWNpdHk9IjAuNCIvPgogIDwvZz4KICAKICA8IS0tIERhcmsgZ3JlZW4gcm9iZXMgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCAxMTApIj4KICAgIDxwYXRoIGQ9Ik0gLTI1LDAgUSAwLDggMjUsMCBMIDMwLDM1IFEgMCw0NSAtMzAsMzUgWiIgZmlsbD0iIzJhNDgxOCIgc3Ryb2tlPSIjMWEyODA4IiBzdHJva2Utd2lkdGg9IjAuOCIgb3BhY2l0eT0iMC45Ii8+CiAgICA8IS0tIFNjb3JwaW9uIHRhaWwgbW90aWYgLS0+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMTUsIDE1KSI+CiAgICAgIDxwYXRoIGQ9Ik0gMCwwIFEgNSwtNSAzLC0xMCBRIDAsLTE1IC01LC0xMiBRIC04LC04IC01LC0zIFEgLTIsMCAwLDAgWiIgZmlsbD0iIzJhOTg5MCIgb3BhY2l0eT0iMC40IiBzdHJva2U9IiMxYTY4NTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICAgIDwhLS0gU3RpbmdlciAtLT4KICAgICAgPHBhdGggZD0iTSAtNSwtMTIgTCAtOCwtMTggTCAtMywtMTQgWiIgZmlsbD0iIzJhOTg5MCIvPgogICAgPC9nPgogIDwvZz4KICAKICA8IS0tIFBvaXNvbiBzdGluZ2VyIHdlYXBvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MCwgMTEwKSByb3RhdGUoLTI1KSI+CiAgICA8IS0tIFRhaWwgc2VnbWVudHMgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSI0IiByeT0iMyIgZmlsbD0idXJsKCNzY29ycFNraW4pIiBzdHJva2U9IiMyYTQ4MTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iLTMiIGN5PSItOCIgcng9IjQiIHJ5PSIzIiBmaWxsPSJ1cmwoI3Njb3JwU2tpbikiIHN0cm9rZT0iIzJhNDgxOCIgc3Ryb2tlLXdpZHRoPSIwLjUiIHRyYW5zZm9ybT0icm90YXRlKDMwIC0zIC04KSIvPgogICAgPGVsbGlwc2UgY3g9Ii04IiBjeT0iLTE0IiByeD0iNCIgcnk9IjMiIGZpbGw9InVybCgjc2NvcnBTa2luKSIgc3Ryb2tlPSIjMmE0ODE4IiBzdHJva2Utd2lkdGg9IjAuNSIgdHJhbnNmb3JtPSJyb3RhdGUoNTAgLTggLTE0KSIvPgogICAgPCEtLSBTdGluZ2VyIC0tPgogICAgPHBhdGggZD0iTSAtMTAsLTE4IEwgLTE1LC0yOCBMIC04LC0yMCBaIiBmaWxsPSIjMmE5ODkwIiBzdHJva2U9IiMxYTY4NTgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIFBvaXNvbiBkcm9wIC0tPgogICAgPGNpcmNsZSBjeD0iLTE0IiBjeT0iLTI1IiByPSIxLjUiIGZpbGw9IiM4YWZmZmYiIG9wYWNpdHk9IjAuNiIvPgogIDwvZz4KICAKICA8IS0tIFBvaXNvbiBwYXJ0aWNsZXMgLS0+CiAgPGcgZmlsbD0iIzJhOTg5MCIgb3BhY2l0eT0iMC40Ij4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iODAiIHI9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjE0MCIgY3k9IjkwIiByPSIxLjUiLz4KICAgIDxjaXJjbGUgY3g9IjE0NSIgY3k9IjE0NSIgcj0iMSIvPgogICAgPGNpcmNsZSBjeD0iNTUiIGN5PSIxNTAiIHI9IjEiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzJhOTg5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPuidjuWtkOeyvjwvdGV4dD4KICAKICA8ZyBmaWxsPSIjMmE5ODkwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "zhizhujing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNwaWRlckJnIiBjeD0iNTAlIiBjeT0iNDAlIiByPSI1NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMmExYTI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMTgwYTE0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzA4MDQwYSIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ic3BpZGVyU2tpbiIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZDhjMGQwIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjYTg4ODk4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzc4NTg2OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCNzcGlkZXJCZykiIHN0cm9rZT0iIzg4NTBjMCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNTgzMDkwIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gU3BpZGVyIERlbW9uIC0gc2VkdWN0aXZlIGZlbWFsZSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDc1KSI+CiAgICA8IS0tIEhhaXIgKGRhcmsgcHVycGxlKSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIwLC0xNSBRIC0yOCwtNSAtMjUsMTAgUSAtMjIsMCAtMTgsLTggWiIgZmlsbD0iIzI4MTAzYSIvPgogICAgPHBhdGggZD0iTSAyMCwtMTUgUSAyOCwtNSAyNSwxMCBRIDIyLDAgMTgsLTggWiIgZmlsbD0iIzI4MTAzYSIvPgogICAgPCEtLSBGYWNlIC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIwIiByeD0iMjAiIHJ5PSIyNCIgZmlsbD0idXJsKCNzcGlkZXJTa2luKSIgc3Ryb2tlPSIjNzg1ODY4IiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBNdWx0aXBsZSBleWVzIChzcGlkZXIgZmVhdHVyZSkgLS0+CiAgICA8IS0tIE1haW4gZXllcyAtLT4KICAgIDxlbGxpcHNlIGN4PSItOCIgY3k9Ii0zIiByeD0iNCIgcnk9IjUiIGZpbGw9IiMxYTBhMTQiLz4KICAgIDxlbGxpcHNlIGN4PSI4IiBjeT0iLTMiIHJ4PSI0IiByeT0iNSIgZmlsbD0iIzFhMGExNCIvPgogICAgPGNpcmNsZSBjeD0iLTgiIGN5PSItMyIgcj0iMiIgZmlsbD0iIzg4NTBjMCIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9Ii0zIiByPSIyIiBmaWxsPSIjODg1MGMwIi8+CiAgICA8IS0tIEV4dHJhIHNtYWxsIGV5ZXMgLS0+CiAgICA8Y2lyY2xlIGN4PSItMTIiIGN5PSItOCIgcj0iMS41IiBmaWxsPSIjODg1MGMwIiBvcGFjaXR5PSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iLTgiIHI9IjEuNSIgZmlsbD0iIzg4NTBjMCIgb3BhY2l0eT0iMC43Ii8+CiAgICA8Y2lyY2xlIGN4PSItNSIgY3k9Ii0xMCIgcj0iMSIgZmlsbD0iIzg4NTBjMCIgb3BhY2l0eT0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSI1IiBjeT0iLTEwIiByPSIxIiBmaWxsPSIjODg1MGMwIiBvcGFjaXR5PSIwLjUiLz4KICAgIDwhLS0gRXllYnJvd3MgLS0+CiAgICA8cGF0aCBkPSJNIC0xMywtNyBRIC04LC05IC00LC03IiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTBhMTQiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHBhdGggZD0iTSA0LC03IFEgOCwtOSAxMywtNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWEwYTE0IiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDwhLS0gTGlwcyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTQsOCBRIDAsNiA0LDggUSAwLDEwIC00LDggWiIgZmlsbD0iIzg4MzA4MCIgc3Ryb2tlPSIjNTgzMDkwIiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPCEtLSBOb3NlIC0tPgogICAgPHBhdGggZD0iTSAwLC0yIEwgLTEsNCBMIDIsNCBaIiBmaWxsPSIjYTg4ODk4IiBvcGFjaXR5PSIwLjMiLz4KICA8L2c+CiAgCiAgPCEtLSBQdXJwbGUgcm9iZXMgd2l0aCB3ZWIgcGF0dGVybiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDExNSkiPgogICAgPHBhdGggZD0iTSAtMjUsMCBRIDAsOCAyNSwwIEwgMzAsMzUgUSAwLDQ1IC0zMCwzNSBaIiBmaWxsPSIjNDgyODY4IiBzdHJva2U9IiMyODEwM2EiIHN0cm9rZS13aWR0aD0iMC44IiBvcGFjaXR5PSIwLjkiLz4KICAgIDwhLS0gU3BpZGVyIHdlYiBwYXR0ZXJuIC0tPgogICAgPGcgb3BhY2l0eT0iMC4zIiBzdHJva2U9IiNiODkwZDgiIHN0cm9rZS13aWR0aD0iMC40IiBmaWxsPSJub25lIj4KICAgICAgPGxpbmUgeDE9IjAiIHkxPSI1IiB4Mj0iMCIgeTI9IjM1Ii8+CiAgICAgIDxsaW5lIHgxPSItMTUiIHkxPSIxMCIgeDI9IjE1IiB5Mj0iMzAiLz4KICAgICAgPGxpbmUgeDE9IjE1IiB5MT0iMTAiIHgyPSItMTUiIHkyPSIzMCIvPgogICAgICA8cGF0aCBkPSJNIC04LDE1IFEgMCwxMiA4LDE1Ii8+CiAgICAgIDxwYXRoIGQ9Ik0gLTEwLDI1IFEgMCwyMiAxMCwyNSIvPgogICAgPC9nPgogIDwvZz4KICAKICA8IS0tIFNwaWRlciBsZWdzIChkZWNvcmF0aXZlKSAtLT4KICA8ZyBzdHJva2U9IiM3ODU4NjgiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBvcGFjaXR5PSIwLjUiPgogICAgPHBhdGggZD0iTSA1NSw5MCBRIDQ4LDg1IDQ1LDgwIFEgNDIsNzUgNDAsNzIiLz4KICAgIDxwYXRoIGQ9Ik0gMTQ1LDkwIFEgMTUyLDg1IDE1NSw4MCBRIDE1OCw3NSAxNjAsNzIiLz4KICAgIDxwYXRoIGQ9Ik0gNTgsMTMwIFEgNTAsMTM1IDQ4LDE0MCBRIDQ1LDE0NSA0MywxNDgiLz4KICAgIDxwYXRoIGQ9Ik0gMTQyLDEzMCBRIDE1MCwxMzUgMTUyLDE0MCBRIDE1NSwxNDUgMTU3LDE0OCIvPgogIDwvZz4KICAKICA8IS0tIFNpbGsgdGhyZWFkcyAtLT4KICA8ZyBzdHJva2U9IiNiODkwZDgiIHN0cm9rZS13aWR0aD0iMC4zIiBvcGFjaXR5PSIwLjMiPgogICAgPGxpbmUgeDE9IjYwIiB5MT0iNjAiIHgyPSIxNDAiIHkyPSI2MCIvPgogICAgPGxpbmUgeDE9IjUwIiB5MT0iMTAwIiB4Mj0iMTUwIiB5Mj0iMTAwIi8+CiAgICA8bGluZSB4MT0iNTUiIHkxPSIxNDAiIHgyPSIxNDUiIHkyPSIxNDAiLz4KICA8L2c+CiAgCiAgPHRleHQgeD0iMTAwIiB5PSIxODIiIGZvbnQtZmFtaWx5PSJzZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzg4NTBjMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiPuicmOibm+eyvjwvdGV4dD4KICAKICA8ZyBmaWxsPSIjODg1MGMwIiBvcGFjaXR5PSIwLjUiPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTkyIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSI4IiBjeT0iMTAwIiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIxMDAiIHI9IjIiLz4KICA8L2c+Cjwvc3ZnPg==",
+  "zhubajie":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJhamllQmciIGN4PSI1MCUiIGN5PSI0MCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyYTFhMTQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiMxYTBlMDgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMGEwNDAyIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJpcm9uQXJtb3IiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzZhNjA1OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzRhNDAzOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyYTIwMTgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJha2VHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzlhOTA4OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzZhNjA1OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzYTMwMjgiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIAogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTYiIGZpbGw9InVybCgjYmFqaWVCZykiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNWE0ODI4IiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1kYXNoYXJyYXk9IjQsMyIvPgogIAogIDwhLS0gUGlnIGhlYWQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA3NSkiPgogICAgPCEtLSBIZWFkIHNoYXBlICh3aWRlciwgcm91bmRlcikgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyOCIgcnk9IjI0IiBmaWxsPSIjYzhhODkwIiBzdHJva2U9IiM4YTYwNDgiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8IS0tIFNub3V0IC0tPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSI4IiByeD0iMTIiIHJ5PSI4IiBmaWxsPSIjZDhiOGEwIiBzdHJva2U9IiM4YTYwNDgiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIE5vc3RyaWxzIC0tPgogICAgPGVsbGlwc2UgY3g9Ii00IiBjeT0iOCIgcng9IjEuNSIgcnk9IjIiIGZpbGw9IiM1YTMwMjAiLz4KICAgIDxlbGxpcHNlIGN4PSI0IiBjeT0iOCIgcng9IjEuNSIgcnk9IjIiIGZpbGw9IiM1YTMwMjAiLz4KICAgIDwhLS0gRXllcyAoc21hbGwsIGZpZXJjZSkgLS0+CiAgICA8ZWxsaXBzZSBjeD0iLTkiIGN5PSItNSIgcng9IjMuNSIgcnk9IjQiIGZpbGw9IiMxYTBhMDQiLz4KICAgIDxlbGxpcHNlIGN4PSI5IiBjeT0iLTUiIHJ4PSIzLjUiIHJ5PSI0IiBmaWxsPSIjMWEwYTA0Ii8+CiAgICA8Y2lyY2xlIGN4PSItOCIgY3k9Ii01IiByPSIxLjUiIGZpbGw9IiNjODQwNDAiLz4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iLTUiIHI9IjEuNSIgZmlsbD0iI2M4NDA0MCIvPgogICAgPCEtLSBFeWVicm93cyAodGhpY2ssIGFuZ3J5KSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTE0LC0xMCBMIC01LC0xMiIgc3Ryb2tlPSIjM2ExODEwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gNSwtMTIgTCAxNCwtMTAiIHN0cm9rZT0iIzNhMTgxMCIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgICA8IS0tIExhcmdlIGVhcnMgLS0+CiAgICA8cGF0aCBkPSJNIC0yOCwtNSBRIC0zOCwtOCAtMzYsNSBRIC0zMCwzIC0yNSwwIFoiIGZpbGw9IiNjOGE4OTAiIHN0cm9rZT0iIzhhNjA0OCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMjgsLTUgUSAzOCwtOCAzNiw1IFEgMzAsMyAyNSwwIFoiIGZpbGw9IiNjOGE4OTAiIHN0cm9rZT0iIzhhNjA0OCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gVHVza3MgLS0+CiAgICA8cGF0aCBkPSJNIC04LDE2IFEgLTEwLDIyIC03LDI0IEwgLTUsMjAgWiIgZmlsbD0iI2U4ZTBkMCIgc3Ryb2tlPSIjOGE2MDQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPHBhdGggZD0iTSA4LDE2IFEgMTAsMjIgNywyNCBMIDUsMjAgWiIgZmlsbD0iI2U4ZTBkMCIgc3Ryb2tlPSIjOGE2MDQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogIDwvZz4KICAKICA8IS0tIERhcmsgaXJvbiBhcm1vciAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDExNSkiPgogICAgPGVsbGlwc2UgY3g9Ii0yMCIgY3k9IjAiIHJ4PSIxNCIgcnk9IjkiIGZpbGw9InVybCgjaXJvbkFybW9yKSIgc3Ryb2tlPSIjM2EzMDI4IiBzdHJva2Utd2lkdGg9IjAuOCIvPgogICAgPGVsbGlwc2UgY3g9IjIwIiBjeT0iMCIgcng9IjE0IiByeT0iOSIgZmlsbD0idXJsKCNpcm9uQXJtb3IpIiBzdHJva2U9IiMzYTMwMjgiIHN0cm9rZS13aWR0aD0iMC44Ii8+CiAgICA8cGF0aCBkPSJNIC0xNiw1IFEgMCwxMiAxNiw1IEwgMjAsMzAgUSAwLDM1IC0yMCwzMCBaIiBmaWxsPSJ1cmwoI2lyb25Bcm1vcikiIHN0cm9rZT0iIzNhMzAyOCIgc3Ryb2tlLXdpZHRoPSIwLjgiIG9wYWNpdHk9IjAuOSIvPgogICAgPCEtLSBBcm1vciBzdHVkcyAtLT4KICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9IjE1IiByPSIxLjUiIGZpbGw9IiM4YTc4NDgiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIxOCIgcj0iMS41IiBmaWxsPSIjOGE3ODQ4Ii8+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjE1IiByPSIxLjUiIGZpbGw9IiM4YTc4NDgiLz4KICA8L2c+CiAgCiAgPCEtLSBOaW5lLXRvb3RoIHJha2UgKOS5nem9v+mSieiAmSkgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQwLCAxMDUpIHJvdGF0ZSgyNSkiPgogICAgPCEtLSBIYW5kbGUgLS0+CiAgICA8cmVjdCB4PSItMSIgeT0iLTIwIiB3aWR0aD0iMiIgaGVpZ2h0PSI1NSIgZmlsbD0iIzZhNDgyMCIgc3Ryb2tlPSIjM2EyMDEwIiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPCEtLSBSYWtlIGhlYWQgLS0+CiAgICA8cmVjdCB4PSItOCIgeT0iLTI1IiB3aWR0aD0iMTYiIGhlaWdodD0iNiIgZmlsbD0idXJsKCNyYWtlR3JhZCkiIHN0cm9rZT0iIzNhMzAyOCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz4KICAgIDwhLS0gTmluZSB0ZWV0aCAtLT4KICAgIDxyZWN0IHg9Ii03IiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgICA8cmVjdCB4PSItNSIgeT0iLTIyIiB3aWR0aD0iMSIgaGVpZ2h0PSI2IiBmaWxsPSJ1cmwoI3Jha2VHcmFkKSIvPgogICAgPHJlY3QgeD0iLTMiIHk9Ii0yMiIgd2lkdGg9IjEiIGhlaWdodD0iNiIgZmlsbD0idXJsKCNyYWtlR3JhZCkiLz4KICAgIDxyZWN0IHg9Ii0xIiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgICA8cmVjdCB4PSIxIiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgICA8cmVjdCB4PSIzIiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgICA8cmVjdCB4PSI1IiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgICA8cmVjdCB4PSI3IiB5PSItMjIiIHdpZHRoPSIxIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjcmFrZUdyYWQpIi8+CiAgPC9nPgogIAogIDx0ZXh0IHg9IjEwMCIgeT0iMTgwIiBmb250LWZhbWlseT0ic2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM4YTc4NDgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj7njKrlhavmiJI8L3RleHQ+CiAgCiAgPGcgZmlsbD0iIzhhNzg0OCIgb3BhY2l0eT0iMC41Ij4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjgiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjE5MiIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9IjEwMCIgcj0iMiIvPgogICAgPGNpcmNsZSBjeD0iMTkyIiBjeT0iMTAwIiByPSIyIi8+CiAgPC9nPgo8L3N2Zz4=",
+};
+
+function getCharSvg(name,charKey){if(charKey&&CHAR_SVG[charKey]&&CHAR_SVG_DFU[CHAR_SVG[charKey]])return CHAR_SVG_DFU[CHAR_SVG[charKey]];if(name&&BOSS_SVG[name]&&CHAR_SVG_DFU[BOSS_SVG[name]])return CHAR_SVG_DFU[BOSS_SVG[name]];return null}
+
+// ==================== 音效系统 ====================
+const SND={ctx:null,enabled:true,
+init(){if(!this.ctx){try{this.ctx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){this.enabled=false}}},
+tone(freq,dur,type,vol){if(!this.enabled)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.value=freq;g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+(dur||.15));o.stop(this.ctx.currentTime+(dur||.15))},
+seq(notes){notes.forEach(n=>setTimeout(()=>this.tone(n[0],n[1],n[2],n[3]),n[4]||0))},
+play(){this.tone(440,.1,"square",.06)},
+draw(){this.tone(330,.08,"triangle",.05)},
+damage(){this.seq([[150,.2,"sawtooth",.1,0],[100,.15,"sawtooth",.08,80]])},
+heal(){this.seq([[523,.12,"sine",.06,0],[659,.12,"sine",.06,100]])},
+skill(){this.seq([[440,.08,"square",.05,0],[587,.08,"square",.05,60],[740,.15,"square",.06,120]])},
+turn(){this.tone(220,.2,"sine",.05)},
+equip(){this.tone(500,.1,"triangle",.06)},
+victory(){this.seq([[523,.15,"sine",.07,0],[659,.15,"sine",.07,150],[784,.15,"sine",.07,300],[1047,.3,"sine",.08,450]])},
+defeat(){this.seq([[330,.2,"sine",.06,0],[262,.2,"sine",.06,200],[196,.4,"sine",.05,400]])},
+flip(){this.tone(600,.05,"square",.04)},
+};
+// ==================== 动画系统 ====================
+function fxDamage(side){const el=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(el){el.classList.add("fx-damage");setTimeout(()=>el.classList.remove("fx-damage"),400)}const ov=document.getElementById("fx-overlay");if(ov){ov.classList.add("fx-damage");setTimeout(()=>ov.classList.remove("fx-damage"),400)}}
+function fxHeal(side){const el=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(el){el.classList.add("fx-heal");setTimeout(()=>el.classList.remove("fx-heal"),600)}}
+function fxShake(){const app=document.getElementById("app");if(app){app.classList.add("fx-shake");setTimeout(()=>app.classList.remove("fx-shake"),400)}}
+function fxSkill(side){const el=document.getElementById(side==="enemy"?"enemy-avatar":"player-avatar");if(el){el.classList.add("fx-skill");setTimeout(()=>el.classList.remove("fx-skill"),600)}}
+function fxHpChange(side){const el=side==="enemy"?document.getElementById("enemy-hptext"):document.getElementById("player-hptext");if(el){el.classList.add("fx-hpchange");setTimeout(()=>el.classList.remove("fx-hpchange"),300)}}
+function fxTurn(side){const el=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(el){el.classList.add("fx-turn");setTimeout(()=>el.classList.remove("fx-turn"),800)}}
+function fxFadeIn(el){if(el){el.classList.add("fx-fadein");setTimeout(()=>el.classList.remove("fx-fadein"),300)}}
+function fxEnemyEnter(){const el=document.querySelector(".enemy-area");if(el){el.classList.add("fx-enemy-enter");setTimeout(()=>el.classList.remove("fx-enemy-enter"),500)}}
+function fxGlowBorder(el){if(el){el.classList.add("fx-glow-border");setTimeout(()=>el.classList.remove("fx-glow-border"),1000)}}
+function fxDmgFloat(side,amount){const area=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(!area)return;const f=document.createElement("div");f.className="dmg-float"+(amount<0?" heal":"");f.textContent=(amount>0?"-":"+")+Math.abs(amount);area.style.position="relative";area.appendChild(f);setTimeout(()=>f.remove(),1000)}
+function fxTargetHint(){const el=document.getElementById("enemy-avatar");if(el){el.classList.add("target-hint");setTimeout(()=>el.classList.remove("target-hint"),3000)}}
+function fxBossEntry(){const el=document.getElementById("enemy-avatar");if(el){el.classList.add("boss-entry");setTimeout(()=>el.classList.remove("boss-entry"),800)}}
+function fxFlipReveal(el){if(el){el.classList.add("flip-reveal");setTimeout(()=>el.classList.remove("flip-reveal"),500)}}
+
+// ====== 战场出牌展示 ======
+function getCardClass(card){
+if(!card)return"card";
+if(card.type==="basic")return"card basic-"+(card.basicSubtype||card.key);
+if(card.type==="equip")return"card equip-"+(card.equipSubtype||"weapon");
+return"card "+card.type;
+}
+function showFieldCard(card,side){
+const bf=document.getElementById("battlefield");if(!bf||!card)return;
+const d=document.createElement("div");
+d.className="field-card "+(side==="player"?"from-player":"from-enemy");
+const cls=getCardClass(card);
+d.classList.add(cls.replace("card ",""));
+const suitRed=isRed(card.suit);
+d.innerHTML=`<div class="card-corner ${suitRed?'red':'black'}" style="font-size:.5em">${card.suit||""}${card.rank||""}</div><div style="flex:1;display:flex;align-items:center">${card.name}</div>`;
+const label=document.createElement("div");
+label.className="field-label";
+label.textContent=side==="player"?"我方":"敌方";
+d.appendChild(label);
+bf.appendChild(d);
+return d;
+}
+function clearFieldCards(){const bf=document.getElementById("battlefield");if(bf)bf.innerHTML=""}
+function removeFieldCard(el){if(el){el.style.transition="all .3s";el.style.opacity="0";el.style.transform="scale(.3)";setTimeout(()=>el.remove(),300)}}
+
+// ====== 回合阶段指示器 ======
+function setPhase(text,type){
+const el=document.getElementById("phase-ind");
+if(el){el.textContent=text;el.className="phase-indicator"+(type?" "+type:"")}
+}
+
+// ====== 目标选择高亮 ======
+function setTargetable(on){
+const el=document.getElementById("enemy-area");if(!el)return;
+if(on)el.classList.add("targetable");else el.classList.remove("targetable");
+const av=document.getElementById("enemy-avatar");if(av){
+if(on)av.classList.add("targetable");else av.classList.remove("targetable")
+}
+}
+
+// ==================== 卡牌定义 ====================
+const SUITS=['♠','♥','♣','♦'];
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const isRed=s=>s==='♥'||s==='♦';
+
+const CARD_DEF={
+sha:{n:"降妖",t:"basic",st:"sha",d:"对目标造成1点伤害"},
+shan:{n:"遁法",t:"basic",st:"shan",d:"抵消一次降妖"},
+tao:{n:"蟠桃",t:"basic",st:"tao",d:"回复1点体力"},
+juedou:{n:"斗法",t:"trick",d:"交替出降妖，先无者受伤"},
+nanman:{n:"群妖来袭",t:"trick",d:"目标须出降妖或受1伤"},
+wanjian:{n:"万箭穿云",t:"trick",d:"目标须出遁法或受1伤"},
+guohe:{n:"拆桥断路",t:"trick",d:"弃置目标一张牌"},
+shunshou:{n:"顺手牵宝",t:"trick",d:"获得目标一张牌"},
+wuzhong:{n:"神通自现",t:"trick",d:"摸两张牌"},
+wugu:{n:"仙果普降",t:"trick",d:"每人摸一张牌"},
+taoyuan:{n:"结义同行",t:"trick",d:"所有人回复1体力"},
+jiedao:{n:"借宝降妖",t:"trick",d:"弃目标武器或受1伤"},
+wuxie:{n:"护身法",t:"trick",d:"抵消一张锦囊"},
+lebu:{n:"迷心劫",t:"delay",d:"判定非红桃跳过出牌"},
+shandian:{n:"天雷劫",t:"delay",d:"判定黑桃2-9受2伤"},
+crossbow:{n:"连环火铳",t:"equip",st:"weapon",r:1,d:"可出多张降妖"},
+cixiong:{n:"雌雄双剑",t:"equip",st:"weapon",r:2,d:"出降妖时目标须弃牌"},
+hanbing:{n:"寒冰剑",t:"equip",st:"weapon",r:2,d:"伤害改为弃两张牌"},
+qinggang:{n:"青釭剑",t:"equip",st:"weapon",r:2,d:"遁法无效"},
+zhangba:{n:"丈八蛇矛",t:"equip",st:"weapon",r:3,d:"两牌当降妖"},
+guanshi:{n:"贯石斧",t:"equip",st:"weapon",r:3,d:"弃两牌强制命中"},
+qinglong:{n:"青龙偃月刀",t:"equip",st:"weapon",r:3,d:"被闪后可再出降妖"},
+fangtian:{n:"方天画戟",t:"equip",st:"weapon",r:4,d:"仅剩此武器时多目标"},
+qilin:{n:"麒麟弓",t:"equip",st:"weapon",r:5,d:"伤害时弃目标坐骑"},
+bagua:{n:"八卦阵",t:"equip",st:"armor",d:"判定红色视为遁法"},
+renwang:{n:"玄铁盾",t:"equip",st:"armor",d:"黑色降妖无效"},
+jiahorse:{n:"祥云",t:"equip",st:"mount",d:"他人到你的距离+1"},
+jianhorse:{n:"筋斗云",t:"equip",st:"mount",d:"你到他人距离-1"},
+};
+
+// 卡牌花色分配表 [suit, rank] pairs
+const CARD_SUITS={
+sha:[['♠','7'],['♠','8'],['♠','8'],['♠','9'],['♠','9'],['♠','10'],['♠','10'],['♠','J'],['♠','J'],['♥','Q'],['♥','K'],['♥','10'],['♥','J'],['♣','2'],['♣','3'],['♣','4'],['♣','5'],['♣','6'],['♣','7'],['♣','8'],['♣','8'],['♣','9'],['♦','9'],['♦','10'],['♦','J'],['♦','J'],['♦','Q'],['♦','K'],['♦','6'],['♦','7']],
+shan:[['♥','2'],['♥','2'],['♥','3'],['♥','4'],['♥','5'],['♥','6'],['♥','7'],['♥','8'],['♦','9'],['♦','10'],['♦','J'],['♦','2'],['♦','3'],['♦','4'],['♦','5']],
+tao:[['♥','3'],['♥','4'],['♥','5'],['♥','6'],['♦','Q'],['♦','K'],['♦','3'],['♦','4']],
+juedou:[['♠','A'],['♥','A'],['♣','A']],
+nanman:[['♠','7'],['♣','K'],['♣','7']],
+wanjian:[['♥','A']],
+guohe:[['♠','3'],['♠','4'],['♥','Q'],['♣','Q'],['♣','3'],['♦','4']],
+shunshou:[['♠','3'],['♠','4'],['♥','J'],['♣','3'],['♦','4']],
+wuzhong:[['♥','7'],['♥','8'],['♦','9'],['♦','J']],
+wugu:[['♥','3'],['♦','4']],
+taoyuan:[['♥','A']],
+jiedao:[['♣','Q'],['♣','K']],
+wuxie:[['♠','J'],['♠','K'],['♥','J'],['♥','Q'],['♣','K'],['♣','A'],['♦','A']],
+lebu:[['♠','6'],['♥','6'],['♣','6']],
+shandian:[['♠','A'],['♠','5']],
+crossbow:[['♣','A'],['♦','A']],
+cixiong:[['♠','2'],['♣','2']],
+hanbing:[['♠','2']],
+qinggang:[['♠','6'],['♣','6']],
+zhangba:[['♠','Q']],
+guanshi:[['♣','5']],
+qinglong:[['♠','5'],['♣','5']],
+fangtian:[['♦','Q']],
+qilin:[['♥','5']],
+bagua:[['♠','2'],['♣','2']],
+renwang:[['♠','2'],['♣','2']],
+jiahorse:[['♣','5']],
+jianhorse:[['♠','5'],['♦','K']],
+};
+
+const CARD_COUNTS={sha:30,shan:15,tao:8,juedou:3,nanman:3,wanjian:1,guohe:6,shunshou:5,wuzhong:4,wugu:2,taoyuan:1,jiedao:2,wuxie:7,lebu:3,shandian:2,crossbow:2,cixiong:2,hanbing:1,qinggang:2,zhangba:1,guanshi:1,qinglong:2,fangtian:1,qilin:1,bagua:2,renwang:2,jiahorse:1,jianhorse:2};
+
+// ==================== 构建牌堆 ====================
+function buildDeck(){
+const deck=[];let id=0;
+for(const[key,def]of Object.entries(CARD_DEF)){
+const suits=CARD_SUITS[key]||[];
+const count=CARD_COUNTS[key]||suits.length;
+for(let i=0;i<count;i++){
+const sr=suits[i%suits.length];
+const suit=sr[0],rank=sr[1];
+const red=isRed(suit);
+let cls=def.t;
+if(def.t==='basic')cls='basic-'+def.st;
+if(def.t==='equip')cls='equip-'+def.st;
+deck.push({id:id++,key:key,name:def.n,type:def.t,basicSubtype:def.st||null,equipSubtype:def.st||null,range:def.r||null,suit:suit,rank:rank,red:red,desc:def.d,cls:cls});
+}
+}
+return shuffle(deck);
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ==================== 角色定义 ====================
+const CHARS={
+wukong:{name:"孙悟空",maxHp:4,skills:[{key:"huoyan",name:"火眼金睛",desc:"查看对手手牌",perTurn:1},{key:"bian",name:"七十二变",desc:"将一张手牌当任意基本牌",perTurn:1}]},
+bajie:{name:"猪八戒",maxHp:4,skills:[{key:"tianpeng",name:"天蓬之力",desc:"红色牌当降妖",perTurn:0},{key:"tanshi",name:"贪食",desc:"回合结束有蟠桃则额外回1血",perTurn:1}]},
+shaseng:{name:"沙和尚",maxHp:4,skills:[{key:"juanlian",name:"卷帘之盾",desc:"黑色牌当遁法",perTurn:0},{key:"liusha",name:"流沙护体",desc:"受伤弃1牌抵1伤",perTurn:1}]},
+};
+
+// ==================== 八十一难数据 ====================
+const L81_NAMES=["大闹天宫","金蝉遭贬","出胎几杀","满月抛江","寻亲报冤","出城逢虎","落坑折从","双叉岭上","两界山头","陡涧换马","夜被火烧","失却袈裟","收降八戒","黄风怪阻","请求灵吉","流沙难渡","收得沙僧","四圣显化","五庄观中","难活人参","贬退心猿","黑松林失散","宝象国捎书","金銮殿变虎","平顶山逢魔","莲花洞高悬","乌鸡国救主","被魔化身","号山逢怪","风摄圣僧","心猿遭害","请圣降妖","黑河沉没","搬运车迟","大赌输赢","祛道兴僧","路逢大水","身落天河","鱼篮现身","金兜山遇怪","普天神难伏","问佛根源","吃水遭毒","西梁国留婚","琵琶洞受苦","再贬心猿","难辨猕猴","路阻火焰山","求取芭蕉扇","收缚魔王","赛城扫塔","取宝救僧","棘林吟咏","小雷音遇难","诸天神遭困","稀柿衕秽阻","朱紫国行医","拯救疲癃","降妖取后","七情迷没","多目遭伤","路阻狮驼","怪分三色","城里遇灾","请佛收魔","比丘救子","辨认真邪","松林救怪","僧房卧病","无底洞遭困","灭法国难行","隐雾山遇魔","凤仙郡求雨","失落兵器","会庆钉钯","竹节山遭难","玄英洞受苦","赶捉犀牛","天竺招婚","铜台府监禁","凌云渡脱胎","通天河遇鼋湿经书"];
+
+const PLOT_LEVELS=[1,2,3,4,16];
+const LIGHT_LEVELS=[5,6,7,8,9,10,21,29,36,56,57,67,68,74];
+const EVENT_LEVELS=[14,17,19,22,30,31,35,38,41,42,43,45,52,55,64,70,72,79];
+const FINALE_LEVELS=[80,81];
+
+function levelType(n){
+if(n===0)return"tutorial";
+if(PLOT_LEVELS.includes(n))return"plot";
+if(FINALE_LEVELS.includes(n))return"finale";
+if(EVENT_LEVELS.includes(n))return"event";
+if(LIGHT_LEVELS.includes(n))return"light";
+return"boss";
+}
+
+// 关键Boss定义
+const KEY_BOSSES={
+0:{name:"如来佛祖",hp:99,draw:5,skills:["fashou"],tutorial:true},
+11:{name:"黑熊精",hp:5,draw:2,skills:["heifeng"]},
+12:{name:"猪八戒",hp:6,draw:2,skills:["tianpeng_e"],join:"bajie",equip:"guanshi"},
+13:{name:"黄风怪",hp:5,draw:2,skills:["huangfeng"]},
+15:{name:"沙和尚",hp:6,draw:2,skills:["juanlian_e"],join:"shaseng"},
+18:{name:"镇元大仙",hp:6,draw:2,skills:["changsheng"]},
+20:{name:"白骨精",hp:5,draw:2,skills:["huapo"]},
+23:{name:"黄袍怪",hp:6,draw:2,skills:[]},
+24:{name:"金角大王",hp:6,draw:3,skills:["zijin"]},
+25:{name:"银角大王",hp:6,draw:3,skills:["yinyin"]},
+26:{name:"青毛狮子",hp:6,draw:2,skills:["shizi"]},
+27:{name:"假国王",hp:5,draw:2,skills:["huanshen"]},
+28:{name:"红孩儿",hp:6,draw:3,skills:["sanmei","huoyun"]},
+32:{name:"鼍龙",hp:6,draw:2,skills:["tuolong"]},
+33:{name:"虎力大仙",hp:6,draw:2,skills:["huli"]},
+34:{name:"鹿力大仙",hp:6,draw:2,skills:["luli"]},
+37:{name:"灵感大王",hp:7,draw:3,skills:["tongtian"]},
+39:{name:"独角兕大王",hp:7,draw:3,skills:["jingang"]},
+40:{name:"独角兕大王",hp:8,draw:3,skills:["jingang"],equip:"renwang"},
+44:{name:"蝎子精",hp:6,draw:2,skills:["madu"]},
+46:{name:"六耳猕猴",hp:4,draw:2,skills:["mirror"]},
+47:{name:"牛魔王",hp:8,draw:3,skills:["manniu"]},
+48:{name:"铁扇公主",hp:6,draw:2,skills:["tieshan"]},
+49:{name:"牛魔王·现原形",hp:8,draw:4,skills:["manniu"],equip:"crossbow"},
+50:{name:"九头虫",hp:7,draw:3,skills:["jiutou"]},
+51:{name:"九头虫·二阶",hp:7,draw:3,skills:["jiutou","feixiang"]},
+53:{name:"黄眉大王",hp:8,draw:3,skills:["renzhongdai","jingnao"],equip:"renwang"},
+54:{name:"黄眉大王·强化",hp:8,draw:4,skills:["renzhongdai2","jingnao"],equip:"renwang"},
+58:{name:"赛太岁",hp:7,draw:3,skills:["saitaisui"]},
+59:{name:"蜘蛛精",hp:6,draw:2,skills:["zhisi"]},
+60:{name:"多目怪",hp:7,draw:3,skills:["duomu"]},
+61:{name:"青狮精",hp:7,draw:3,skills:["tunyun"]},
+62:{name:"白象精",hp:7,draw:3,skills:["juanbi"]},
+63:{name:"狮驼三魔王",hp:12,draw:3,skills:["sanmo","yinyangping"],equip:"fangtian"},
+65:{name:"白鹿精",hp:7,draw:3,skills:["bailu"]},
+66:{name:"白鹿精·二阶",hp:7,draw:3,skills:["bailu","shouzhang"]},
+69:{name:"金毛犼",hp:7,draw:3,skills:["jinmao"]},
+71:{name:"豹子精",hp:7,draw:3,skills:["baozi"]},
+73:{name:"黄狮精",hp:7,draw:3,skills:["huangshi"]},
+75:{name:"九灵元圣",hp:9,draw:4,skills:["jiutou2","shengwei"]},
+76:{name:"犀牛精",hp:8,draw:3,skills:["xiniu"]},
+77:{name:"三犀大王",hp:8,draw:3,skills:["xiniu","sanxi"]},
+78:{name:"玉兔精",hp:7,draw:3,skills:["daoyao","yuehua"]},
+81:{name:"老鼋",hp:10,draw:4,skills:["tongtian2","fanfu","changshou2"]},
+};
+
+const GENERIC_BOSS_NAMES=["妖王","魔头","山精","水怪","夜叉","罗刹","鬼将","妖道","魔修","邪灵","蛮妖","毒蛟"];
+
+function getBoss(n){
+if(KEY_BOSSES[n])return KEY_BOSSES[n];
+const t=levelType(n);
+if(t!=="boss"&&t!=="light"&&t!=="finale")return null;
+if(t==="light")return{name:"小妖",hp:3+Math.floor(n/20),draw:2,skills:[]};
+const hp=Math.min(4+Math.floor(n/8),8);
+const draw=n>40?3:2;
+const name=GENERIC_BOSS_NAMES[n%GENERIC_BOSS_NAMES.length]+"·第"+n+"难";
+const skills=[];
+if(n>=20)skills.push("generic1");
+if(n>=40)skills.push("generic2");
+return{name,hp,draw,skills};
+}
+
+// 剧情文本
+const STORIES={
+0:"孙悟空大闹天宫，偷蟠桃、盗仙丹、练就火眼金睛。十万天兵奈何不了他，玉帝请来如来佛祖……",
+1:"如来座下二弟子金蝉子因轻慢佛法，被贬下凡尘，转世投胎为唐僧。",
+2:"唐僧之母温娇产下婴儿，贼人刘洪杀其父陈光蕊，欲害此子。",
+3:"满月之日，温娇将婴儿放入木盆，顺江漂流，被金山寺法明长老救起。",
+4:"唐僧十八岁得知身世，寻至洪州，巧遇祖母，报了杀父之仇。",
+5:"唐僧出长安城门，逢双叉岭寅将军（虎精），随从被食。",
+6:"唐僧落入坑中，随从折损，幸遇太白金星指引脱险。",
+7:"双叉岭上，两虎精拦路，猎户刘伯钦护送过岭。",
+8:"两界山头，虎狼当道。悟空金箍棒开路，护师父翻山越岭。",
+9:"鹰愁涧，小白龙吃了唐僧的马，观音点化，白龙化为白马为坐骑。",
+10:"观音院失火，黑熊精趁乱偷走袈裟。",
+11:"黑熊精据守黑风洞，悟空前去夺回袈裟。",
+12:"高老庄，猪八戒强占高翠兰，悟空降伏之，收为二徒弟。",
+13:"黄风岭，黄风怪三昧神风刮瞎悟空双眼。",
+14:"灵吉菩萨前来降伏黄风怪，赐悟空定风丹。",
+15:"流沙河，沙和尚阻路，水战难胜。",
+16:"沙悟净归顺唐僧，收为三徒弟，师徒齐备。",
+17:"四圣试禅心，黎山老母等化作母女试探师徒道心。",
+18:"五庄观，悟空偷打人参果，推倒果树，镇元大仙怒擒师徒。",
+19:"悟空求方医治人参果树，观音甘露复活仙树。",
+20:"白骨精三变戏弄唐僧，悟空三打白骨精，却被唐僧逐走。",
+21:"黑松林，唐僧误入黄袍怪洞府，与随从失散。",
+22:"宝象国，唐僧被擒，百花公主托他带信求救。",
+23:"黄袍怪将唐僧变为猛虎，朝堂惊变。",
+24:"平顶山，金角大王手持紫金红葫芦拦路。",
+25:"莲花洞，银角大王以幌金绳、紫金铃困住悟空。",
+26:"乌鸡国，妖道篡位三年，真国王被推入井中。",
+27:"妖道变为假国王，悟空识破真相。",
+28:"号山火云洞，红孩儿三昧真火烧退悟空师徒。",
+29:"鼍龙在黑水河摄走唐僧，风浪中圣僧遭难。",
+30:"悟空内心魔障丛生，心猿遭害，道心动摇。",
+31:"悟空请来观音，以净瓶杨柳收伏红孩儿为善财童子。",
+32:"黑水河鼍龙擒唐僧沉于河底，悟空水中难敌。",
+33:"车迟国，虎力大仙与悟空斗法求雨。",
+34:"车迟国，鹿力大仙与悟空赌胜比试。",
+35:"车迟国三妖被除，国王祛道兴僧，佛法重光。",
+36:"路逢通天河大水，无船可渡。",
+37:"灵感大王施法冰封通天河，唐僧落入水中被擒。",
+38:"观音编鱼篮收走灵感大王，乃金鱼精。",
+39:"金兜山，独角兕大王以金刚琢套走悟空兵器。",
+40:"普天神将皆难伏独角兕，悟空求佛问根。",
+41:"如来指明独角兕来历，老君下界收伏。",
+42:"子母河水，唐僧八戒误饮而孕。",
+43:"西梁女国招亲，女王欲留唐僧为夫。",
+44:"琵琶洞，蝎子精以毒刺蜇伤悟空师徒。",
+45:"唐僧再次逐走悟空，心猿被贬。",
+46:"六耳猕猴假冒悟空，真假难辨。",
+47:"火焰山阻路，八百里烈焰冲天。",
+48:"悟空求铁扇公主借芭蕉扇，三调扇不得。",
+49:"牛魔王现原形大战，悟空哪吒合力收伏。",
+50:"祭赛国金光塔，九头虫盗走佛宝舍利。",
+51:"悟空二取佛宝，救出被囚僧人。",
+52:"荆棘岭，树妖化形吟诗论道。",
+53:"小雷音寺，黄眉大王假冒佛祖，人种袋收尽诸天。",
+54:"诸天神将皆困于人种袋，悟空难救。",
+55:"稀柿衕，积年秽物阻塞道路。",
+56:"朱紫国，国王病重求医。",
+57:"赛太岁掠走朱紫国皇后，悟空拯救疲癃。",
+58:"悟空降伏赛太岁，救回皇后。",
+59:"盘丝洞，七只蜘蛛精以蛛丝缠绕师徒。",
+60:"黄花观，多目怪百眼金光伤退悟空。",
+61:"狮驼岭，三大魔王：青狮、白象、大鹏，实力通天。",
+62:"青狮精一口吞下悟空，悟空在腹中大闹。",
+63:"白象精卷鼻攻击，二师兄被擒。",
+64:"如来亲自降临，收伏大鹏金翅雕。",
+65:"比丘国，白鹿精以小儿心肝为药引。",
+66:"南极仙翁降伏白鹿精，辨认真假国丈。",
+67:"松林中救一女妖，僧房中忽染重病。",
+68:"僧房卧病，黑松林妖雾弥漫。",
+69:"无底洞，金毛犼困住唐僧。",
+70:"灭法国欲杀万僧，师徒变化通关。",
+71:"隐雾山，豹子精以分瓣梅花计摄走唐僧。",
+72:"凤仙郡大旱，郡侯冒犯天庭，求雨难矣。",
+73:"玉华州，黄狮精偷走三徒弟兵器。",
+74:"会庆钉钯宴，三徒弟打造新兵器。",
+75:"竹节山，九灵元圣九头齐出，擒拿师徒。",
+76:"玄英洞，三犀牛精逼索香油。",
+77:"悟空赶捉三犀，天兵助力降伏。",
+78:"天竺国公主招亲，玉兔精假冒公主。",
+79:"铜台府地灵县，师徒遭冤入狱。",
+80:"凌云渡，无底船渡河，唐僧脱胎换骨。",
+81:"通天河，老鼋驮师徒渡河，因唐僧失信于老鼋，老鼋将师徒翻入水中，经书浸湿。此为最后一难。",
+};
+
+// 事件选项
+const EVENT_CHOICES={
+14:{title:"请求灵吉",text:"黄风怪的风沙遮天蔽日，灵吉菩萨就在附近。是否请求相助？",choices:[{label:"求助灵吉菩萨",effect:{buff:"lingji",desc:"下一关Boss减2体力"}},{label:"自行解决",effect:{}}]},
+17:{title:"四圣显化",text:"黎山老母等化为母女，欲招师徒为婿。是否经受考验？",choices:[{label:"经受考验",effect:{hp:-1}},{label:"心如止水",effect:{buff:"dingli",desc:"下一关防御+1"}}]},
+19:{title:"难活人参",text:"人参果树被推倒，如何医治？",choices:[{label:"求观音甘露",effect:{buff:"guanyin",desc:"全队回满体力"}},{label:"自行寻找方子",effect:{hp:-1}}]},
+22:{title:"宝象国捎书",text:"百花公主托你带信求救，是否答应？",choices:[{label:"带信救人",effect:{buff:"baohua",desc:"下一关多摸1牌"}},{label:"拒绝带信",effect:{}}]},
+30:{title:"心猿遭害",text:"内心魔障丛生，如何抉择？",choices:[{label:"斩除心魔",effect:{buff:"xinmo1",desc:"下一关攻击+1"}},{label:"忍耐修行",effect:{buff:"xinmo2",desc:"下一关防御+1"}}]},
+31:{title:"请圣降妖",text:"红孩儿三昧真火难挡，请观音降伏。",choices:[{label:"请观音收伏",effect:{buff:"guanyin",desc:"全队回满体力"}},{label:"自行前往",effect:{hp:-1}}]},
+35:{title:"祛道兴僧",text:"车迟国三妖已除，如何处置？",choices:[{label:"祛道兴僧",effect:{buff:"chechi",desc:"下一关Boss减1体力"}},{label:"宽大处理",effect:{}}]},
+38:{title:"鱼篮现身",text:"观音编鱼篮前来收妖。",choices:[{label:"感恩观音",effect:{buff:"guanyin",desc:"全队回满体力"}},{label:"自行收尾",effect:{}}]},
+41:{title:"问佛根源",text:"独角兕大王来历不明，是否求佛问根？",choices:[{label:"问佛根源",effect:{buff:"wenfo",desc:"下一关Boss不使用技能"}},{label:"自行试探",effect:{hp:-1}}]},
+42:{title:"吃水遭毒",text:"子母河水，误饮而孕。如何解？",choices:[{label:"落胎泉水",effect:{buff:"luotai",desc:"下一关开始回复1点体力"}},{label:"忍痛前行",effect:{hp:-1}}]},
+43:{title:"西梁国留婚",text:"女儿国国王欲留唐僧为夫。",choices:[{label:"婉言谢绝",effect:{buff:"liangguo",desc:"下一关多摸2牌"}},{label:"假亲脱身",effect:{}}]},
+45:{title:"再贬心猿",text:"悟空再次被逐，如何抉择？",choices:[{label:"忍耐等待",effect:{buff:"dingli",desc:"下一关防御+1"}},{label:"立即追回",effect:{hp:-1}}]},
+52:{title:"棘林吟咏",text:"荆棘岭树妖邀你吟诗论道。",choices:[{label:"吟诗作别",effect:{buff:"jingji",desc:"下一关多摸1牌"}},{label:"强行通过",effect:{hp:-1}}]},
+55:{title:"稀柿衕秽阻",text:"积年秽物阻塞道路，如何通过？",choices:[{label:"八戒开路",effect:{buff:"xishi",desc:"下一关Boss减2体力"}},{label:"绕路而行",effect:{buff:"raolu",desc:"跳过本关"}}]},
+64:{title:"请佛收魔",text:"大鹏金翅雕实力通天，是否请佛收伏？",choices:[{label:"请如来降伏",effect:{buff:"ruolai",desc:"全队回满体力"}},{label:"独自硬拼",effect:{hp:-2}}]},
+70:{title:"灭法国难行",text:"灭法国王欲杀万僧。如何通过？",choices:[{label:"变化通关",effect:{buff:"bianhua",desc:"跳过下一关战斗"}},{label:"硬闯通过",effect:{hp:-1}}]},
+72:{title:"凤仙郡求雨",text:"郡侯冒犯天庭，大旱三年。",choices:[{label:"劝善求雨",effect:{buff:"qiyu",desc:"全队回满体力"}},{label:"强行施法",effect:{hp:-1}}]},
+79:{title:"铜台府监禁",text:"师徒遭人诬陷入狱。",choices:[{label:"查明真相",effect:{buff:"zhenxiang",desc:"下一关多摸2牌"}},{label:"忍耐受刑",effect:{hp:-1}}]},
+};
+
+// ==================== 游戏状态 ====================
+let G={};
+
+function newGameState(){
+return{
+screen:"title",level:0,maxLevel:0,
+party:["wukong"],partyHp:{wukong:4},partyMaxHp:{wukong:4},
+selectedChar:"wukong",
+buffs:{},
+deck:[],discard:[],
+player:null,enemy:null,
+turn:"player",phase:"play",
+awaitingResponse:null,
+tutorialStep:0,
+log:[],
+};
+}
+
+function makeCombatant(charKey,bossData){
+const char=CHARS[charKey];
+const hp=bossData?bossData.hp:char.maxHp;
+const maxHp=bossData?bossData.hp:char.maxHp;
+const drawCount=bossData?bossData.draw:2;
+return{
+charKey:charKey,name:bossData?bossData.name:char.name,
+hp:hp,maxHp:maxHp,drawCount:drawCount,
+hand:[],equipment:{weapon:null,armor:null,mount:null,defMount:null},
+judge:[],shaPlayed:false,
+skills:bossData?bossData.skills:(char.skills||[]),
+skillUsed:{},
+alive:true,skillsDef:bossData?null:char.skills,
+isEnemy:!!bossData,
+bossData:bossData,
+};
+}
+
+// ==================== 工具函数 ====================
+function log(msg,cls=""){G.log.push({msg,cls});renderLog()}
+function drawFromDeck(n=1){const cards=[];for(let i=0;i<n;i++){if(G.deck.length===0){G.deck=shuffle(G.discard);G.discard=[];log("牌堆重洗","log-system")}if(G.deck.length>0)cards.push(G.deck.pop())}return cards}
+function findCard(side,key){return side.hand.findIndex(c=>c.key===key)}
+function hasCard(side,key){return side.hand.some(c=>c.key===key)}
+function dist(a,b){let d=1;if(a.equipment.mount)d--;if(b.equipment.defMount)d++;return Math.max(1,d)}
+function canPlayBasic(side,card){
+if(card.key==="sha"&&side.shaPlayed&&!(side.equipment.weapon&&side.equipment.weapon.key==="crossbow"))return{ok:false,msg:"每回合限出一张降妖"};
+if(card.key==="sha"){
+const opp=side.isEnemy?G.player:G.enemy;
+const d=dist(side,opp);
+const range=side.equipment.weapon?(side.equipment.weapon.range||1):1;
+if(d>range)return{ok:false,msg:"距离不够，需武器或坐骑"};
+}
+return{ok:true}
+}
+
+// ==================== 显示控制 ====================
+function showScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+G.screen=id.replace("-screen","");
+}
+function showResponse(title,text,buttons){
+const m=document.getElementById("response-modal");
+document.getElementById("response-title").textContent=title;
+document.getElementById("response-text").textContent=text;
+const bc=document.getElementById("response-buttons");
+bc.innerHTML="";
+buttons.forEach(b=>{
+const btn=document.createElement("button");
+btn.className=b.danger?"btn":"btn-sm";
+btn.textContent=b.label;
+btn.onclick=()=>{m.classList.add("hidden");G.awaitingResponse=null;if(b.action)b.action()};
+bc.appendChild(btn);
+});
+m.classList.remove("hidden");
+}
+function hideResponse(){document.getElementById("response-modal").classList.add("hidden")}
+
+// ==================== 战斗UI渲染 ====================
+function renderBattle(){
+const p=G.player,e=G.enemy;
+document.getElementById("bt-chapter").textContent=`第 ${G.level===0?"教学":G.level} ${G.level===0?"":"难"}`;
+document.getElementById("bt-title").textContent=L81_NAMES[G.level]||"";
+document.getElementById("enemy-name").textContent=e.name;
+document.getElementById("enemy-hptext").textContent=e.hp+"/"+e.maxHp;
+const er=e.hp/e.maxHp;
+const ebar=document.getElementById("enemy-hpbar");
+ebar.style.width=Math.max(0,er)*100+"%";
+ebar.className="hp-bar-fill "+(er>.5?"high":er>.25?"mid":"low");
+document.getElementById("player-name").textContent=p.name;
+document.getElementById("player-hptext").textContent=p.hp+"/"+p.maxHp;
+const pr=p.hp/p.maxHp;
+const pbar=document.getElementById("player-hpbar");
+pbar.style.width=Math.max(0,pr)*100+"%";
+pbar.className="hp-bar-fill "+(pr>.5?"high":pr>.25?"mid":"low");
+// turn indicator
+const en=document.getElementById("enemy-name");
+const pn=document.getElementById("player-name");
+if(G.turn==="enemy"){en.style.textShadow="0 0 8px rgba(200,64,64,.6)";pn.style.textShadow="none"}
+else if(G.turn==="player"){pn.style.textShadow="0 0 8px rgba(201,168,76,.6)";en.style.textShadow="none"}
+else{en.style.textShadow="none";pn.style.textShadow="none"}
+// avatar
+const pav=document.getElementById("player-avatar");
+const pSvg=getCharSvg(null,p.charKey);
+pav.innerHTML=pSvg?'<img src="'+pSvg+'" alt="'+p.name+'">':(p.charKey==="wukong"?"🐵":p.charKey==="bajie"?"🐷":"🧔");
+const eav=document.getElementById("enemy-avatar");
+const eSvg=getCharSvg(e.name,null);
+eav.innerHTML=eSvg?'<img src="'+eSvg+'" alt="'+e.name+'">':"👹";
+// equips
+renderEquips("enemy-equips",e);
+renderEquips("player-equips",p);
+// judge areas
+const ej=document.getElementById("enemy-equips");
+if(e.judge.length){const jt=document.createElement("span");jt.className="judge-tag";jt.textContent="判定:"+e.judge.map(c=>c.name).join(",");ej.appendChild(jt)}
+const pj=document.getElementById("player-judge");
+pj.innerHTML=p.judge.length?'<span class="judge-tag">判定:'+p.judge.map(c=>c.name).join(",")+'</span>':'';
+// enemy hand (face down)
+const eh=document.getElementById("enemy-hand");
+eh.innerHTML="";
+for(let i=0;i<e.hand.length;i++){eh.appendChild(document.createElement("div")).className="card-back";}
+// buffs
+const eb=document.getElementById("enemy-buffs");
+eb.innerHTML="";
+if(e.skills&&e.skills.length){const st=document.createElement("span");st.className="buff-list";st.textContent="["+e.skills.join(" ")+"]";eb.appendChild(st)}
+document.getElementById("player-buffs").innerHTML=p._atkBuff?"<span class='buff-list'>攻+"+p._atkBuff+"</span>":"";
+// player hand
+renderHand();
+// actions
+renderActions();
+}
+function renderEquips(id,side){
+const el=document.getElementById(id);el.innerHTML="";
+const slots=[["weapon","武","weapon"],["armor","防","armor"],["mount","骑","mount"],["defMount","防骑","mount"]];
+slots.forEach(([k,label,cls])=>{
+if(side.equipment[k]){
+const tag=document.createElement("span");
+tag.className="equip-mini "+cls;
+tag.textContent=label;
+const tip=document.createElement("span");
+tip.className="eq-tip";
+tip.textContent=side.equipment[k].name;
+tag.appendChild(tip);
+el.appendChild(tag);
+}
+});
+}
+function renderHand(){
+const ph=document.getElementById("player-hand");
+const prevCount=ph.childElementCount;
+ph.innerHTML="";
+const p=G.player;
+const isDiscard=G.awaitingResponse&&G.awaitingResponse.type==="discard";
+const canAct=(G.turn==="player"&&G.phase==="play"&&!G.awaitingResponse)||isDiscard;
+const tut=G.tutorialStep>0&&G.tutorialStep<10;
+p.hand.forEach((card,i)=>{
+const div=document.createElement("div");
+div.className="card "+card.cls;
+if(i>=prevCount)div.classList.add("card-entering");
+if(isDiscard){
+// all cards clickable for discard
+}else if(tut){
+if(!isTutorialCard(G.tutorialStep,card))div.classList.add("disabled");
+}else if(!canAct||!canPlayCardNow(card))div.classList.add("disabled");
+div.innerHTML=`<div class="card-corner ${card.red?'red':'black'}">${card.suit}${card.rank}</div><div class="card-name">${card.name}</div><div class="card-desc">${card.desc}</div>`;
+if(isDiscard){
+div.onclick=()=>discardCard(i);
+}else if(tut){
+if(isTutorialCard(G.tutorialStep,card))div.onclick=()=>onCardClick(i);
+}else if(canAct&&canPlayCardNow(card)){
+div.onclick=()=>onCardClick(i);
+}
+ph.appendChild(div);
+});
+}
+function discardCard(idx){
+const p=G.player;
+const card=p.hand.splice(idx,1)[0];
+G.discard.push(card);
+log("弃置"+card.name,"log-system");
+G.awaitingResponse.need--;
+if(G.awaitingResponse.need<=0){
+G.awaitingResponse=null;
+log("你结束了回合","log-player");
+G.turn="enemy";
+renderBattle();
+setTimeout(()=>aiTurn(),500);
+return;
+}
+renderHand();
+}
+function canPlayCardNow(card){
+if(card.key==="shan")return false;
+if(card.key==="wuxie")return false;
+if(card.key==="sha"){
+const r=canPlayBasic(G.player,card);
+if(!r.ok)return false;
+}
+if(card.key==="tao"&&G.player.hp>=G.player.maxHp)return false;
+return true;
+}
+function renderActions(){
+const ac=document.getElementById("player-actions");
+ac.innerHTML="";
+if(G.turn==="player"&&G.phase==="play"&&!G.awaitingResponse){
+const p=G.player;
+if(!p.isEnemy&&p.skillsDef){
+p.skillsDef.forEach((sk,i)=>{
+if(sk.perTurn>0){
+const used=p.skillUsed[sk.key]||0;
+if(used<sk.perTurn){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent=sk.name;
+btn.onclick=()=>useSkill(sk.key);
+ac.appendChild(btn);
+}
+}
+});
+// passive skills
+p.skillsDef.forEach((sk,i)=>{
+if(sk.perTurn===0&&sk.key==="tianpeng"&&p.hand.some(c=>c.red&&c.key!=="sha")){
+const btn=document.createElement("button");
+btn.className="skill-btn passive";
+btn.textContent=sk.name;
+btn.onclick=()=>useSkill("tianpeng");
+ac.appendChild(btn);
+}
+});
+// zhangba weapon: two cards as sha
+if(p.equipment.weapon&&p.equipment.weapon.key==="zhangba"&&p.hand.length>=2&&!p.shaPlayed){
+const btn=document.createElement("button");
+btn.className="skill-btn passive";
+btn.textContent="丈八蛇矛";
+btn.onclick=()=>useSkill("zhangba_skill");
+ac.appendChild(btn);
+}
+}
+if(!(G.tutorialStep>0&&G.tutorialStep<10)){
+const endBtn=document.createElement("button");
+endBtn.className="btn-sm";
+endBtn.textContent="结束回合";
+endBtn.onclick=endPlayerTurn;
+ac.appendChild(endBtn);
+}
+}
+}
+function renderLog(){
+const el=document.getElementById("battle-log");
+el.innerHTML=G.log.slice(-15).map(l=>`<p class="${l.cls}">${l.msg}</p>`).join("");
+el.scrollTop=el.scrollHeight;
+}
+
+// ==================== 出牌逻辑 ====================
+function onCardClick(idx){
+const p=G.player;
+const card=p.hand[idx];
+if(!card)return;
+if(G.tutorialStep>0&&G.tutorialStep<10){handleTutorialClick(idx);return}
+if(card.type==="basic")playBasic(idx);
+else if(card.type==="trick")playTrick(idx);
+else if(card.type==="delay")playDelay(idx);
+else if(card.type==="equip")playEquipment(idx);
+}
+
+function playBasic(idx){
+const p=G.player,e=G.enemy;
+const card=p.hand[idx];
+const chk=canPlayBasic(p,card);
+if(!chk.ok){log(chk.msg,"log-system");return}
+if(card.key==="tao"&&p.hp>=p.maxHp){log("体力已满","log-system");return}
+// remove from hand
+p.hand.splice(idx,1);
+G.discard.push(card);
+if(card.key==="sha"){
+p.shaPlayed=true;
+G._lastPlayerCardKey="sha";
+log(`${p.name}出了降妖！`,"log-player");
+SND.play();
+const fc=showFieldCard(card,"player");
+resolveSha(p,e,card);
+setTimeout(()=>removeFieldCard(fc),1500);
+}else if(card.key==="tao"){
+p.hp=Math.min(p.maxHp,p.hp+1);
+log(`${p.name}使用蟠桃，回复1点体力`,"log-heal");
+SND.heal();fxHeal("player");fxHpChange("player");fxDmgFloat("player",-1);
+const fc=showFieldCard(card,"player");
+setTimeout(()=>removeFieldCard(fc),1500);
+}
+renderBattle();
+checkEnd();
+}
+
+function playTrick(idx){
+const p=G.player,e=G.enemy;
+const card=p.hand[idx];
+if(card.key==="shunshou"&&dist(p,e)>1){log("距离不够，无法顺手牵宝","log-system");return}
+// check wuxie from enemy
+if(e.hand.some(c=>c.key==="wuxie")){
+const widx=findCard(e,"wuxie");
+if(Math.random()<0.4||card.key==="nanman"||card.key==="wanjian"){
+const wc=e.hand.splice(widx,1)[0];
+G.discard.push(wc);
+log(`${e.name}出了护身法，抵消了${card.name}！`,"log-enemy");
+p.hand.splice(idx,1);
+G.discard.push(card);
+renderBattle();
+return;
+}
+}
+p.hand.splice(idx,1);
+G.discard.push(card);
+G._lastPlayerCardKey=card.key;
+log(`${p.name}出了${card.name}`,"log-player");
+SND.play();
+const fc=showFieldCard(card,"player");
+setTimeout(()=>removeFieldCard(fc),1500);
+switch(card.key){
+case"wuzhong":const drawn=drawFromDeck(2);p.hand.push(...drawn);log(`${p.name}摸了2张牌`,"log-heal");break;
+case"guohe":aiEnemyDiscardCard();break;
+case"shunshou":if(dist(p,e)<=1){const si=Math.floor(Math.random()*e.hand.length);if(e.hand.length>0){const stolen=e.hand.splice(si,1)[0];p.hand.push(stolen);log(`${p.name}顺手牵走了${e.name}一张牌`,"log-player")}else log(`${e.name}没有手牌`,"log-system")}else log("距离不够","log-system");break;
+case"nanman":if(hasCard(e,"sha")){const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);log(`${e.name}出了降妖抵挡群妖来袭`,"log-enemy")}else{damage(e,1,p);log(`${e.name}受群妖来袭1点伤害`,"log-damage")}break;
+case"wanjian":enemyRespondWanjian();break;
+case"taoyuan":p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log("结义同行，双方各回1点体力","log-heal");break;
+case"jiedao":if(e.equipment.weapon){const w=e.equipment.weapon;G.discard.push(w);e.equipment.weapon=null;log(`${e.name}被迫弃去${w.name}`,"log-enemy")}else{damage(e,1,p);log(`${e.name}无武器，受1点伤害`,"log-damage")}break;
+case"juedou":resolveDuel(p,e);break;
+case"wugu":const c1=drawFromDeck(1)[0];const c2=drawFromDeck(1)[0];p.hand.push(c1);e.hand.push(c2);log(`仙果普降，双方各得1牌`,"log-heal");break;
+case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.push(card);G.discard.pop();break;
+}
+renderBattle();
+checkEnd();
+}
+
+function playDelay(idx){
+const p=G.player,e=G.enemy;
+const card=p.hand[idx];
+p.hand.splice(idx,1);
+e.judge.push(card);
+log(`${p.name}对${e.name}使用了${card.name}`,"log-player");
+renderBattle();
+}
+
+function playEquipment(idx){
+const p=G.player;
+const card=p.hand[idx];
+p.hand.splice(idx,1);
+const st=card.equipSubtype;
+if(st==="weapon"){if(p.equipment.weapon)G.discard.push(p.equipment.weapon);p.equipment.weapon=card}
+else if(st==="armor"){if(p.equipment.armor)G.discard.push(p.equipment.armor);p.equipment.armor=card}
+else if(st==="mount"){
+if(card.key==="jiahorse"){if(p.equipment.defMount)G.discard.push(p.equipment.defMount);p.equipment.defMount=card}
+else{if(p.equipment.mount)G.discard.push(p.equipment.mount);p.equipment.mount=card}
+}
+log(`${p.name}装备了${card.name}`,"log-player");
+SND.equip();
+const fc=showFieldCard(card,"player");
+setTimeout(()=>removeFieldCard(fc),1500);
+renderBattle();
+}
+
+// ==================== 降妖结算 ====================
+function resolveSha(source,target,card){
+// check target armor
+if(target.equipment.armor){
+if(target.equipment.armor.key==="renwang"&&!card.red){
+log(`${target.name}的玄铁盾抵消了黑色降妖`,"log-system");
+return;
+}
+if(target.equipment.armor.key==="bagua"){
+const jc=drawFromDeck(1)[0];G.discard.push(jc);
+log(`八卦阵判定：${jc.suit}${jc.rank} ${jc.red?"红":"黑"}`,"log-system");
+if(jc.red){log("八卦阵判定红色，视为出了遁法","log-system");return;}
+}
+}
+// check source weapon qinggang
+const qinggang=source.equipment.weapon&&source.equipment.weapon.key==="qinggang";
+// enemy respond (if target is enemy, AI; if target is player, prompt)
+if(target.isEnemy){
+// AI dodge
+if(!qinggang&&hasCard(target,"shan")){
+if(target.hp<=2||target.hand.length>4||Math.random()<0.5){
+const si=findCard(target,"shan");
+const sc=target.hand.splice(si,1)[0];
+G.discard.push(sc);
+log(`${target.name}出了遁法`,"log-enemy");
+// guanshi: discard 2 to force hit
+if(source.equipment.weapon&&source.equipment.weapon.key==="guanshi"&&source.hand.length>=2){
+showResponse("贯石斧",`${target.name}出了遁法！是否弃2牌强制命中？`,[
+{label:"弃2牌强命中",action:()=>{
+for(let g=0;g<2;g++){const gc=source.hand.splice(0,1)[0];G.discard.push(gc)}
+log(`贯石斧：弃2牌强制命中！`,"log-player");
+let dmg=1;
+if(source.skills.includes("manniu"))dmg=2;
+if(source.skills.includes("sanmei"))dmg=2;
+if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
+if(target.skills&&target.skills.includes("xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
+if(dmg>0){damage(target,dmg,source);if(target.hp>0)onShaDamage(source,target,card)}
+renderBattle();checkEnd();
+}},
+{label:"放弃",action:()=>{renderBattle()}},
+]);
+return;
+}
+// qinglong: allow another sha
+if(source.equipment.weapon&&source.equipment.weapon.key==="qinglong"&&source.shaPlayed&&!source._qinglongUsed){
+source._qinglongUsed=true;source.shaPlayed=false;
+log(`${source.name}的青龙偃月刀：可再出一张降妖`,"log-player");
+}
+return;
+}
+}
+// not dodged
+let dmg=1;
+if(source.skills.includes("manniu"))dmg=2;
+if(source.skills.includes("sanmei"))dmg=2;
+if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
+// xiniu: reduce sha damage by 1
+if(target.skills&&target.skills.includes("xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消降妖伤害`,"log-system")}
+// hanbing: replace damage with discard 2
+if(source.equipment.weapon&&source.equipment.weapon.key==="hanbing"&&target.hand.length>=2){
+for(let h=0;h<2;h++){const dc=target.hand.splice(0,1)[0];G.discard.push(dc)}
+log(`寒冰剑：${target.name}弃2牌代替伤害`,"log-system");
+}else if(dmg>0){
+damage(target,dmg,source);
+if(target.hp>0)onShaDamage(source,target,card);
+}
+}else{
+// player is target - prompt
+if(!qinggang&&hasCard(target,"shan")){
+showResponse("敌人出了降妖！",`${source.name}对你出了降妖。是否出遁法抵消？`,[
+{label:"出遁法",action:()=>{
+const si=findCard(target,"shan");
+const sc=target.hand.splice(si,1)[0];
+G.discard.push(sc);
+log(`${target.name}出了遁法`,"log-player");
+renderBattle();checkEnd();
+}},
+{label:"受到伤害",danger:true,action:()=>{
+let dmg=1;
+if(source.skills.includes("manniu"))dmg=2;
+if(source.skills.includes("sanmei"))dmg=2;
+if(source.skills.includes("jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
+damage(target,dmg,source);
+if(target.hp>0)onShaDamage(source,target,card);
+renderBattle();checkEnd();
+}},
+]);
+}else{
+let dmg=1;
+if(source.skills.includes("manniu"))dmg=2;
+if(source.skills.includes("sanmei"))dmg=2;
+if(source.skills.includes("jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
+damage(target,dmg,source);
+if(target.hp>0)onShaDamage(source,target,card);
+}
+}
+}
+
+function onShaDamage(source,target,card){
+// cixiong: target discards
+if(source.equipment.weapon&&source.equipment.weapon.key==="cixiong"&&target.hand.length>0){
+const di=Math.floor(Math.random()*target.hand.length);
+const dc=target.hand.splice(di,1)[0];G.discard.push(dc);
+log(`雌雄双剑：${target.name}被迫弃1牌`,"log-system");
+}
+// qilin: discard mount
+if(source.equipment.weapon&&source.equipment.weapon.key==="qilin"){
+if(target.equipment.mount){G.discard.push(target.equipment.mount);target.equipment.mount=null;log(`麒麟弓击落${target.name}的坐骑`,"log-system")}
+else if(target.equipment.defMount){G.discard.push(target.equipment.defMount);target.equipment.defMount=null;log(`麒麟弓击落${target.name}的坐骑`,"log-system")}
+}
+// madu: reflect
+if(target.skills&&target.skills.includes("madu")){
+damage(source,1,target);
+log(`蝎子精倒马毒桩：反弹1点伤害`,"log-damage");
+}
+}
+
+function enemyRespondWanjian(){
+const e=G.enemy;
+if(e.equipment.armor&&e.equipment.armor.key==="bagua"){
+const jc=drawFromDeck(1)[0];G.discard.push(jc);
+if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");return;}
+}
+if(hasCard(e,"shan")){
+const si=findCard(e,"shan");
+const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
+log(`${e.name}出了遁法抵挡万箭穿云`,"log-enemy");
+}else{
+damage(e,1,G.player);
+log(`${e.name}受万箭穿云1点伤害`,"log-damage");
+}
+}
+
+// ==================== 斗法结算 ====================
+function resolveDuel(source,target){
+let cur=target,other=source;
+let depth=0;
+while(depth<20){
+const si=findCard(cur,"sha");
+if(si<0){
+damage(cur,1,other);
+log(`${cur.name}无降妖可出，受1点伤害`,"log-damage");
+return;
+}
+const sc=cur.hand.splice(si,1)[0];G.discard.push(sc);
+log(`${cur.name}出了降妖应战`,"log-"+(cur.isEnemy?"enemy":"player"));
+[cur,other]=[other,cur];
+depth++;
+}
+damage(cur,1,other);
+log("斗法僵持不下，"+cur.name+"受1点伤害","log-damage");
+}
+
+// ==================== 伤害与死亡 ====================
+function damage(target,amount,source){
+// defense buff
+if(!target.isEnemy&&target._defBuff){
+amount=Math.max(0,amount-target._defBuff);
+log(`防御增益抵消${target._defBuff}点伤害`,"log-heal");
+}
+// liusha shield
+if(!target.isEnemy&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<1&&target.hand.length>0){
+target.skillUsed.liusha=1;
+const di=0;const dc=target.hand.splice(di,1)[0];G.discard.push(dc);
+log(`沙和尚流沙护体：弃1牌抵消1伤`,"log-heal");
+amount=Math.max(0,amount-1);
+}
+if(amount<=0)return;
+target.hp-=amount;
+log(`${target.name}受到${amount}点伤害 (${target.hp}/${target.maxHp})`,"log-damage");
+SND.damage();
+fxDamage(target.isEnemy?"enemy":"player");
+fxHpChange(target.isEnemy?"enemy":"player");
+fxDmgFloat(target.isEnemy?"enemy":"player",amount);
+if(amount>=2)fxShake();
+if(target.hp<=0){
+target.hp=0;
+target.alive=false;
+}
+}
+
+function checkEnd(){
+// 结算前归还被人种袋锁走的牌，避免关卡结束时牌凭空消失
+if(G.player._locked&&G.player._locked.length){G.player.hand.push(...G.player._locked);G.player._locked=[]}
+if(!G.player.alive){
+setTimeout(()=>onLevelFail(),800);
+return;
+}
+if(!G.enemy.alive){
+// check huapo revive
+if(G.enemy.skills&&G.enemy.skills.includes("huapo")&&!G.enemy._revived){
+G.enemy._revived=true;G.enemy.hp=Math.min(G.enemy.maxHp,3);G.enemy.alive=true;
+log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
+fxHeal("enemy");renderBattle();
+return;
+}
+setTimeout(()=>onLevelWin(),800);
+return;
+}
+}
+
+// ==================== AI ====================
+function aiTurn(){
+const e=G.enemy,p=G.player;
+// judge phase
+aiJudgePhase(e);
+// boss passive skills
+applyBossStart(e,p);
+// draw phase
+const drawn=drawFromDeck(e.drawCount);
+e.hand.push(...drawn);
+e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};
+SND.draw();
+log(`${e.name}摸了${e.drawCount}张牌`,"log-enemy");
+fxTurn("enemy");
+setPhase("敌方回合","enemy-turn");
+clearFieldCards();
+renderBattle();
+// play phase
+if(!e.skipPlay){
+setTimeout(()=>aiPlayPhase(e,p),500);
+}else{
+e.skipPlay=false;
+log(`${e.name}被迷心劫影响，跳过出牌阶段`,"log-system");
+setTimeout(()=>aiEndTurn(),500);
+}
+}
+
+function aiJudgePhase(e){
+if(e.judge.length===0)return;
+const toResolve=[...e.judge];
+e.judge=[];
+for(const card of toResolve){
+const jc=drawFromDeck(1)[0];G.discard.push(jc);
+log(`判定${card.name}：${jc.suit}${jc.rank}`,"log-system");
+if(card.key==="lebu"){
+if(jc.suit!=="♥"){
+e.skipPlay=true;
+log(`迷心劫判定非红桃，${e.name}跳过出牌阶段`,"log-system");
+}
+G.discard.push(card);
+}else if(card.key==="shandian"){
+if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
+damage(e,2,e);
+log(`天雷劫判定黑桃${jc.rank}，${e.name}受2点伤害`,"log-damage");
+G.discard.push(card);
+}else{
+// pass to player
+G.player.judge.push(card);
+log(`天雷劫未触发，传给${G.player.name}`,"log-system");
+}
+}
+}
+renderBattle();
+}
+
+function applyBossStart(e,p){
+if(!e.skills)return;
+if(e.skills.includes("huoyun")){
+const extra=drawFromDeck(1);e.hand.push(...extra);
+log("红孩儿火云洞：额外摸1牌","log-enemy");
+}
+if(e.skills.includes("tongtian")){
+if(p.hand.length>0){
+const di=Math.floor(Math.random()*p.hand.length);
+log("通天河寒：你受1点冰冻伤害","log-damage");
+if(hasCard(p,"shan")||hasCard(p,"sha")){
+const ci=findCard(p,"shan")>=0?findCard(p,"shan"):findCard(p,"sha");
+const cc=p.hand.splice(ci,1)[0];G.discard.push(cc);
+log("你弃1牌抵消冰冻","log-heal");
+}else{
+damage(p,1,e);
+}
+}
+}
+if(e.skills.includes("jingang")){
+if(p.equipment.weapon){
+const w=p.equipment.weapon;p.equipment.weapon=null;
+if(e.equipment.weapon)G.discard.push(e.equipment.weapon);
+e.equipment.weapon=w;
+log("金刚琢：窃取你的武器！","log-enemy");
+}
+}
+if(e.skills.includes("renzhongdai")||e.skills.includes("renzhongdai2")){
+const prob=e.skills.includes("renzhongdai2")?0.5:0.3;
+if(p.hand.length>0&&Math.random()<prob){
+const di=Math.floor(Math.random()*p.hand.length);
+const lc=p.hand.splice(di,1)[0];
+p._locked=p._locked||[];
+p._locked.push(lc);
+log("人种袋：收走你一张牌！","log-enemy");
+}
+}
+if(e.skills.includes("zhisi")){
+if(Math.random()<0.5){
+p.skipPlay=true;
+log("蛛丝缠绕：你将跳过出牌阶段！","log-enemy");
+}
+}
+if(e.skills.includes("daoyao")){
+e.hp=Math.min(e.maxHp,e.hp+1);
+log("玉兔精捣药杵：恢复1点体力","log-heal");
+}
+if(e.skills.includes("tongtian2")){
+e.hp=Math.min(e.maxHp,e.hp+1);
+log("老鼋通天河主：恢复1点体力","log-heal");
+}
+if(e.skills.includes("yinyangping")){
+if(p.hand.length>0){
+const di=0;const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("阴阳二气瓶：你须弃1牌","log-damage");
+if(p.hand.length===0)damage(p,1,e);
+}
+}
+if(e.skills.includes("fanfu")&&e.hp<5&&!e._fanfuActive){
+e._fanfuActive=true;
+// disable player equipment
+if(G.player.equipment.weapon){G.discard.push(G.player.equipment.weapon);G.player.equipment.weapon=null}
+if(G.player.equipment.armor){G.discard.push(G.player.equipment.armor);G.player.equipment.armor=null}
+log("老鼋翻覆：你的装备全部失效！","log-damage");
+}
+if(e.skills.includes("shengwei")){
+// extra draw per hp lost - handled in draw count
+}
+// 黑熊精·黑风: 每回合25%概率额外出一张降妖
+if(e.skills.includes("heifeng")){
+if(!e.shaPlayed&&hasCard(e,"sha")&&Math.random()<0.25){
+const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
+e.shaPlayed=true;
+log("黑风突袭：黑熊精额外出一张降妖！","log-enemy");
+damage(p,1,e);if(p.hp>0)onShaDamage(e,p,sc);
+}
+}
+// 黄风怪·黄风: 每回合30%概率弃你一张牌
+if(e.skills.includes("huangfeng")){
+if(p.hand.length>0&&Math.random()<0.3){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("三昧神风：黄风怪刮走你一张牌！","log-enemy");
+}
+}
+// 白骨精·化尸: 死亡时复活一次，恢复3体力
+if(e.skills.includes("huapo")){
+if(e.hp<=0&&!e._revived){
+e._revived=true;e.hp=3;e.alive=true;
+log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
+}
+}
+// 金角大王·紫金葫芦: 每回合30%概率偷你一张牌
+if(e.skills.includes("zijin")){
+if(p.hand.length>0&&Math.random()<0.3){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];e.hand.push(dc);
+log("紫金葫芦：金角大王收走你一张牌！","log-enemy");
+}
+}
+// 银角大王·幌金绳: 每回合25%概率让你弃一张牌
+if(e.skills.includes("yinyin")){
+if(p.hand.length>0&&Math.random()<0.25){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("幌金绳：银角大王缚住你，弃一张牌！","log-enemy");
+}
+}
+// 六耳猕猴·镜像: 复制玩家上回合使用的最后一张牌类型
+if(e.skills.includes("mirror")){
+if(G._lastPlayerCardKey){
+const def=CARD_DEF[G._lastPlayerCardKey];
+if(def&&def.t==="basic"&&hasCard(e,G._lastPlayerCardKey)){
+log("六耳猕猴镜像：模仿你的招式！","log-enemy");
+// just log, actual mimicry handled in AI decide
+}
+}
+}
+// 铁扇公主·芭蕉扇: 每回合30%概率吹散你一张手牌到弃牌堆
+if(e.skills.includes("tieshan")){
+if(p.hand.length>0&&Math.random()<0.3){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("芭蕉扇：铁扇公主扇走你一张牌！","log-enemy");
+}
+}
+// 镇元大仙·长生: 每回合恢复1体力
+if(e.skills.includes("changsheng")){
+if(e.hp<e.maxHp){e.hp++;log("镇元大仙长生妙法：恢复1体力","log-heal")}
+}
+// 青狮精·吞云: 每回合25%概率吞掉你一张手牌
+if(e.skills.includes("tunyun")){
+if(p.hand.length>0&&Math.random()<0.25){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("吞云大口：青狮精吞掉你一张牌！","log-enemy");
+}
+}
+// 白象精·卷鼻: 每回合25%概率卷走你一张装备
+if(e.skills.includes("juanbi")){
+if(p.equipment.weapon&&Math.random()<0.25){
+const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);
+log("卷鼻袭击：白象精卷走你的武器！","log-enemy");
+}
+}
+// 白鹿精·仙寿: 每回合额外摸1牌
+if(e.skills.includes("bailu")){
+const extra=drawFromDeck(1);e.hand.push(...extra);
+log("白鹿精仙寿：额外摸1牌","log-enemy");
+}
+// 赛太岁·摄魂: 每回合20%概率让你下回合少摸1牌
+if(e.skills.includes("saitaisui")){
+if(Math.random()<0.2){p._extraDraw=-1;log("赛太岁摄魂铃：你下回合少摸1牌！","log-enemy")}
+}
+// 多目怪·百眼金光: 每回合30%概率让你弃2张牌
+if(e.skills.includes("duomu")){
+if(p.hand.length>=2&&Math.random()<0.3){
+for(let d=0;d<2;d++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}
+log("百眼金光：多目怪金光炫目，你弃2张牌！","log-enemy");
+}else if(p.hand.length>0&&Math.random()<0.3){
+const dc=p.hand.splice(0,1)[0];G.discard.push(dc);
+log("百眼金光：你弃1张牌","log-enemy");
+}
+}
+// 犀牛精·犀角: 受到降妖伤害减1（在resolveSha中处理）
+if(e.skills.includes("xiniu")){
+// passive, handled in resolveSha
+}
+// 玉兔精·月华: 每回合25%概率额外回1体力
+if(e.skills.includes("yuehua")){
+if(e.hp<e.maxHp&&Math.random()<0.25){e.hp++;log("月华倾泻：玉兔精恢复1体力","log-heal")}
+}
+// 如来佛祖·佛法无边: 教学关专用，无实际效果
+if(e.skills.includes("fashou")){
+// tutorial only
+}
+// 通用技能1: 20%概率额外出降妖
+if(e.skills.includes("generic1")){
+if(!e.shaPlayed&&hasCard(e,"sha")&&Math.random()<0.2){
+const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
+e.shaPlayed=true;
+log("妖力涌动：额外出一张降妖！","log-enemy");
+damage(p,1,e);if(p.hp>0)onShaDamage(e,p,sc);
+}
+}
+// 通用技能2: 15%概率弃你一张牌
+if(e.skills.includes("generic2")){
+if(p.hand.length>0&&Math.random()<0.15){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("妖风袭来：你被吹散一张牌！","log-enemy");
+}
+}
+// 九头虫·九头: 每回合额外摸1牌
+if(e.skills.includes("jiutou")){
+const extra=drawFromDeck(1);e.hand.push(...extra);
+log("九头虫九首：额外摸1牌","log-enemy");
+}
+// 九灵元圣·圣威: 降妖不可闪避（已在resolveSha处理）
+// 老鼋·长寿: 每回合恢复1体力（额外）
+if(e.skills.includes("changshou2")){
+if(e.hp<e.maxHp){e.hp++;log("老鼋长寿：恢复1体力","log-heal")}
+}
+// 黄狮精·黄毛: 每回合25%概率偷你一张装备
+if(e.skills.includes("huangshi")){
+if(p.equipment.weapon&&Math.random()<0.25){
+const w=p.equipment.weapon;p.equipment.weapon=null;
+if(e.equipment.weapon)G.discard.push(e.equipment.weapon);
+e.equipment.weapon=w;
+log("黄狮精偷盗：窃取你的武器！","log-enemy");
+}
+}
+// 豹子精·分瓣: 每回合20%概率分身出一张降妖
+if(e.skills.includes("baozi")){
+if(!e.shaPlayed&&hasCard(e,"sha")&&Math.random()<0.2){
+const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
+e.shaPlayed=true;
+log("分瓣梅花计：豹子精分身出降妖！","log-enemy");
+damage(p,1,e);if(p.hp>0)onShaDamage(e,p,sc);
+}
+}
+// 金毛犼·吼叫: 每回合25%概率让你弃一张牌
+if(e.skills.includes("jinmao")){
+if(p.hand.length>0&&Math.random()<0.25){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("金毛犼震吼：你弃一张牌！","log-enemy");
+}
+}
+// 黄眉大王·金铙: 每回合20%概率锁定你一张牌
+if(e.skills.includes("jingnao")){
+if(p.hand.length>0&&Math.random()<0.2){
+const di=Math.floor(Math.random()*p.hand.length);
+p._locked=p._locked||[];
+const lc=p.hand.splice(di,1)[0];p._locked.push(lc);
+log("金铙罩下：锁定你一张牌！","log-enemy");
+}
+}
+// 猪八戒(敌)·天蓬之力: 红色牌当降妖
+if(e.skills.includes("tianpeng_e")){
+// handled in AI decide - red cards can be used as sha
+}
+// 沙和尚(敌)·卷帘之盾: 黑色牌当遁法
+if(e.skills.includes("juanlian_e")){
+// handled in AI dodge - black cards can be used as shan
+}
+}
+
+function aiPlayPhase(e,p){
+let actions=0;
+while(actions<8&&e.alive){
+const action=aiDecide(e,p);
+if(!action)break;
+actions++;
+switch(action.type){
+case"sha":
+const si=findCard(e,"sha");
+if(si>=0){
+const card=e.hand.splice(si,1)[0];G.discard.push(card);
+e.shaPlayed=true;
+SND.play();
+const fc=showFieldCard(card,"enemy");
+log(`${e.name}出了降妖！`,"log-enemy");
+renderBattle();
+// player response
+if(hasCard(p,"shan")||p.equipment.armor){
+setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);
+return;
+}else{
+let dmg=1;
+if(e.skills.includes("manniu"))dmg=2;
+if(e.skills.includes("sanmei"))dmg=2;
+damage(p,dmg,e);
+if(p.hp>0)onShaDamage(e,p,card);
+renderBattle();
+setTimeout(()=>removeFieldCard(fc),1500);
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+}
+}
+break;
+case"tao":
+if(e.hp<e.maxHp){
+const ti=findCard(e,"tao");
+if(ti>=0){
+const card=e.hand.splice(ti,1)[0];G.discard.push(card);
+;
+e.hp++;
+log(`${e.name}使用蟠桃回复1体力`,"log-heal");
+renderBattle();
+}
+}
+break;
+case"equip":
+const ei=e.hand.findIndex(c=>c.type==="equip");
+if(ei>=0){
+const card=e.hand.splice(ei,1)[0];
+const st=card.equipSubtype;
+if(st==="weapon"&&!e.equipment.weapon)e.equipment.weapon=card;
+else if(st==="armor"&&!e.equipment.armor)e.equipment.armor=card;
+else if(st==="mount"){
+if(card.key==="jiahorse"&&!e.equipment.defMount)e.equipment.defMount=card;
+else if(card.key!=="jiahorse"&&!e.equipment.mount)e.equipment.mount=card;
+else{e.hand.push(card);break}
+}
+else{e.hand.push(card);break}
+log(`${e.name}装备了${card.name}`,"log-enemy");
+SND.equip();
+const fc=showFieldCard(card,"enemy");
+setTimeout(()=>removeFieldCard(fc),1500);
+renderBattle();
+}
+break;
+case"trick":
+aiPlayTrick(e,p);
+renderBattle();
+break;
+}
+}
+if(!e.alive){checkEnd();return}
+setTimeout(()=>aiEndTurn(),500);
+}
+
+function aiDecide(e,p){
+if(e.hp<=2&&hasCard(e,"tao")&&e.hp<e.maxHp)return{type:"tao"};
+if(hasCard(e,"sha")&&!e.shaPlayed&&dist(e,p)<=((e.equipment.weapon&&e.equipment.weapon.range)||1))return{type:"sha"};
+// equip
+const ei=e.hand.findIndex(c=>c.type==="equip");
+if(ei>=0){
+const card=e.hand[ei];
+const st=card.equipSubtype;
+if((st==="weapon"&&!e.equipment.weapon)||(st==="armor"&&!e.equipment.armor)||(st==="mount"&&(card.key==="jiahorse"?!e.equipment.defMount:!e.equipment.mount)))return{type:"equip"};
+}
+// tricks - priority order
+if(hasCard(e,"wuzhong"))return{type:"trick",key:"wuzhong"};
+if(hasCard(e,"jiedao")&&p.equipment.weapon)return{type:"trick",key:"jiedao"};
+if(hasCard(e,"guohe")&&(p.equipment.weapon||p.hand.length>3))return{type:"trick",key:"guohe"};
+if(hasCard(e,"juedou")&&e.hand.filter(c=>c.key==="sha").length>=2&&p.hand.filter(c=>c.key==="sha").length<=1)return{type:"trick",key:"juedou"};
+if(hasCard(e,"nanman")&&!hasCard(p,"sha"))return{type:"trick",key:"nanman"};
+if(hasCard(e,"wanjian")&&!hasCard(p,"shan"))return{type:"trick",key:"wanjian"};
+if(hasCard(e,"lebu")&&!p.judge.some(c=>c.key==="lebu"))return{type:"trick",key:"lebu"};
+if(hasCard(e,"shandian")&&!p.judge.some(c=>c.key==="shandian")&&Math.random()<0.5)return{type:"trick",key:"shandian"};
+if(hasCard(e,"shunshou")&&dist(e,p)<=1&&p.hand.length>0)return{type:"trick",key:"shunshou"};
+if(hasCard(e,"nanman")&&p.hp<=3)return{type:"trick",key:"nanman"};
+if(hasCard(e,"wanjian")&&p.hp<=3)return{type:"trick",key:"wanjian"};
+return null;
+}
+
+function aiPlayTrick(e,p){
+const keys=["wuzhong","jiedao","guohe","juedou","nanman","wanjian","lebu","shandian","shunshou"];
+for(const key of keys){
+if(!hasCard(e,key))continue;
+// check player wuxie
+let cancelled=false;
+if(p.hand.some(c=>c.key==="wuxie")){
+const chance=key==="nanman"||key==="wanjian"?0.7:0.4;
+if(Math.random()<chance){
+const wi=findCard(p,"wuxie");
+const wc=p.hand.splice(wi,1)[0];G.discard.push(wc);
+log(`你出了护身法抵消${e.name}的锦囊`,"log-player");
+cancelled=true;
+}
+}
+if(cancelled)continue;
+const ti=findCard(e,key);
+const card=e.hand.splice(ti,1)[0];
+if(key!=="lebu"&&key!=="shandian")G.discard.push(card);
+log(`${e.name}出了${card.name}`,"log-enemy");
+SND.play();
+const fc=showFieldCard(card,"enemy");
+setTimeout(()=>removeFieldCard(fc),1500);
+switch(key){
+case"wuzhong":const dr=drawFromDeck(2);e.hand.push(...dr);log(`${e.name}摸了2牌`,"log-enemy");break;
+case"nanman":if(hasCard(p,"sha")){const si=findCard(p,"sha");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了降妖抵挡群妖来袭`,"log-player")}else{damage(p,1,e);log("你受群妖来袭1伤","log-damage")}break;
+case"wanjian":{let dodged=false;if(p.equipment.armor&&p.equipment.armor.key==="bagua"){const jc=drawFromDeck(1)[0];G.discard.push(jc);log(`八卦阵判定：${jc.suit}${jc.rank}`,"log-system");if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");dodged=true}}if(!dodged&&hasCard(p,"shan")){const si=findCard(p,"shan");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了遁法抵挡万箭穿云`,"log-player");dodged=true}if(!dodged){damage(p,1,e);log("你受万箭穿云1伤","log-damage")}break;}
+case"guohe":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`${e.name}拆掉了你的${w.name}`,"log-enemy")}else if(p.hand.length>0){const di=Math.floor(Math.random()*p.hand.length);const dc=p.hand.splice(di,1)[0];G.discard.push(dc);log(`${e.name}拆掉你一张手牌`,"log-enemy")}break;
+case"shunshou":if(dist(e,p)<=1&&p.hand.length>0){const si=Math.floor(Math.random()*p.hand.length);const stolen=p.hand.splice(si,1)[0];e.hand.push(stolen);log(`${e.name}顺走你一张牌`,"log-enemy")}break;
+case"lebu":p.judge.push(card);log(`${e.name}对你使用迷心劫`,"log-enemy");break;
+case"juedou":resolveDuel(e,p);break;
+case"jiedao":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`借宝降妖：${e.name}迫使你弃去${w.name}`,"log-enemy")}else{damage(p,1,e);log(`你无武器，受借宝降妖1伤`,"log-damage")}break;
+case"shandian":p.judge.push(card);log(`${e.name}对你使用天雷劫`,"log-enemy");break;
+}
+return;
+}
+}
+
+function aiEnemyDiscardCard(){
+const e=G.enemy;
+if(e.equipment.weapon){const w=e.equipment.weapon;e.equipment.weapon=null;G.discard.push(w);log(`拆桥断路：弃掉${e.name}的${w.name}`,"log-player")}
+else if(e.hand.length>0){const di=Math.floor(Math.random()*e.hand.length);const dc=e.hand.splice(di,1)[0];G.discard.push(dc);log(`拆桥断路：弃掉${e.name}一张手牌`,"log-player")}
+else log(`${e.name}无牌可弃`,"log-system");
+}
+
+function aiEndTurn(){
+const e=G.enemy,p=G.player;
+// unlock player locked cards
+if(p._locked){p.hand.push(...p._locked);p._locked=[];log("人种袋中的牌归还","log-system")}
+// discard phase
+while(e.hand.length>e.hp){
+// discard lowest priority
+let idx=0;let priority=99;
+e.hand.forEach((c,i)=>{
+let pr=5;
+if(c.key==="wuxie")pr=1;
+else if(c.key==="shan")pr=2;
+else if(c.key==="tao")pr=3;
+else if(c.key==="sha")pr=4;
+else if(c.type==="equip")pr=6;
+else if(c.type==="trick")pr=7;
+if(pr<priority){priority=pr;idx=i}
+});
+const dc=e.hand.splice(idx,1)[0];G.discard.push(dc);
+}
+log(`${e.name}结束回合`,"log-enemy");
+// switch to player
+G.turn="player";G.phase="play";
+playerTurnStart();
+}
+
+// ==================== 玩家回合 ====================
+function playerTurnStart(){
+const p=G.player,e=G.enemy;
+// judge phase
+if(p.judge.length>0){
+const toResolve=[...p.judge];p.judge=[];
+for(const card of toResolve){
+const jc=drawFromDeck(1)[0];G.discard.push(jc);
+log(`判定${card.name}：${jc.suit}${jc.rank}`,"log-system");
+if(card.key==="lebu"){
+if(jc.suit!=="♥"){p.skipPlay=true;log(`迷心劫判定非红桃，跳过出牌阶段`,"log-system")}
+G.discard.push(card);
+}else if(card.key==="shandian"){
+if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
+damage(p,2,null);log(`天雷劫判定黑桃${jc.rank}，受2点伤害`,"log-damage");
+G.discard.push(card);
+}else{e.judge.push(card);log(`天雷劫未触发，传给${e.name}`,"log-system")}
+}
+}
+renderBattle();
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+}
+// draw phase
+const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
+const drawn=drawFromDeck(drawN);
+p.hand.push(...drawn);
+p._extraDraw=0;
+p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;
+G._lastPlayerCardKey=null;
+SND.draw();
+log(`你的回合，摸了${drawN}张牌`,"log-player");
+fxTurn("player");
+setPhase("出牌阶段","");
+clearFieldCards();
+renderBattle();
+if(p.skipPlay){
+p.skipPlay=false;
+log("你被迷心劫影响，跳过出牌阶段","log-system");
+setTimeout(()=>endPlayerTurn(),500);
+}else{
+renderBattle();
+}
+}
+
+function endPlayerTurn(){
+const p=G.player,e=G.enemy;
+if(G.turn!=="player")return;
+// tanshi skill
+if(p.charKey==="bajie"&&!(p.skillUsed.tanshi>0)&&hasCard(p,"tao")&&p.hp<p.maxHp){
+p.skillUsed.tanshi=1;
+p.hp++;
+log("猪八戒贪食：额外回复1点体力","log-heal");
+}
+// discard phase
+if(p.hand.length>p.hp){
+setPhase("弃牌阶段","discard");
+promptDiscard();
+return;
+}
+// end turn
+setPhase("敌方回合","enemy-turn");
+log("你结束了回合","log-player");
+G.turn="enemy";
+renderBattle();
+setTimeout(()=>aiTurn(),500);
+}
+
+function promptDiscard(){
+const p=G.player;
+const need=p.hand.length-p.hp;
+log(`弃牌阶段：须弃${need}张牌，点击手牌弃置`,"log-system");
+G.awaitingResponse={type:"discard",need:need};
+setPhase("弃牌阶段","discard");
+renderHand();
+}
+
+function promptPlayerDodge(enemy,card){
+const p=G.player;
+// check armor
+if(p.equipment.armor){
+if(p.equipment.armor.key==="renwang"&&!card.red){
+log("玄铁盾抵消了黑色降妖","log-system");
+renderBattle();
+continueEnemyTurn();
+return;
+}
+if(p.equipment.armor.key==="bagua"){
+const jc=drawFromDeck(1)[0];G.discard.push(jc);
+log(`八卦阵判定：${jc.suit}${jc.rank}`,"log-system");
+if(jc.red){log("八卦阵判定红色，视为遁法","log-system");renderBattle();continueEnemyTurn();return}
+}
+}
+// check enemy qinggang: shan ineffective
+const eqg=enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinggang";
+// check enemy hanbing: replace damage with discard
+const ehb=enemy.equipment.weapon&&enemy.equipment.weapon.key==="hanbing";
+const noDodge=!!(enemy.skills&&enemy.skills.includes("jiutou2"));
+if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
+if(!eqg&&!noDodge&&(hasCard(p,"shan")||(p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan")))){
+const canJuanlian=p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan");
+showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
+{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");renderBattle();continueEnemyTurn()}}},
+...(canJuanlian?[{label:"卷帘之盾(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`卷帘之盾：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
+{label:"受到伤害",danger:true,action:()=>{
+let dmg=1;
+if(enemy.skills.includes("manniu"))dmg=2;
+if(enemy.skills.includes("sanmei"))dmg=2;
+if(enemy.skills.includes("jiutou2")){dmg=1;log("圣威：不可闪避","log-enemy")}
+if(ehb&&p.hand.length>=2){
+for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}
+log(`寒冰剑：你弃2牌代替伤害`,"log-system");
+}else{
+damage(p,dmg,enemy);
+if(p.hp>0)onShaDamage(enemy,p,card);
+}
+renderBattle();
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+continueEnemyTurn();
+}},
+]);
+}else if(!eqg&&!ehb){
+let dmg=1;
+if(enemy.skills.includes("manniu"))dmg=2;
+if(enemy.skills.includes("sanmei"))dmg=2;
+damage(p,dmg,enemy);
+if(p.hp>0)onShaDamage(enemy,p,card);
+renderBattle();
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+continueEnemyTurn();
+}else if(ehb&&p.hand.length>=2){
+for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}
+log(`寒冰剑：你弃2牌代替伤害`,"log-system");
+renderBattle();
+continueEnemyTurn();
+}else{
+let dmg=1;
+if(enemy.skills.includes("manniu"))dmg=2;
+if(enemy.skills.includes("sanmei"))dmg=2;
+damage(p,dmg,enemy);
+if(p.hp>0)onShaDamage(enemy,p,card);
+renderBattle();
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+continueEnemyTurn();
+}
+}
+
+function continueEnemyTurn(){
+// continue AI play after player response
+const e=G.enemy,p=G.player;
+if(!p.alive||!e.alive)return;
+setTimeout(()=>{
+let actions=0;
+while(actions<8&&e.alive){
+const action=aiDecide(e,p);
+if(!action)break;
+actions++;
+switch(action.type){
+case"sha":if(hasCard(e,"sha")&&!e.shaPlayed){
+const si=findCard(e,"sha");const card=e.hand.splice(si,1)[0];G.discard.push(card);
+e.shaPlayed=true;
+SND.play();
+const fc=showFieldCard(card,"enemy");
+log(`${e.name}出了降妖！`,"log-enemy");
+renderBattle();
+if(hasCard(p,"shan")||p.equipment.armor){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
+else{let d=1;if(e.skills.includes("manniu"))d=2;if(e.skills.includes("sanmei"))d=2;damage(p,d,e);if(p.hp>0)onShaDamage(e,p,card);renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>onLevelFail(),800);return}}
+}
+break;
+case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);;e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
+break;
+case"equip":{const ei=e.hand.findIndex(c=>c.type==="equip");if(ei>=0){const c=e.hand.splice(ei,1)[0];const st=c.equipSubtype;if(st==="weapon"){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=c}else if(st==="armor"){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=c}else if(st==="mount"){if(c.key==="jiahorse"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=c}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=c}}log(`${e.name}装备${c.name}`,"log-enemy");SND.equip();const fc=showFieldCard(c,"enemy");setTimeout(()=>removeFieldCard(fc),1500);renderBattle()}}
+break;
+case"trick":aiPlayTrick(e,p);renderBattle();break;
+}
+}
+if(!e.alive){checkEnd();return}
+if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+aiEndTurn();
+},300);
+}
+
+// ==================== 技能 ====================
+function useSkill(key){
+const p=G.player;
+if(G.tutorialStep>0&&G.tutorialStep<10){useSkillTutorial(key);return}
+SND.skill();fxSkill("player");
+if(key==="huoyan"){
+if((p.skillUsed.huoyan||0)>=1)return;
+p.skillUsed.huoyan=1;
+const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
+showResponse("火眼金睛",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
+log("孙悟空使用火眼金睛查看敌方手牌","log-player");
+}
+else if(key==="bian"){
+if((p.skillUsed.bian||0)>=1)return;
+showResponse("七十二变","选择要变化的基本牌类型：",[
+{label:"降妖",action:()=>{doBian("sha")}},
+{label:"遁法",action:()=>{doBian("shan")}},
+{label:"蟠桃",action:()=>{doBian("tao")}},
+]);
+}
+else if(key==="tianpeng"){
+const idx=p.hand.findIndex(c=>c.red&&c.key!=="sha");
+if(idx<0){log("没有可用的红色牌","log-system");return}
+const old=p.hand[idx];
+const def=CARD_DEF["sha"];
+const newCard={...old,key:"sha",name:def.n,type:"basic",basicSubtype:"sha",desc:def.d,cls:"basic-sha"};
+p.hand[idx]=newCard;
+log(`天蓬之力：将${old.name}(${old.suit}${old.rank})变为降妖`,"log-player");
+renderBattle();
+}
+else if(key==="zhangba_skill"){
+if(p.hand.length<2){log("手牌不足","log-system");return}
+const c1=p.hand.splice(0,1)[0];G.discard.push(c1);
+const c2=p.hand.splice(0,1)[0];G.discard.push(c2);
+const def=CARD_DEF["sha"];
+const newCard={id:Math.random(),key:"sha",name:"丈八蛇矛·降妖",type:"basic",basicSubtype:"sha",suit:c1.suit,rank:c1.rank,red:c1.red,desc:"丈八蛇矛化降妖",cls:"basic-sha"};
+p.hand.push(newCard);
+log(`丈八蛇矛：将${c1.name}+${c2.name}合为降妖`,"log-player");
+renderBattle();
+}
+}
+function doBian(targetKey){
+const p=G.player;
+// find any non-basic card to transform
+const idx=p.hand.findIndex(c=>c.type!=="basic"||c.key!==targetKey);
+if(idx<0){log("没有可变化的牌","log-system");return}
+const old=p.hand[idx];
+const def=CARD_DEF[targetKey];
+let cls="basic-"+def.st;
+const newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:cls};
+p.hand[idx]=newCard;
+p.skillUsed.bian=1;
+log(`七十二变：将${old.name}变为${newCard.name}`,"log-player");
+renderBattle();
+}
+
+// ==================== 关卡流程 ====================
+function startNewGame(){
+G=newGameState();
+G.level=0;
+save();
+startLevel(0);
+}
+
+function continueGame(){
+const data=load();
+if(data){
+G=Object.assign(newGameState(),data);
+startLevel(G.level);
+}
+}
+
+function startLevel(n){
+G.level=n;
+save();
+const type=levelType(n);
+if(n===0){startTutorial();return}
+if(type==="plot"){showStory(n);return}
+if(type==="event"){showEvent(n);return}
+if(type==="finale"&&n===80){showStory(80);return}
+if(G.buffs.bianhua){delete G.buffs.bianhua;log("变化通关：无伤通过本关","log-system");nextLevel();return}
+// battle: show char select
+if(G.party.length>1){
+showCharSelect(n);
+}else{
+G.selectedChar=G.party[0];
+startBattle(n);
+}
+}
+
+function showCharSelect(n){
+showScreen("charselect-screen");
+const el=document.getElementById("char-select-cards");
+el.innerHTML="";
+G.party.forEach(key=>{
+const ch=CHARS[key];
+const hp=G.partyHp[key];
+const injured=hp<=0;
+const div=document.createElement("div");
+div.className="char-card"+(injured?" injured":"");
+const svg=getCharSvg(null,ch.key);const av=svg?'<img src="'+svg+'" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--gold-dim);object-fit:cover">':(ch.key==='wukong'?'🐵':ch.key==='bajie'?'🐷':'🧔');
+div.innerHTML=`<div style="margin-bottom:4px">${av}</div><div class="ch-name">${ch.name}</div><div class="ch-hp">体力 ${hp}/${ch.maxHp}</div><div class="ch-skill">${ch.skills.map(s=>s.name).join(" · ")}</div>`;
+if(!injured)div.onclick=()=>{G.selectedChar=key;startBattle(n)};
+el.appendChild(div);
+});
+}
+
+function startBattle(n){
+const type=levelType(n);
+const bossData=getBoss(n);
+// apply buffs
+let extraHp=0,extraDraw=0,extraAtk=0,extraDef=0;
+if(G.buffs.lingji){bossData={...bossData,hp:Math.max(1,bossData.hp-2)};delete G.buffs.lingji}
+if(G.buffs.chechi){bossData={...bossData,hp:Math.max(1,bossData.hp-1)};delete G.buffs.chechi}
+if(G.buffs.xishi){bossData={...bossData,hp:Math.max(1,bossData.hp-2)};delete G.buffs.xishi}
+if(G.buffs.wenfo){bossData={...bossData,skills:[]};delete G.buffs.wenfo}
+if(G.buffs.baohua){extraDraw=1;delete G.buffs.baohua}
+if(G.buffs.jingji){extraDraw=1;delete G.buffs.jingji}
+if(G.buffs.liangguo){extraDraw=2;delete G.buffs.liangguo}
+if(G.buffs.zhenxiang){extraDraw=2;delete G.buffs.zhenxiang}
+if(G.buffs.xinmo1){extraAtk=1;delete G.buffs.xinmo1}
+if(G.buffs.xinmo2){extraDef=1;delete G.buffs.xinmo2}
+if(G.buffs.dingli){extraDef=(extraDef||0)+1;delete G.buffs.dingli}
+if(G.buffs.guanyin){G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;delete G.buffs.guanyin}
+if(G.buffs.ruolai){G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;delete G.buffs.ruolai}
+if(G.buffs.qiyu){G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;delete G.buffs.qiyu}
+if(n===81&&G.buffs.tuotai){extraHp=2;delete G.buffs.tuotai}
+if(G.buffs.luotai){G.partyHp[G.selectedChar]=Math.min(CHARS[G.selectedChar].maxHp,(G.partyHp[G.selectedChar]??CHARS[G.selectedChar].maxHp)+1);delete G.buffs.luotai}
+
+G.player=makeCombatant(G.selectedChar,null);
+G.player.hp=(G.partyHp[G.selectedChar]??CHARS[G.selectedChar].maxHp);
+G.player.maxHp=CHARS[G.selectedChar].maxHp+extraHp;
+G.player.hp=Math.min(G.player.hp+extraHp,G.player.maxHp);
+G.player._atkBuff=extraAtk;
+G.player._defBuff=extraDef;
+G.player.drawBonus=extraDraw;
+G.enemy=makeCombatant(null,bossData);
+G.deck=buildDeck();
+G.discard=[];
+G.log=[];
+G.turn="player";
+G.awaitingResponse=null;
+G.tutorialStep=0;
+
+// starting hands
+const ph=drawFromDeck(4);G.player.hand.push(...ph);
+const eh=drawFromDeck(4);G.enemy.hand.push(...eh);
+
+// boss starting equipment
+if(bossData.equip){
+const ed=CARD_DEF[bossData.equip];
+let cls="equip-"+ed.st;
+const ec={id:9999,key:bossData.equip,name:ed.n,type:"equip",equipSubtype:ed.st,range:ed.r,suit:"♣",rank:"A",red:false,desc:ed.d,cls:cls};
+if(ed.st==="weapon")G.enemy.equipment.weapon=ec;
+else if(ed.st==="armor")G.enemy.equipment.armor=ec;
+}
+
+showScreen("battle-screen");
+log(`第 ${n} 难：${L81_NAMES[n]}`,"log-system");
+log(`${G.enemy.name} 出现！体力 ${G.enemy.hp}/${G.enemy.maxHp}`,"log-system");
+renderBattle();
+setTimeout(()=>{fxBossEntry();SND.flip()},200);
+playerTurnStart();
+}
+
+// ==================== 教学关 ====================
+function startTutorial(){
+G.tutorialStep=1;
+G.player=makeCombatant("wukong",null);
+G.enemy=makeCombatant(null,KEY_BOSSES[0]);
+G.deck=buildDeck();G.discard=[];
+G.log=[];G.turn="player";G.awaitingResponse=null;
+// give specific cards
+G.player.hand=[];
+G.player.hand.push(makeCard("sha"));
+G.player.hand.push(makeCard("shan"));
+G.player.hand.push(makeCard("tao"));
+G.player.hand.push(makeCard("qinggang"));
+G.enemy.hand=drawFromDeck(4);
+showScreen("battle-screen");
+log("【教学】大闹天宫 — 如来佛祖降临","log-system");
+log("如来佛祖体力99，此战为教学，不可获胜","log-system");
+renderBattle();
+showTutorialStep(1);
+}
+
+function makeCard(key){
+const def=CARD_DEF[key];
+const suits=CARD_SUITS[key]||[['♠','7']];
+const sr=suits[0];
+let cls=def.t;
+if(def.t==='basic')cls='basic-'+def.st;
+if(def.t==='equip')cls='equip-'+def.st;
+return{id:Math.random(),key:key,name:def.n,type:def.t,basicSubtype:def.st||null,equipSubtype:def.st||null,range:def.r||null,suit:sr[0],rank:sr[1],red:isRed(sr[0]),desc:def.d,cls:cls};
+}
+
+function isTutorialCard(step,card){
+if(step===1)return card.key==="sha";
+if(step===2)return card.key==="tao";
+if(step===3)return card.type==="equip";
+return false;
+}
+
+function showTutorialStep(step){
+const steps=[
+null,
+{text:"欢迎来到西游杀！这是你的手牌。点击「降妖」对如来发起攻击。",wait:"sha"},
+{text:"很好！如来出了遁法抵挡。现在试试用「蟠桃」回复体力。",wait:"tao"},
+{text:"体力已回复。接下来装备「青釭剑」，点击它即可装备。",wait:"equip"},
+{text:"装备完毕！青釭剑使你的降妖无法被遁法抵挡。点击「火眼金睛」技能查看如来手牌。",wait:"skill"},
+{text:"如来佛祖施展佛法无边……五行山镇压！",wait:"end"},
+];
+if(step<steps.length){
+const s=steps[step];
+if(s.text){
+setTimeout(()=>{
+showResponse("教学引导",s.text,[{label:"明白了",action:()=>{hideResponse();G.tutorialStep=step;renderBattle()}}]);
+},300);
+}
+}
+}
+
+function handleTutorialClick(idx){
+const p=G.player;
+const card=p.hand[idx];
+const step=G.tutorialStep;
+if(step===1&&card.key==="sha"){
+// play sha
+p.hand.splice(idx,1);G.discard.push(card);
+p.shaPlayed=true;
+log("你出了降妖！","log-player");
+log("如来出了遁法抵消","log-enemy");
+p.hp=Math.max(1,p.hp-1);
+log("如来反手一掌，你受到1点伤害","log-damage");
+renderBattle();
+showTutorialStep(2);
+}else if(step===2&&card.key==="tao"){
+p.hand.splice(idx,1);G.discard.push(card);
+p.hp=Math.min(p.maxHp,p.hp+1);
+log("你使用蟠桃回复1点体力","log-heal");
+renderBattle();
+showTutorialStep(3);
+}else if(step===3&&card.type==="equip"){
+p.hand.splice(idx,1);
+p.equipment.weapon=card;
+log(`你装备了${card.name}`,"log-player");
+renderBattle();
+showTutorialStep(4);
+}else{
+log(step===4?"【教学】这一步请点击上方的「火眼金睛」技能按钮":"【教学】请点击高亮的牌","log-system");
+}
+}
+
+function useSkillTutorial(key){
+if(G.tutorialStep>0&&G.tutorialStep<4){
+log("【教学】先按引导出牌，技能稍后再用","log-system");
+return;
+}
+if(G.tutorialStep===4&&key==="huoyan"){
+G.player.skillUsed.huoyan=1;
+log("孙悟空使用火眼金睛查看敌方手牌","log-player");
+log("如来手牌："+G.enemy.hand.map(c=>c.name+"("+c.suit+c.rank+")").join("、"),"log-system");
+setTimeout(()=>{
+showResponse("教学引导","如来佛祖施展佛法无边……五行山镇压！",[{label:"继续",action:()=>{
+hideResponse();
+log("孙悟空被压五行山下五百年……","log-system");
+setTimeout(()=>{
+G.partyHp.wukong=4;
+showStory(0,"被镇压","孙悟空被如来以五行山镇压，五百年后，唐僧揭去封条，取经之旅正式开始……");
+},1000);
+}}]);
+},1000);
+}else{
+log("【教学】请点击「火眼金睛」技能按钮","log-system");
+}
+}
+
+// ==================== 剧情/事件 ====================
+function showStory(n,customTitle,customText){
+showScreen("story-screen");
+const type=levelType(n);
+const title=customTitle||L81_NAMES[n];
+const text=customText||STORIES[n]||"";
+document.getElementById("story-chapter").textContent=n===0?"教学关":`第 ${n} 难`;
+document.getElementById("story-title").textContent=title;
+document.getElementById("story-text").textContent=text;
+}
+
+function afterStory(){
+const n=G.level;
+if(n===0){
+// tutorial done, go to level 1
+G.tutorialStep=0;
+G.level=1;G.maxLevel=Math.max(G.maxLevel,1);
+save();
+startLevel(1);
+return;
+}
+if(n===80){
+// finale: start level 81
+G.level=81;G.maxLevel=Math.max(G.maxLevel,81);
+G.buffs.tuotai=true;
+save();
+startLevel(81);
+return;
+}
+// next level
+const type=levelType(n);
+if(type==="plot"){
+nextLevel();
+}else{
+nextLevel();
+}
+}
+
+function showEvent(n){
+showScreen("event-screen");
+const ev=EVENT_CHOICES[n];
+if(!ev){nextLevel();return}
+document.getElementById("event-chapter").textContent=`第 ${n} 难`;
+document.getElementById("event-title").textContent=ev.title;
+document.getElementById("event-text").textContent=ev.text;
+const ec=document.getElementById("event-choices");
+ec.innerHTML="";
+ev.choices.forEach((choice,i)=>{
+const div=document.createElement("div");
+div.className="event-choice";
+div.innerHTML=`<strong>${choice.label}</strong>`;
+div.onclick=()=>{resolveEventChoice(choice.effect)};
+ec.appendChild(div);
+});
+}
+
+function resolveEventChoice(effect){
+const p=G.player;
+if(effect.hp){
+G.partyHp[G.selectedChar]=Math.max(0,(G.partyHp[G.selectedChar]||CHARS[G.selectedChar].maxHp)+effect.hp);
+log(`${effect.hp>0?"回复":"失去"}${Math.abs(effect.hp)}点体力`,"log-system");
+}
+if(effect.buff){
+G.buffs[effect.buff]=true;
+}
+if(effect.buff==="guanyin"||effect.buff==="ruolai"||effect.buff==="qiyu"){
+G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;
+}
+if(effect.buff==="raolu"){
+// skip this level
+nextLevel();
+return;
+}
+nextLevel();
+}
+
+function nextLevel(){
+G.level++;
+G.maxLevel=Math.max(G.maxLevel,G.level);
+// resting characters heal
+G.party.forEach(key=>{
+if(key!==G.selectedChar&&G.partyHp[key]<CHARS[key].maxHp){
+G.partyHp[key]=Math.min(CHARS[key].maxHp,G.partyHp[key]+1);
+}
+});
+save();
+if(G.level>81){
+showScreen("victory-screen");
+return;
+}
+startLevel(G.level);
+}
+
+// ==================== 胜利/失败 ====================
+function onLevelWin(){
+const n=G.level;
+log(`${G.enemy.name}被击败！`,"log-system");
+SND.victory();
+// check party join
+const boss=KEY_BOSSES[n];
+G.partyHp[G.selectedChar]=G.player.hp;
+if(boss&&boss.join){
+if(boss.join==="bajie"&&!G.party.includes("bajie")){
+G.party.push("bajie");
+G.partyHp.bajie=CHARS.bajie.maxHp;
+log("猪八戒加入队伍！","log-system");
+setTimeout(()=>showStory(n,"收降八戒","高老庄一战，猪八戒败北，愿随唐僧西天取经，拜为二徒弟。"),1000);
+return;
+}
+if(boss.join==="shaseng"&&!G.party.includes("shaseng")){
+G.party.push("shaseng");
+G.partyHp.shaseng=CHARS.shaseng.maxHp;
+log("沙和尚加入队伍！","log-system");
+}
+}
+// heal selected char
+G.partyHp[G.selectedChar]=G.player.hp;
+if(n===81){
+setTimeout(()=>showScreen("victory-screen"),1500);
+return;
+}
+// show victory story
+setTimeout(()=>{
+showStory(n,"胜利",`击败${G.enemy.name}！第${n}难已过，继续前行。`);
+},1000);
+}
+
+function onLevelFail(){
+const n=G.level;
+SND.defeat();
+if(n===0){
+// tutorial failure - proceed
+showStory(0,"五行山镇压","孙悟空被如来镇压，五百年后唐僧揭去封条，取经之旅开始……");
+return;
+}
+G.partyHp[G.selectedChar]=Math.max(1,Math.floor(G.player.maxHp/2));
+showScreen("over-screen");
+document.getElementById("over-title").textContent="败北";
+document.getElementById("over-text").textContent=`${G.enemy.name}击败了你……重整旗鼓，再战一回！`;
+}
+
+function retryLevel(){
+G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;
+startLevel(G.level);
+}
+
+function showLevelSelect(){
+showScreen("level-screen");
+const grid=document.getElementById("level-grid");
+grid.innerHTML="";
+for(let i=0;i<=81;i++){
+const btn=document.createElement("div");
+const type=levelType(i);
+btn.className="level-btn "+type+(i>G.maxLevel?" locked":"")+(i===G.level?" current":"");
+btn.textContent=`${i===0?"教学":i}. ${L81_NAMES[i]||""}`;
+if(i<=G.maxLevel)btn.onclick=()=>startLevel(i);
+grid.appendChild(btn);
+}
+}
+
+// ==================== 存档 ====================
+function save(){
+try{
+const data={
+level:G.level,maxLevel:G.maxLevel,
+party:G.party,partyHp:G.partyHp,partyMaxHp:G.partyMaxHp,
+buffs:G.buffs,
+};
+localStorage.setItem("xiyousha_save",JSON.stringify(data));
+}catch(e){}
+}
+
+function load(){
+try{
+const s=localStorage.getItem("xiyousha_save");
+if(s){
+const data=JSON.parse(s);
+if(data&&data.level!==undefined){
+document.getElementById("continue-btn").style.display="";
+return data;
+}
+}
+}catch(e){}
+return null;
+}
+
+// ==================== 初始化 ====================
+function init(){
+load();
+}
+init();
+
+// expose for onclick
+window.startNewGame=startNewGame;
+window.continueGame=continueGame;
+window.afterStory=afterStory;
+window.endPlayerTurn=endPlayerTurn;
+window.retryLevel=retryLevel;
+window.showLevelSelect=showLevelSelect;
+window.showScreen=showScreen;
+window.useSkill=useSkill;
+window.onCardClick=onCardClick;
+window.startLevel=startLevel;
+
+}catch(e){
+console.error("Game init error:",e);
+document.body.innerHTML='<div style="color:#fff;padding:20px;text-align:center"><h2>游戏加载失败</h2><p>'+e.message+'</p><button onclick="location.reload()" style="padding:10px 20px;margin:10px">重新加载</button></div>';
+}
+</script>
+</body>
+</html>
