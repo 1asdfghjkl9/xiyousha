@@ -239,7 +239,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <h1 class="game-title">西 游 杀</h1>
 <p class="game-sub">取经路上的八十一难，一牌一战，皆系天命</p>
 <div>
-<button class="btn" onclick="SND.init();startNewGame()">新的旅程</button>
+<button class="btn" onclick="startNewGame()">新的旅程</button>
 <button class="btn" id="continue-btn" style="display:none" onclick="continueGame()">继续游戏</button>
 </div>
 <p style="margin-top:20px;font-size:.85em;color:var(--dim)">玩法照搬三国杀标准版 · 手牌改名不改效果</p>
@@ -2003,6 +2003,7 @@ renderBattle();
 
 // ==================== 关卡流程 ====================
 function startNewGame(){
+SND.init();
 G=newGameState();
 G.level=0;
 save();
@@ -2415,6 +2416,7 @@ load();
 init();
 
 // expose for onclick
+window.SND=SND;
 window.startNewGame=startNewGame;
 window.continueGame=continueGame;
 window.afterStory=afterStory;
@@ -2425,6 +2427,8 @@ window.showScreen=showScreen;
 window.useSkill=useSkill;
 window.onCardClick=onCardClick;
 window.startLevel=startLevel;
+window.discardCard=discardCard;
+window.hideResponse=hideResponse;
 
 }catch(e){
 console.error("Game init error:",e);
