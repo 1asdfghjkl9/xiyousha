@@ -1320,12 +1320,13 @@ log("斗法僵持不下，"+cur.name+"受1点伤害","log-damage");
 // ==================== 伤害与死亡 ====================
 function damage(target,amount,source){
 // defense buff
-if(!target.isEnemy&&target._defBuff){
+if(amount>0&&!target.isEnemy&&target._defBuff){
+const reduced=Math.min(amount,target._defBuff);
 amount=Math.max(0,amount-target._defBuff);
-log(`防御增益抵消${target._defBuff}点伤害`,"log-heal");
+log(`防御增益抵消${reduced}点伤害`,"log-heal");
 }
-// liusha shield
-if(!target.isEnemy&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<1&&target.hand.length>0){
+// liusha shield - only trigger if there's still damage to mitigate
+if(amount>0&&!target.isEnemy&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<1&&target.hand.length>0){
 target.skillUsed.liusha=1;
 const di=0;const dc=target.hand.splice(di,1)[0];G.discard.push(dc);
 log(`沙和尚流沙护体：弃1牌抵消1伤`,"log-heal");
@@ -2114,6 +2115,12 @@ function showCharSelect(n){
 showScreen("charselect-screen");
 const el=document.getElementById("char-select-cards");
 el.innerHTML="";
+// safety: if all party members are at 0 HP, revive the first one to 1
+const allDead=G.party.every(key=>(G.partyHp[key]??0)<=0);
+if(allDead&&G.party.length>0){
+G.partyHp[G.party[0]]=1;
+log("全队濒危！"+CHARS[G.party[0]].name+"勉强支撑，恢复1点体力","log-heal");
+}
 G.party.forEach(key=>{
 const ch=CHARS[key];
 const hp=G.partyHp[key];
@@ -2440,6 +2447,10 @@ document.getElementById("over-text").textContent=`${G.enemy.name}击败了你…
 }
 
 function retryLevel(){
+// heal all party members to at least 1 HP, selected char to full
+G.party.forEach(key=>{
+G.partyHp[key]=Math.max(G.partyHp[key]??0,1);
+});
 G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;
 startLevel(G.level);
 }
