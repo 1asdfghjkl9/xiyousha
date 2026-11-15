@@ -862,6 +862,8 @@ function showScreen(id){
 document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
 G.screen=id.replace("-screen","");
+document.getElementById("response-modal").classList.add("hidden");
+G.awaitingResponse=null;
 }
 function showResponse(title,text,buttons){
 const m=document.getElementById("response-modal");
@@ -1935,8 +1937,9 @@ const noDodge=!!(enemy.skills&&enemy.skills.includes("jiutou2"));
 if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
 if(!eqg&&!noDodge&&(hasCard(p,"shan")||(p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan")))){
 const canJuanlian=p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan");
+const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
-{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");renderBattle();continueEnemyTurn()}}},
+...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");renderBattle();continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
 ...(canJuanlian?[{label:"卷帘之盾(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`卷帘之盾：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
