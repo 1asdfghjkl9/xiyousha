@@ -78,12 +78,14 @@ pointer-events:none;z-index:0}
 repeating-linear-gradient(45deg,transparent,transparent 30px,rgba(201,168,76,.01) 30px,rgba(201,168,76,.01) 31px),
 radial-gradient(ellipse at 50% 50%,rgba(40,28,12,.3) 0%,transparent 70%),
 linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
-.battle-header{text-align:center;padding:4px 8px;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.battle-header{text-align:center;padding:4px 8px;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;position:relative}
 .battle-header .chapter{color:var(--orange);font-size:.75em}
 .battle-header .title{color:var(--gold-br);font-size:1em;font-weight:bold}
 .phase-indicator{font-size:.7em;padding:1px 8px;border-radius:10px;background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold-br);white-space:nowrap}
 .phase-indicator.enemy-turn{background:rgba(200,64,64,.15);border-color:var(--red-d);color:#e87878}
 .phase-indicator.discard{background:rgba(152,144,136,.15);border-color:var(--gray);color:#b0a898}
+.snd-toggle{position:absolute;top:8px;right:8px;background:rgba(201,168,76,.12);border:1px solid var(--gold-dim);border-radius:6px;color:var(--gold-br);font-size:1em;cursor:pointer;padding:2px 8px;z-index:50}
+.snd-toggle:hover{background:rgba(201,168,76,.25)}
 .char-row{display:flex;align-items:center;gap:8px;padding:6px 10px}
 .char-avatar{width:46px;height:46px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:1.5em;flex-shrink:0;background:rgba(0,0,0,.4);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 3px 8px rgba(0,0,0,.5);position:relative}
 .char-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
@@ -269,6 +271,46 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 .char-card .ch-name{font-size:1em;color:var(--gold-br);margin-bottom:4px}
 .char-card .ch-hp{font-size:.8em;color:var(--green)}
 .char-card .ch-skill{font-size:.68em;color:var(--text-dim);margin-top:3px}
+.char-card .ch-lv{font-size:.72em;color:var(--gold);margin-top:2px;font-weight:bold}
+.char-confirm-btn{background:linear-gradient(180deg,rgba(201,168,76,.25),rgba(201,168,76,.1));border-color:var(--gold);color:var(--gold-br);font-size:1em;padding:10px 28px;animation:glowBorder 1.5s ease-in-out infinite}
+.char-confirm-btn:hover{background:linear-gradient(180deg,rgba(201,168,76,.4),rgba(201,168,76,.15));box-shadow:0 0 16px rgba(201,168,76,.4)}
+
+/* XP bar */
+.xp-bar-track{width:100%;height:5px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden;margin-top:2px}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-br));transition:width .4s ease;border-radius:3px}
+.lv-badge{display:inline-block;padding:1px 6px;border-radius:3px;background:rgba(201,168,76,.2);border:1px solid var(--gold-dim);color:var(--gold-br);font-size:.7em;font-weight:bold;margin-left:4px}
+
+/* Skill tree screen */
+#skilltree-screen{padding:15px;align-items:center;justify-content:flex-start;text-align:center}
+.skilltree-info{margin:10px 0 15px;padding:8px 16px;border:1px solid var(--gold-dim);border-radius:8px;background:rgba(201,168,76,.06);display:inline-block}
+.skilltree-info .ski-name{font-size:1.1em;color:var(--gold-br);font-weight:bold}
+.skilltree-info .ski-level{font-size:.85em;color:var(--green);margin:3px 0}
+.skilltree-info .ski-pts{font-size:.85em;color:var(--gold)}
+.skilltree-list{display:flex;flex-direction:column;gap:10px;max-width:420px;width:100%}
+.skill-node{padding:12px 15px;border:1.5px solid var(--gold-dim);background:linear-gradient(180deg,rgba(28,22,18,.85),rgba(20,16,12,.8));border-radius:8px;text-align:left;transition:all .2s;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.skill-node:hover{border-color:var(--gold)}
+.skill-node.locked{opacity:.5;cursor:not-allowed}
+.skill-node.unlocked{border-color:var(--green);background:linear-gradient(180deg,rgba(20,40,20,.6),rgba(16,28,16,.5))}
+.skill-node-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.skill-node-name{font-size:1em;color:var(--gold-br);font-weight:bold}
+.skill-node-status{font-size:.7em;padding:2px 8px;border-radius:3px}
+.skill-node-status.owned{background:rgba(80,200,80,.2);border:1px solid var(--green);color:#6fd86f}
+.skill-node-status.available{background:rgba(201,168,76,.2);border:1px solid var(--gold);color:var(--gold-br)}
+.skill-node-status.locked{background:rgba(100,100,100,.15);border:1px solid #555;color:#888}
+.skill-node-desc{font-size:.82em;color:var(--text-dim);line-height:1.5}
+.skill-node-cost{font-size:.75em;color:var(--gold);margin-top:4px}
+.skill-node-btn{margin-top:8px;padding:5px 16px;font-size:.85em;border:1px solid var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.2),rgba(201,168,76,.05));border-radius:5px;color:var(--gold-br);cursor:pointer;transition:all .15s}
+.skill-node-btn:hover{background:linear-gradient(180deg,rgba(201,168,76,.35),rgba(201,168,76,.1));box-shadow:0 0 10px rgba(201,168,76,.3)}
+.skill-node-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Level up animation */
+@keyframes levelUpPop{0%{transform:scale(0) rotate(-10deg);opacity:0}50%{transform:scale(1.3) rotate(5deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.levelup-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;padding:20px 40px;background:linear-gradient(180deg,#2a2018,#1a140e);border:2px solid var(--gold-br);border-radius:12px;text-align:center;box-shadow:0 0 60px rgba(201,168,76,.5),0 8px 40px rgba(0,0,0,.7);animation:levelUpPop .5s ease-out}
+.levelup-popup .lu-title{font-size:1.5em;color:var(--gold-br);font-weight:bold;margin-bottom:8px}
+.levelup-popup .lu-detail{font-size:.9em;color:var(--green);margin-bottom:6px}
+
+/* Battle header improvements */
+.battle-header .lv-badge{vertical-align:middle}
 
 @media(max-width:600px){
 :root{--card-w:50px;--card-h:72px}
@@ -325,6 +367,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <h2 class="story-title">选择出战角色</h2>
 <div class="char-select" id="char-select-cards"></div>
 <p style="font-size:.85em;color:var(--text-dim)">未出战的角色将在休息中恢复体力</p>
+<button class="btn char-confirm-btn" id="char-confirm-btn" onclick="confirmCharSelect()" style="display:none;margin-top:12px">确认出战</button>
 </div>
 
 <!-- 战斗界面 -->
@@ -333,6 +376,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <span class="chapter" id="bt-chapter"></span>
 <span class="title" id="bt-title"></span>
 <span class="phase-indicator" id="phase-ind"></span>
+<button class="snd-toggle" id="snd-toggle" onclick="SND.toggleMute();this.textContent=SND.muted?'🔇':'🔊'">🔊</button>
 </div>
 <div class="enemy-area" id="enemy-area">
 <div class="char-row">
@@ -390,7 +434,10 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <!-- 关卡选择 -->
 <div id="level-screen" class="screen hidden">
 <h2 class="story-title">关卡选择</h2>
+<div style="margin-bottom:10px">
 <button class="btn-sm" onclick="showScreen('title-screen')">返回</button>
+<button class="btn-sm" onclick="showSkillTree()">技能修炼</button>
+</div>
 <div class="level-grid" id="level-grid"></div>
 </div>
 
@@ -409,6 +456,14 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <h2 class="over-title win">通关！</h2>
 <p class="story-text">历经八十一难，终于取得真经，功德圆满！</p>
 <button class="btn" onclick="location.reload()">重新开始</button>
+</div>
+
+<!-- 技能树界面 -->
+<div id="skilltree-screen" class="screen hidden">
+<h2 class="story-title" id="skilltree-title">技能修炼</h2>
+<div class="skilltree-info" id="skilltree-info"></div>
+<div class="skilltree-list" id="skilltree-list"></div>
+<button class="btn" onclick="closeSkillTree()" style="margin-top:15px">返回</button>
 </div>
 
 </div>
@@ -443,20 +498,28 @@ var CHAR_SVG_DFU={
 function getCharSvg(name,charKey){if(charKey&&CHAR_SVG[charKey]&&CHAR_SVG_DFU[CHAR_SVG[charKey]])return CHAR_SVG_DFU[CHAR_SVG[charKey]];if(name&&BOSS_SVG[name]&&CHAR_SVG_DFU[BOSS_SVG[name]])return CHAR_SVG_DFU[BOSS_SVG[name]];return null}
 
 // ==================== 音效系统 ====================
-const SND={ctx:null,enabled:true,
+const SND={ctx:null,enabled:true,muted:false,
 init(){if(!this.ctx){try{this.ctx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){this.enabled=false}}},
-tone(freq,dur,type,vol){if(!this.enabled)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.value=freq;g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+(dur||.15));o.stop(this.ctx.currentTime+(dur||.15))},
+toggleMute(){this.muted=!this.muted;return this.muted},
+tone(freq,dur,type,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.value=freq;g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+(dur||.15));o.stop(this.ctx.currentTime+(dur||.15))},
+tone2(freq1,freq2,dur,type,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.setValueAtTime(freq1,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(freq2,this.ctx.currentTime+dur);g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);o.stop(this.ctx.currentTime+dur)},
+noise(dur,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const bs=Math.floor(this.ctx.sampleRate*dur);const buf=this.ctx.createBuffer(1,bs,this.ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bs,2);const n=this.ctx.createBufferSource();n.buffer=buf;const g=this.ctx.createGain();g.gain.value=vol||.05;n.connect(g);g.connect(this.ctx.destination);n.start()},
 seq(notes){notes.forEach(n=>setTimeout(()=>this.tone(n[0],n[1],n[2],n[3]),n[4]||0))},
-play(){this.tone(440,.1,"square",.06)},
-draw(){this.tone(330,.08,"triangle",.05)},
-damage(){this.seq([[150,.2,"sawtooth",.1,0],[100,.15,"sawtooth",.08,80]])},
-heal(){this.seq([[523,.12,"sine",.06,0],[659,.12,"sine",.06,100]])},
-skill(){this.seq([[440,.08,"square",.05,0],[587,.08,"square",.05,60],[740,.15,"square",.06,120]])},
-turn(){this.tone(220,.2,"sine",.05)},
-equip(){this.tone(500,.1,"triangle",.06)},
-victory(){this.seq([[523,.15,"sine",.07,0],[659,.15,"sine",.07,150],[784,.15,"sine",.07,300],[1047,.3,"sine",.08,450]])},
-defeat(){this.seq([[330,.2,"sine",.06,0],[262,.2,"sine",.06,200],[196,.4,"sine",.05,400]])},
-flip(){this.tone(600,.05,"square",.04)},
+seq2(notes){notes.forEach(n=>setTimeout(()=>{if(n.length===5)this.tone2(n[0],n[1],n[2],n[3],n[4]);else this.tone(n[0],n[1],n[2],n[3])},n[n.length-1]||0))},
+play(){this.tone(440,.1,"square",.06);this.tone(660,.08,"triangle",.04)},
+draw(){this.tone2(300,500,.1,"triangle",.05)},
+damage(){this.noise(.15,.08);this.tone(120,.2,"sawtooth",.1);setTimeout(()=>this.tone(80,.15,"sawtooth",.06),60)},
+heal(){this.seq([[523,.12,"sine",.06,0],[659,.12,"sine",.06,100],[784,.15,"sine",.05,200]])},
+skill(){this.seq([[440,.06,"square",.04,0],[554,.06,"square",.04,50],[659,.06,"square",.05,100],[880,.2,"sine",.06,150]])},
+turn(){this.tone2(180,260,.15,"sine",.05)},
+equip(){this.tone(500,.08,"triangle",.06);setTimeout(()=>this.tone(750,.06,"triangle",.04),60)},
+victory(){this.seq([[523,.12,"sine",.07,0],[659,.12,"sine",.07,120],[784,.12,"sine",.07,240],[1047,.12,"sine",.07,360],[1319,.4,"sine",.08,480]])},
+defeat(){this.seq2([[400,150,.25,"sawtooth",.07,0],[300,100,.25,"sine",.06,200],[200,50,.5,"sine",.05,400]])},
+flip(){this.tone(600,.04,"square",.04);setTimeout(()=>this.tone(800,.03,"square",.03),30)},
+select(){this.tone(440,.04,"triangle",.04);setTimeout(()=>this.tone(660,.04,"triangle",.03),30)},
+levelup(){this.seq([[523,.1,"square",.06,0],[659,.1,"square",.06,80],[784,.1,"square",.06,160],[1047,.1,"square",.07,240],[1319,.3,"sine",.08,320]])},
+boss(){this.seq2([[110,55,.4,"sawtooth",.08,0],[220,110,.3,"square",.05,200]])},
+skillUnlock(){this.seq([[659,.1,"sine",.06,0],[880,.1,"sine",.06,80],[1100,.15,"sine",.07,160],[1320,.2,"sine",.06,280]])},
 };
 // ==================== 动画系统 ====================
 function fxDamage(side){const el=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(el){el.classList.add("fx-damage");setTimeout(()=>el.classList.remove("fx-damage"),400)}const ov=document.getElementById("fx-overlay");if(ov){ov.classList.add("fx-damage");setTimeout(()=>ov.classList.remove("fx-damage"),400)}}
@@ -614,6 +677,44 @@ wukong:{name:"孙悟空",maxHp:4,skills:[{key:"huoyan",name:"火眼金睛",desc:
 bajie:{name:"猪八戒",maxHp:4,skills:[{key:"tianpeng",name:"天蓬之力",desc:"红色牌当降妖",perTurn:0},{key:"tanshi",name:"贪食",desc:"回合结束有蟠桃则额外回1血",perTurn:1}]},
 shaseng:{name:"沙和尚",maxHp:4,skills:[{key:"juanlian",name:"卷帘之盾",desc:"黑色牌当遁法",perTurn:0},{key:"liusha",name:"流沙护体",desc:"受伤弃1牌抵1伤",perTurn:1}]},
 };
+// 升级所需经验表
+const EXP_TABLE=[0,10,25,45,70,100,140,190,250,320];
+
+// ==================== 技能树系统 ====================
+// 每个角色的可解锁技能及升级路径
+// cost: 消耗技能点; req: 前置技能(可选); passive: 是否被动; maxLv: 最大等级
+const SKILL_TREE={
+wukong:{
+jinbao:{name:"筋斗雷霆",desc:"造成伤害+1",cost:2,passive:true,maxLv:2},
+huoyan_up:{name:"火眼精进",desc:"火眼金睛每回合可用+1次",cost:2,passive:true,maxLv:1,req:"jinbao"},
+bian_up:{name:"变术精通",desc:"七十二变每回合可用+1次",cost:2,passive:true,maxLv:1,req:"jinbao"},
+bianshen:{name:"大圣化身",desc:"变术可当任意牌(含锦囊)",cost:4,passive:false,maxLv:1,req:"bian_up"},
+sanshiliu:{name:"三十六变",desc:"每回合1次将手牌当遁法",cost:3,passive:false,maxLv:1,req:"bian_up"},
+},
+bajie:{
+tianpeng_up:{name:"天蓬精进",desc:"红牌当降妖时伤害+1",cost:2,passive:true,maxLv:2},
+tanshi_up:{name:"贪食精进",desc:"回合结束有蟠桃额外回2血",cost:2,passive:true,maxLv:1,req:"tianpeng_up"},
+dunqi:{name:"遁气护身",desc:"每回合1次红牌当遁法",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
+chanxin:{name:"禅心稳固",desc:"每回合额外摸1张牌",cost:4,passive:true,maxLv:1,req:"tanshi_up"},
+},
+shaseng:{
+liusha_up:{name:"流沙精进",desc:"流沙护体每回合可用+1次",cost:2,passive:true,maxLv:1},
+juanlian_up:{name:"卷帘精进",desc:"卷帘之盾可当任意黑色基本牌",cost:2,passive:true,maxLv:1,req:"liusha_up"},
+jinshen:{name:"金身罗汉",desc:"受伤时50%概率减1伤",cost:3,passive:true,maxLv:1,req:"liusha_up"},
+foen:{name:"佛恩浩荡",desc:"每回合首张蟠桃回2血",cost:4,passive:true,maxLv:1,req:"juanlian_up"},
+},
+};
+
+// 检查角色是否解锁了某技能
+function hasSkill(charKey,skillKey){
+const u=G.partyUnlocked&&G.partyUnlocked[charKey];
+return u&&u[skillKey];
+}
+// 获取技能等级(被动技能可能有多级)
+function getSkillLv(charKey,skillKey){
+const u=G.partyUnlocked&&G.partyUnlocked[charKey];
+return u&&u[skillKey]?u[skillKey]:0;
+}
 
 // ==================== 八十一难数据 ====================
 const L81_NAMES=["大闹天宫","金蝉遭贬","出胎几杀","满月抛江","寻亲报冤","出城逢虎","落坑折从","双叉岭上","两界山头","陡涧换马","夜被火烧","失却袈裟","收降八戒","请求灵吉","黄风怪阻","流沙难渡","收得沙僧","四圣显化","五庄观中","难活人参","贬退心猿","黑松林失散","宝象国捎书","金銮殿变虎","平顶山逢魔","莲花洞高悬","乌鸡国救主","被魔化身","号山逢怪","风摄圣僧","心猿遭害","请圣降妖","黑河沉没","搬运车迟","大赌输赢","祛道兴僧","路逢大水","身落天河","鱼篮现身","金兜山遇怪","普天神难伏","问佛根源","吃水遭毒","西梁国留婚","琵琶洞受苦","再贬心猿","难辨猕猴","路阻火焰山","求取芭蕉扇","收缚魔王","赛城扫塔","取宝救僧","棘林吟咏","小雷音遇难","诸天神遭困","稀柿衕秽阻","朱紫国行医","拯救疲癃","降妖取后","七情迷没","多目遭伤","路阻狮驼","怪分三色","城里遇灾","请佛收魔","比丘救子","辨认真邪","松林救怪","僧房卧病","无底洞遭困","灭法国难行","隐雾山遇魔","凤仙郡求雨","失落兵器","会庆钉钯","竹节山遭难","玄英洞受苦","赶捉犀牛","天竺招婚","铜台府监禁","凌云渡脱胎","通天河遇鼋湿经书"];
@@ -811,7 +912,10 @@ function newGameState(){
 return{
 screen:"title",level:0,maxLevel:0,
 party:["wukong"],partyHp:{wukong:4},partyMaxHp:{wukong:4},
+partyExp:{wukong:0},partyLevel:{wukong:1},partySkillPoints:{wukong:0},
+partyUnlocked:{wukong:{}},partySkillLv:{wukong:{}},
 selectedChar:"wukong",
+charSelectPending:null,
 buffs:{},
 deck:[],discard:[],
 player:null,enemy:null,
@@ -824,17 +928,36 @@ log:[],
 
 function makeCombatant(charKey,bossData){
 const char=CHARS[charKey];
-const hp=bossData?bossData.hp:char.maxHp;
-const maxHp=bossData?bossData.hp:char.maxHp;
+let hp=bossData?bossData.hp:char.maxHp;
+let maxHp=bossData?bossData.hp:char.maxHp;
 const drawCount=bossData?bossData.draw:2;
+// player level bonus: +1 maxHp per level above 1
+if(!bossData){
+const lv=(G.partyLevel&&G.partyLevel[charKey])||1;
+const lvBonus=lv-1;
+maxHp+=lvBonus;
+hp+=lvBonus;
+}
+// collect unlocked skills
+let skills=bossData?bossData.skills:(char.skills||[]).map(s=>({...s}));
+let skillsDef=bossData?null:char.skills.map(s=>({...s}));
+if(!bossData&&SKILL_TREE[charKey]){
+const unlocked=G.partyUnlocked&&G.partyUnlocked[charKey]||{};
+Object.entries(SKILL_TREE[charKey]).forEach(([key,node])=>{
+if(unlocked[key]&&!node.passive){
+const lv=typeof unlocked[key]==='number'?unlocked[key]:1;
+skills.push({key:key,name:node.name,desc:node.desc,perTurn:node.maxLv?lv:1});
+if(skillsDef)skillsDef.push({key:key,name:node.name,desc:node.desc,perTurn:node.maxLv?lv:1});
+}
+});
+}
 return{
 charKey:charKey,name:bossData?bossData.name:char.name,
 hp:hp,maxHp:maxHp,drawCount:drawCount,
 hand:[],equipment:{weapon:null,armor:null,mount:null,defMount:null},
 judge:[],shaPlayed:false,
-skills:bossData?bossData.skills:(char.skills||[]),
-skillUsed:{},
-alive:true,skillsDef:bossData?null:char.skills,
+skills:skills,skillUsed:{},
+alive:true,skillsDef:skillsDef,
 isEnemy:!!bossData,
 bossData:bossData,
 };
@@ -894,6 +1017,8 @@ const ebar=document.getElementById("enemy-hpbar");
 ebar.style.width=Math.max(0,er)*100+"%";
 ebar.className="hp-bar-fill "+(er>.5?"high":er>.25?"mid":"low");
 document.getElementById("player-name").textContent=p.name;
+const pLv=(G.partyLevel&&G.partyLevel[p.charKey])||1;
+document.getElementById("player-name").innerHTML=p.name+'<span class="lv-badge">Lv.'+pLv+'</span>';
 document.getElementById("player-hptext").textContent=p.hp+"/"+p.maxHp;
 const pr=p.hp/p.maxHp;
 const pbar=document.getElementById("player-hpbar");
@@ -1014,7 +1139,13 @@ if(!p.isEnemy&&p.skillsDef){
 p.skillsDef.forEach((sk,i)=>{
 if(sk.perTurn>0){
 const used=p.skillUsed[sk.key]||0;
-if(used<sk.perTurn){
+let maxUse=sk.perTurn;
+if(sk.key==="bian"){
+if(p.skills.some(s=>s.key==="bianshen"))maxUse=2;
+if(p.skills.some(s=>s.key==="bian_up"))maxUse+=1;
+}
+if(sk.key==="huoyan"&&p.skills.some(s=>s.key==="huoyan_up"))maxUse+=1;
+if(used<maxUse){
 const btn=document.createElement("button");
 btn.className="skill-btn";
 btn.textContent=sk.name;
@@ -1023,6 +1154,21 @@ ac.appendChild(btn);
 }
 }
 });
+if(p.skills.some(s=>s.key==="sanshiliu")&&!(p.skillUsed.sanshiliu>0)){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="三十六变";
+btn.onclick=()=>useSkill("sanshiliu");
+ac.appendChild(btn);
+}
+// dunqi: use red card as shan
+if(p.skills.some(s=>s.key==="dunqi")&&!(p.skillUsed.dunqi>0)&&p.hand.some(c=>c.red)){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="遁气护身";
+btn.onclick=()=>useSkill("dunqi");
+ac.appendChild(btn);
+}
 // passive skills
 p.skillsDef.forEach((sk,i)=>{
 if(sk.perTurn===0&&sk.key==="tianpeng"&&p.hand.some(c=>c.red&&c.key!=="sha")){
@@ -1087,9 +1233,15 @@ const fc=showFieldCard(card,"player");
 resolveSha(p,e,card);
 setTimeout(()=>removeFieldCard(fc),1500);
 }else if(card.key==="tao"){
-p.hp=Math.min(p.maxHp,p.hp+1);
-log(`${p.name}使用蟠桃，回复1点体力`,"log-heal");
-SND.heal();fxHeal("player");fxHpChange("player");fxDmgFloat("player",-1);
+let healAmt=1;
+// foen: first tao each turn heals 2
+if(p.skills.some(s=>s.key==="foen")&&!(p.skillUsed.foen>0)){
+healAmt=2;
+p.skillUsed.foen=1;
+}
+p.hp=Math.min(p.maxHp,p.hp+healAmt);
+log(`${p.name}使用蟠桃，回复${healAmt}点体力`,"log-heal");
+SND.heal();fxHeal("player");fxHpChange("player");fxDmgFloat("player",-healAmt);
 const fc=showFieldCard(card,"player");
 setTimeout(()=>removeFieldCard(fc),1500);
 }
@@ -1196,10 +1348,10 @@ showResponse("贯石斧",`${target.name}出了遁法！是否弃2牌强制命中
 for(let g=0;g<2;g++){const gc=source.hand.splice(0,1)[0];G.discard.push(gc)}
 log(`贯石斧：弃2牌强制命中！`,"log-player");
 let dmg=1;
-if(source.skills.includes("manniu"))dmg=2;
-if(source.skills.includes("sanmei"))dmg=2;
+if(source.skills.some(s=>s.key==="manniu"))dmg=2;
+if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
 if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
-if(target.skills&&target.skills.includes("xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
+if(target.skills&&target.skills.some(s=>s.key==="xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
 if(dmg>0){damage(target,dmg,source);if(target.hp>0)onShaDamage(source,target,card)}
 renderBattle();checkEnd();
 }},
@@ -1217,11 +1369,18 @@ return;
 }
 // not dodged
 let dmg=1;
-if(source.skills.includes("manniu"))dmg=2;
-if(source.skills.includes("sanmei"))dmg=2;
+if(source.skills.some(s=>s.key==="manniu"))dmg=2;
+if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
 if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
+// unlocked attack skills: jinbao (wukong) +1 damage per level, tianpeng_up (bajie) +1 per level
+if(!source.isEnemy){
+const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 // xiniu: reduce sha damage by 1
-if(target.skills&&target.skills.includes("xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消降妖伤害`,"log-system")}
+if(target.skills&&target.skills.some(s=>s.key==="xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消降妖伤害`,"log-system")}
 // hanbing: replace damage with discard 2
 if(source.equipment.weapon&&source.equipment.weapon.key==="hanbing"&&target.hand.length>=2){
 for(let h=0;h<2;h++){const dc=target.hand.splice(0,1)[0];G.discard.push(dc)}
@@ -1326,11 +1485,18 @@ amount=Math.max(0,amount-target._defBuff);
 log(`防御增益抵消${reduced}点伤害`,"log-heal");
 }
 // liusha shield - only trigger if there's still damage to mitigate
-if(amount>0&&!target.isEnemy&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<1&&target.hand.length>0){
-target.skillUsed.liusha=1;
+const liushaMax=target.skills&&target.skills.some(s=>s.key==="liusha_up")?2:1;
+if(amount>0&&!target.isEnemy&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<liushaMax&&target.hand.length>0){
+target.skillUsed.liusha=(target.skillUsed.liusha||0)+1;
 const di=0;const dc=target.hand.splice(di,1)[0];G.discard.push(dc);
 log(`沙和尚流沙护体：弃1牌抵消1伤`,"log-heal");
 amount=Math.max(0,amount-1);
+}
+// jinshen: 50% chance to reduce 1 damage
+if(amount>0&&!target.isEnemy&&target.skills&&target.skills.some(s=>s.key==="jinshen")&&(target.skillUsed.jinshen||0)<1&&Math.random()<0.5){
+target.skillUsed.jinshen=1;
+amount=Math.max(0,amount-1);
+log("金身罗汉：减伤1点","log-heal");
 }
 if(amount<=0)return;
 target.hp-=amount;
@@ -1862,7 +2028,9 @@ if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
 }
 // draw phase
 const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
-const drawn=drawFromDeck(drawN);
+let extraDrawSkill=0;
+if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
+const drawn=drawFromDeck(drawN+extraDrawSkill);
 p.hand.push(...drawn);
 p._extraDraw=0;
 p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;
@@ -1888,8 +2056,12 @@ if(G.turn!=="player")return;
 // tanshi skill
 if(p.charKey==="bajie"&&!(p.skillUsed.tanshi>0)&&hasCard(p,"tao")&&p.hp<p.maxHp){
 p.skillUsed.tanshi=1;
-p.hp++;
-log("猪八戒贪食：额外回复1点体力","log-heal");
+let healAmt=1;
+// tanshi_up: extra +1 heal
+if(p.skills.some(s=>s.key==="tanshi_up"))healAmt=2;
+p.hp=Math.min(p.maxHp,p.hp+healAmt);
+log(`猪八戒贪食：额外回复${healAmt}点体力`,"log-heal");
+SND.heal();fxHeal("player");
 }
 // discard phase
 if(p.hand.length>p.hp){
@@ -2060,16 +2232,96 @@ p.hand.push(newCard);
 log(`丈八蛇矛：将${c1.name}+${c2.name}合为降妖`,"log-player");
 renderBattle();
 }
+// ====== Unlocked skills ======
+else if(key==="jinbao"){
+log("筋斗雷霆：造成伤害+1（被动）","log-player");
+}
+else if(key==="bianshen"){
+if((p.skillUsed.bian||0)>=2)return;
+p.skillUsed.bian=(p.skillUsed.bian||0)+1;
+showResponse("七十二变·大圣化身","选择要变化的牌类型：",[
+{label:"降妖",action:()=>{doBian("sha")}},
+{label:"遁法",action:()=>{doBian("shan")}},
+{label:"蟠桃",action:()=>{doBian("tao")}},
+{label:"神通自现",action:()=>{doBian("wuzhong")}},
+{label:"护身法",action:()=>{doBian("wuxie")}},
+{label:"拆桥断路",action:()=>{doBian("guohe")}},
+]);
+}
+else if(key==="sanshiliu"){
+if((p.skillUsed.sanshiliu||0)>=1)return;
+p.skillUsed.sanshiliu=1;
+const idx=p.hand.findIndex(c=>c.type!=="trick");
+if(idx<0){log("没有可变化的牌","log-system");return}
+showResponse("三十六变","选择要变化的锦囊牌类型：",[
+{label:"神通自现",action:()=>{doSanshiliu(idx,"wuzhong")}},
+{label:"拆桥断路",action:()=>{doSanshiliu(idx,"guohe")}},
+{label:"护身法",action:()=>{doSanshiliu(idx,"wuxie")}},
+]);
+}
+else if(key==="dunqi"){
+if((p.skillUsed.dunqi||0)>=1)return;
+const idx=p.hand.findIndex(c=>c.red);
+if(idx<0){log("没有红色手牌可施遁气","log-system");return}
+p.skillUsed.dunqi=1;
+const card=p.hand.splice(idx,1)[0];
+G.discard.push(card);
+log(`遁气护身：将${card.name}当遁法使用`,"log-player");
+// treat as playing a shan — add a virtual shan to hand temporarily
+p.hand.push({id:99999+Math.random(),key:"shan",name:"遁法",type:"basic",basicSubtype:"shan",suit:card.suit,rank:card.rank,red:card.red,desc:"遁气化遁法",cls:"basic-shan"});
+renderBattle();
+}
+else if(key==="tianpeng_up"){
+log("天蓬精进：红牌当降妖时伤害+1（被动）","log-player");
+}
+else if(key==="tanshi_up"){
+log("贪食精进：回合结束有蟠桃额外回2血（被动）","log-player");
+}
+else if(key==="chanxin"){
+log("禅心稳固：每回合额外摸1张牌（被动）","log-player");
+}
+else if(key==="liusha_up"){
+log("流沙精进：流沙护体每回合可用2次（被动）","log-player");
+}
+else if(key==="juanlian_up"){
+log("卷帘精进：卷帘之盾可当任意黑色基本牌（被动）","log-player");
+}
+else if(key==="jinshen"){
+log("金身罗汉：受伤时50%概率减1伤（被动）","log-player");
+}
+else if(key==="foen"){
+log("佛恩浩荡：每回合首张蟠桃回2血（被动）","log-player");
+}
+else if(key==="huoyan_up"){
+log("火眼精进：火眼金睛每回合可用+1次（被动）","log-player");
+}
+else if(key==="bian_up"){
+log("变术精通：七十二变每回合可用+1次（被动）","log-player");
+}
+}
+function doSanshiliu(idx,targetKey){
+const p=G.player;
+const old=p.hand[idx];
+const def=CARD_DEF[targetKey];
+const newCard={id:old.id,key:targetKey,name:def.n,type:"trick",suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:"trick"};
+p.hand[idx]=newCard;
+log(`三十六变：将${old.name}变为${newCard.name}`,"log-player");
+renderBattle();
 }
 function doBian(targetKey){
 const p=G.player;
-// find any non-basic card to transform
-const idx=p.hand.findIndex(c=>c.type!=="basic"||c.key!==targetKey);
+// find any card to transform (prefer non-matching)
+const idx=p.hand.findIndex(c=>c.key!==targetKey);
 if(idx<0){log("没有可变化的牌","log-system");return}
 const old=p.hand[idx];
 const def=CARD_DEF[targetKey];
+let newCard;
+if(def.t==="trick"){
+newCard={id:old.id,key:targetKey,name:def.n,type:"trick",suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:"trick"};
+}else{
 let cls="basic-"+def.st;
-const newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:cls};
+newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:cls};
+}
 p.hand[idx]=newCard;
 p.skillUsed.bian=1;
 log(`七十二变：将${old.name}变为${newCard.name}`,"log-player");
@@ -2089,6 +2341,18 @@ function continueGame(){
 const data=load();
 if(data){
 G=Object.assign(newGameState(),data);
+if(!G.partyExp)G.partyExp={};
+if(!G.partyLevel)G.partyLevel={};
+if(!G.partySkillPoints)G.partySkillPoints={};
+if(!G.partyUnlocked)G.partyUnlocked={};
+if(!G.partySkillLv)G.partySkillLv={};
+G.party.forEach(k=>{
+if(G.partyExp[k]===undefined)G.partyExp[k]=0;
+if(G.partyLevel[k]===undefined)G.partyLevel[k]=1;
+if(G.partySkillPoints[k]===undefined)G.partySkillPoints[k]=0;
+if(!G.partyUnlocked[k])G.partyUnlocked[k]={};
+if(!G.partySkillLv[k])G.partySkillLv[k]={};
+});
 startLevel(G.level);
 }
 }
@@ -2113,8 +2377,11 @@ startBattle(n);
 
 function showCharSelect(n){
 showScreen("charselect-screen");
+G.charSelectPending=n;
 const el=document.getElementById("char-select-cards");
 el.innerHTML="";
+const btn=document.getElementById("char-confirm-btn");
+if(btn)btn.style.display="none";
 // safety: if all party members are at 0 HP, revive the first one to 1
 const allDead=G.party.every(key=>(G.partyHp[key]??0)<=0);
 if(allDead&&G.party.length>0){
@@ -2125,13 +2392,37 @@ G.party.forEach(key=>{
 const ch=CHARS[key];
 const hp=G.partyHp[key];
 const injured=hp<=0;
+const lv=(G.partyLevel&&G.partyLevel[key])||1;
+const exp=(G.partyExp&&G.partyExp[key])||0;
+const expNeed=EXP_TABLE[lv]||999;
+const expPct=Math.min(100,(exp/(expNeed||1))*100);
 const div=document.createElement("div");
-div.className="char-card"+(injured?" injured":"");
+div.className="char-card"+(injured?" injured":"")+(key===G.selectedChar?" selected":"");
 const svg=getCharSvg(null,ch.key);const av=svg?'<img src="'+svg+'" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--gold-dim);object-fit:cover">':(ch.key==='wukong'?'🐵':ch.key==='bajie'?'🐷':'🧔');
-div.innerHTML=`<div style="margin-bottom:4px">${av}</div><div class="ch-name">${ch.name}</div><div class="ch-hp">体力 ${hp}/${ch.maxHp}</div><div class="ch-skill">${ch.skills.map(s=>s.name).join(" · ")}</div>`;
-if(!injured)div.onclick=()=>{G.selectedChar=key;startBattle(n)};
+const unlockedCount=Object.keys(G.partyUnlocked&&G.partyUnlocked[key]||{}).length;
+div.innerHTML=`<div style="margin-bottom:4px">${av}</div><div class="ch-name">${ch.name}</div><div class="ch-lv">Lv.${lv}</div><div class="ch-hp">体力 ${hp}/${ch.maxHp}</div><div class="ch-skill">${ch.skills.map(s=>s.name).join(" · ")}${unlockedCount>0?" +"+unlockedCount:""}</div><div class="xp-bar-track"><div class="xp-bar-fill" style="width:${expPct}%"></div></div>`;
+if(!injured){
+div.onclick=()=>{
+G.party.forEach(k=>{
+const c=document.querySelectorAll(".char-card");
+c.forEach(card=>card.classList.remove("selected"));
+});
+div.classList.add("selected");
+G.selectedChar=key;
+if(btn){btn.style.display="";SND.select();}
+};
+}
 el.appendChild(div);
 });
+}
+
+function confirmCharSelect(){
+if(G.charSelectPending!==null&&G.charSelectPending!==undefined){
+const n=G.charSelectPending;
+G.charSelectPending=null;
+SND.flip();
+startBattle(n);
+}
 }
 
 function startBattle(n){
@@ -2188,7 +2479,7 @@ showScreen("battle-screen");
 log(`第 ${n} 难：${L81_NAMES[n]}`,"log-system");
 log(`${G.enemy.name} 出现！体力 ${G.enemy.hp}/${G.enemy.maxHp}`,"log-system");
 renderBattle();
-setTimeout(()=>{fxBossEntry();SND.flip()},200);
+setTimeout(()=>{fxBossEntry();SND.flip();SND.boss()},200);
 playerTurnStart();
 }
 
@@ -2410,6 +2701,10 @@ if(boss&&boss.join){
 if(boss.join==="bajie"&&!G.party.includes("bajie")){
 G.party.push("bajie");
 G.partyHp.bajie=CHARS.bajie.maxHp;
+G.partyExp=G.partyExp||{};G.partyExp.bajie=0;
+G.partyLevel=G.partyLevel||{};G.partyLevel.bajie=1;
+G.partySkillPoints=G.partySkillPoints||{};G.partySkillPoints.bajie=0;
+G.partyUnlocked=G.partyUnlocked||{};G.partyUnlocked.bajie={};
 log("猪八戒加入队伍！","log-system");
 setTimeout(()=>showStory(n,"收降八戒","高老庄一战，猪八戒败北，愿随唐僧西天取经，拜为二徒弟。"),1000);
 return;
@@ -2417,11 +2712,25 @@ return;
 if(boss.join==="shaseng"&&!G.party.includes("shaseng")){
 G.party.push("shaseng");
 G.partyHp.shaseng=CHARS.shaseng.maxHp;
+G.partyExp=G.partyExp||{};G.partyExp.shaseng=0;
+G.partyLevel=G.partyLevel||{};G.partyLevel.shaseng=1;
+G.partySkillPoints=G.partySkillPoints||{};G.partySkillPoints.shaseng=0;
+G.partyUnlocked=G.partyUnlocked||{};G.partyUnlocked.shaseng={};
 log("沙和尚加入队伍！","log-system");
 }
 }
 // heal selected char
 G.partyHp[G.selectedChar]=G.player.hp;
+// award XP
+const xpReward=Math.max(3,Math.floor(n/3)+3);
+G.partyExp=G.partyExp||{};
+G.partyLevel=G.partyLevel||{};
+G.partySkillPoints=G.partySkillPoints||{};
+const curExp=(G.partyExp[G.selectedChar]||0)+xpReward;
+G.partyExp[G.selectedChar]=curExp;
+log(`${CHARS[G.selectedChar].name}获得${xpReward}点经验`,"log-heal");
+// check level up
+checkLevelUp(G.selectedChar);
 if(n===81){
 setTimeout(()=>showScreen("victory-screen"),1500);
 return;
@@ -2430,6 +2739,35 @@ return;
 setTimeout(()=>{
 showStory(n,"胜利",`击败${G.enemy.name}！第${n}难已过，继续前行。`);
 },1000);
+}
+
+function checkLevelUp(charKey){
+const lv=(G.partyLevel[charKey]||1);
+if(lv>=10)return;
+const exp=G.partyExp[charKey]||0;
+const need=EXP_TABLE[lv]||999;
+if(exp>=need){
+G.partyLevel[charKey]=lv+1;
+G.partySkillPoints[charKey]=(G.partySkillPoints[charKey]||0)+1;
+G.partyExp[charKey]=exp-need;
+SND.levelup();
+// show level up popup
+const ch=CHARS[charKey];
+const newLv=lv+1;
+const popup=document.createElement("div");
+popup.className="levelup-popup";
+popup.innerHTML=`<div class="lu-title">${ch.name} 升级！</div><div class="lu-detail">Lv.${lv} → Lv.${newLv}</div><div class="lu-detail">体力上限+1 · 获得1技能点</div>`;
+document.body.appendChild(popup);
+setTimeout(()=>{
+popup.style.transition="all .4s ease-out";
+popup.style.opacity="0";
+popup.style.transform="translate(-50%,-50%) scale(.7)";
+setTimeout(()=>popup.remove(),400);
+},2000);
+log(`${ch.name}升级至Lv.${newLv}！体力上限+1，获得1技能点`,"log-heal");
+// recursive check for multi-level
+checkLevelUp(charKey);
+}
 }
 
 function onLevelFail(){
@@ -2459,6 +2797,19 @@ function showLevelSelect(){
 showScreen("level-screen");
 const grid=document.getElementById("level-grid");
 grid.innerHTML="";
+// show party info
+G.party.forEach(key=>{
+const ch=CHARS[key];
+const lv=(G.partyLevel&&G.partyLevel[key])||1;
+const pts=(G.partySkillPoints&&G.partySkillPoints[key])||0;
+const exp=(G.partyExp&&G.partyExp[key])||0;
+const expNeed=EXP_TABLE[lv]||999;
+const div=document.createElement("div");
+div.style.cssText="display:inline-block;margin:4px 6px;padding:6px 12px;border:1px solid var(--gold-dim);border-radius:6px;cursor:pointer;background:rgba(201,168,76,.06);font-size:.8em";
+div.innerHTML=`${ch.name} Lv.${lv} ${pts>0?'<span style="color:var(--gold-br)">●'+pts+'技能点</span>':''} <span style="color:var(--text-dim)">${exp}/${expNeed}exp</span>`;
+div.onclick=()=>showSkillTree(key);
+grid.appendChild(div);
+});
 for(let i=0;i<=81;i++){
 const btn=document.createElement("div");
 const type=levelType(i);
@@ -2476,6 +2827,9 @@ const data={
 level:G.level,maxLevel:G.maxLevel,
 party:G.party,partyHp:G.partyHp,partyMaxHp:G.partyMaxHp,
 buffs:G.buffs,
+partyExp:G.partyExp,partyLevel:G.partyLevel,
+partySkillPoints:G.partySkillPoints,partyUnlocked:G.partyUnlocked,
+partySkillLv:G.partySkillLv,
 };
 localStorage.setItem("xiyousha_save",JSON.stringify(data));
 }catch(e){}
@@ -2493,6 +2847,96 @@ return data;
 }
 }catch(e){}
 return null;
+}
+
+// ==================== 技能树 ====================
+function showSkillTree(charKey){
+if(!charKey)charKey=G.selectedChar;
+const ch=CHARS[charKey];
+const tree=SKILL_TREE[charKey];
+if(!tree){showLevelSelect();return}
+showScreen("skilltree-screen");
+const lv=(G.partyLevel&&G.partyLevel[charKey])||1;
+const exp=(G.partyExp&&G.partyExp[charKey])||0;
+const pts=(G.partySkillPoints&&G.partySkillPoints[charKey])||0;
+const expNeed=EXP_TABLE[lv]||999;
+const unlocked=G.partyUnlocked&&G.partyUnlocked[charKey]||{};
+document.getElementById("skilltree-title").textContent=ch.name+" · 技能修炼";
+const info=document.getElementById("skilltree-info");
+info.innerHTML=`<span class="ski-name">${ch.name}</span> <span class="ski-level">Lv.${lv}</span> <span class="ski-pts">技能点: ${pts}</span> <span style="color:var(--text-dim)">${exp}/${expNeed}exp</span>`;
+const list=document.getElementById("skilltree-list");
+list.innerHTML="";
+// char tabs
+const tabs=document.createElement("div");
+tabs.style.cssText="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap";
+G.party.forEach(k=>{
+const btn=document.createElement("button");
+btn.className="btn-sm"+(k===charKey?"":" btn-dim");
+btn.textContent=CHARS[k].name;
+btn.onclick=()=>showSkillTree(k);
+tabs.appendChild(btn);
+});
+list.appendChild(tabs);
+Object.entries(tree).forEach(([key,node])=>{
+const isUnlocked=!!unlocked[key];
+const reqMet=!node.req||!!unlocked[node.req];
+const curLv=isUnlocked?(typeof unlocked[key]==='number'?unlocked[key]:1):0;
+const isMaxLv=node.maxLv&&curLv>=node.maxLv;
+const canUnlock=!isUnlocked&&reqMet&&pts>=node.cost;
+const canUpgrade=isUnlocked&&!isMaxLv&&pts>=node.cost;
+const div=document.createElement("div");
+div.className="skill-node"+(isUnlocked?" unlocked":"")+(isUnlocked?"":" locked");
+let statusHtml="";
+if(isUnlocked){
+statusHtml='<span class="skill-node-status owned">已解锁'+(node.maxLv>1?' Lv.'+curLv+'/'+node.maxLv:'')+'</span>';
+}else if(!reqMet){
+const reqNode=tree[node.req];
+statusHtml='<span class="skill-node-status locked">需先解锁'+(reqNode?reqNode.name:node.req)+'</span>';
+}else{
+statusHtml='<span class="skill-node-status available">可解锁</span>';
+}
+div.innerHTML=`<div class="skill-node-head"><span class="skill-node-name">${node.name}</span>${statusHtml}</div><div class="skill-node-desc">${node.desc}</div><div class="skill-node-cost">消耗: ${node.cost} 技能点</div>`;
+if(!isUnlocked&&canUnlock){
+const btn=document.createElement("button");
+btn.className="skill-node-btn";
+btn.textContent="解锁";
+btn.onclick=()=>{
+G.partyUnlocked[charKey]=G.partyUnlocked[charKey]||{};
+G.partyUnlocked[charKey][key]=node.maxLv?1:true;
+G.partySkillPoints[charKey]=pts-node.cost;
+SND.skillUnlock();
+save();
+showSkillTree(charKey);
+};
+div.appendChild(btn);
+}else if(isUnlocked&&!isMaxLv&&canUpgrade){
+const btn=document.createElement("button");
+btn.className="skill-node-btn";
+btn.textContent="升级 → Lv."+(curLv+1);
+btn.onclick=()=>{
+G.partyUnlocked[charKey][key]=curLv+1;
+G.partySkillPoints[charKey]=pts-node.cost;
+SND.skillUnlock();
+save();
+showSkillTree(charKey);
+};
+div.appendChild(btn);
+}
+list.appendChild(div);
+});
+}
+
+function closeSkillTree(){
+// return to level select or battle depending on context
+if(G.screen==="battle"){
+showScreen("battle-screen");
+renderBattle();
+}else if(G.charSelectPending!==null&&G.charSelectPending!==undefined){
+showScreen("charselect-screen");
+showCharSelect(G.charSelectPending);
+}else{
+showLevelSelect();
+}
 }
 
 // ==================== 初始化 ====================
@@ -2518,6 +2962,9 @@ window.onCardClick=onCardClick;
 window.startLevel=startLevel;
 window.discardCard=discardCard;
 window.hideResponse=hideResponse;
+window.confirmCharSelect=confirmCharSelect;
+window.showSkillTree=showSkillTree;
+window.closeSkillTree=closeSkillTree;
 
 }catch(e){
 console.error("Game init error:",e);
