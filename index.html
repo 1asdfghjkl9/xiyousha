@@ -690,18 +690,24 @@ huoyan_up:{name:"火眼精进",desc:"火眼金睛每回合可用+1次",cost:2,pa
 bian_up:{name:"变术精通",desc:"七十二变每回合可用+1次",cost:2,passive:true,maxLv:1,req:"jinbao"},
 bianshen:{name:"大圣化身",desc:"变术可当任意牌(含锦囊)",cost:4,passive:false,maxLv:1,req:"bian_up"},
 sanshiliu:{name:"三十六变",desc:"每回合1次将手牌当遁法",cost:3,passive:false,maxLv:1,req:"bian_up"},
+fenghuo:{name:"风火轮",desc:"每回合1次将手牌当降妖",cost:3,passive:false,maxLv:1,req:"jinbao"},
+shenbing:{name:"定海神针",desc:"每回合1次无视防具出降妖",cost:4,passive:false,maxLv:1,req:"bianshen"},
 },
 bajie:{
 tianpeng_up:{name:"天蓬精进",desc:"红牌当降妖时伤害+1",cost:2,passive:true,maxLv:2},
 tanshi_up:{name:"贪食精进",desc:"回合结束有蟠桃额外回2血",cost:2,passive:true,maxLv:1,req:"tianpeng_up"},
 dunqi:{name:"遁气护身",desc:"每回合1次红牌当遁法",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
 chanxin:{name:"禅心稳固",desc:"每回合额外摸1张牌",cost:4,passive:true,maxLv:1,req:"tanshi_up"},
+dachui:{name:"天蓬大锤",desc:"每回合1次弃2牌造成1点伤害",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
+bianshen_zhu:{name:"净坛使者",desc:"每回合1次将手牌当蟠桃",cost:4,passive:false,maxLv:1,req:"chanxin"},
 },
 shaseng:{
 liusha_up:{name:"流沙精进",desc:"流沙护体每回合可用+1次",cost:2,passive:true,maxLv:1},
 juanlian_up:{name:"卷帘精进",desc:"卷帘之盾可当任意黑色基本牌",cost:2,passive:true,maxLv:1,req:"liusha_up"},
 jinshen:{name:"金身罗汉",desc:"受伤时50%概率减1伤",cost:3,passive:true,maxLv:1,req:"liusha_up"},
 foen:{name:"佛恩浩荡",desc:"每回合首张蟠桃回2血",cost:4,passive:true,maxLv:1,req:"juanlian_up"},
+jinta:{name:"金塔镇妖",desc:"每回合1次弃1牌让敌人弃1牌",cost:3,passive:false,maxLv:1,req:"liusha_up"},
+luohan:{name:"罗汉金身",desc:"每回合1次免疫一张锦囊",cost:4,passive:false,maxLv:1,req:"foen"},
 },
 };
 
@@ -931,10 +937,10 @@ const char=CHARS[charKey];
 let hp=bossData?bossData.hp:char.maxHp;
 let maxHp=bossData?bossData.hp:char.maxHp;
 const drawCount=bossData?bossData.draw:2;
-// player level bonus: +1 maxHp per level above 1
+// player level bonus: +1 maxHp per 2 levels above 1
 if(!bossData){
 const lv=(G.partyLevel&&G.partyLevel[charKey])||1;
-const lvBonus=lv-1;
+const lvBonus=Math.floor((lv-1)/2);
 maxHp+=lvBonus;
 hp+=lvBonus;
 }
@@ -1141,8 +1147,10 @@ if(sk.perTurn>0){
 const used=p.skillUsed[sk.key]||0;
 let maxUse=sk.perTurn;
 if(sk.key==="bian"){
-if(p.skills.some(s=>s.key==="bianshen"))maxUse=2;
-if(p.skills.some(s=>s.key==="bian_up"))maxUse+=1;
+let maxBian=1;
+if(p.skills.some(s=>s.key==="bianshen"))maxBian=2;
+if(p.skills.some(s=>s.key==="bian_up"))maxBian+=1;
+maxUse=maxBian;
 }
 if(sk.key==="huoyan"&&p.skills.some(s=>s.key==="huoyan_up"))maxUse+=1;
 if(used<maxUse){
@@ -1167,6 +1175,54 @@ const btn=document.createElement("button");
 btn.className="skill-btn";
 btn.textContent="遁气护身";
 btn.onclick=()=>useSkill("dunqi");
+ac.appendChild(btn);
+}
+// fenghuo: turn a card into sha
+if(p.skills.some(s=>s.key==="fenghuo")&&!(p.skillUsed.fenghuo>0)&&p.hand.some(c=>c.key!=="sha")){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="风火轮";
+btn.onclick=()=>useSkill("fenghuo");
+ac.appendChild(btn);
+}
+// shenbing: next sha ignores armor
+if(p.skills.some(s=>s.key==="shenbing")&&!(p.skillUsed.shenbing>0)&&!p.shaPlayed){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="定海神针";
+btn.onclick=()=>useSkill("shenbing");
+ac.appendChild(btn);
+}
+// dachui: discard 2 cards to deal 1 damage
+if(p.skills.some(s=>s.key==="dachui")&&!(p.skillUsed.dachui>0)&&p.hand.length>=2){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="天蓬大锤";
+btn.onclick=()=>useSkill("dachui");
+ac.appendChild(btn);
+}
+// bianshen_zhu: turn a card into tao
+if(p.skills.some(s=>s.key==="bianshen_zhu")&&!(p.skillUsed.bianshen_zhu>0)&&p.hp<p.maxHp&&p.hand.some(c=>c.key!=="tao")){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="净坛使者";
+btn.onclick=()=>useSkill("bianshen_zhu");
+ac.appendChild(btn);
+}
+// jinta: discard 1 to make enemy discard 1
+if(p.skills.some(s=>s.key==="jinta")&&!(p.skillUsed.jinta>0)&&p.hand.length>=1&&G.enemy.hand.length>=1){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="金塔镇妖";
+btn.onclick=()=>useSkill("jinta");
+ac.appendChild(btn);
+}
+// luohan: immune to next trick
+if(p.skills.some(s=>s.key==="luohan")&&!(p.skillUsed.luohan>0)){
+const btn=document.createElement("button");
+btn.className="skill-btn";
+btn.textContent="罗汉金身";
+btn.onclick=()=>useSkill("luohan");
 ac.appendChild(btn);
 }
 // passive skills
@@ -1318,8 +1374,11 @@ renderBattle();
 
 // ==================== 降妖结算 ====================
 function resolveSha(source,target,card){
+// shenbing: ignore armor
+const shenbing=source._shenbingActive;
+if(shenbing)source._shenbingActive=false;
 // check target armor
-if(target.equipment.armor){
+if(!shenbing&&target.equipment.armor){
 if(target.equipment.armor.key==="renwang"&&!card.red){
 log(`${target.name}的玄铁盾抵消了黑色降妖`,"log-system");
 return;
@@ -1937,6 +1996,15 @@ function aiPlayTrick(e,p){
 const keys=["wuzhong","jiedao","guohe","juedou","nanman","wanjian","lebu","shandian","shunshou"];
 for(const key of keys){
 if(!hasCard(e,key))continue;
+// luohan: immune to next trick
+if(p._luohanActive){
+p._luohanActive=false;
+log(`罗汉金身抵消了${e.name}的锦囊！`,"log-player");
+const ti0=findCard(e,key);
+const card0=e.hand.splice(ti0,1)[0];G.discard.push(card0);
+SND.skill();
+continue;
+}
 // check player wuxie
 let cancelled=false;
 if(p.hand.some(c=>c.key==="wuxie")){
@@ -2033,7 +2101,7 @@ if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
 p.hand.push(...drawn);
 p._extraDraw=0;
-p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;
+p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;
 G._lastPlayerCardKey=null;
 SND.draw();
 log(`你的回合，摸了${drawN}张牌`,"log-player");
@@ -2205,12 +2273,20 @@ showResponse("火眼金睛",`${G.enemy.name}的手牌：${cards}`,[{label:"知�
 log("孙悟空使用火眼金睛查看敌方手牌","log-player");
 }
 else if(key==="bian"){
-if((p.skillUsed.bian||0)>=1)return;
-showResponse("七十二变","选择要变化的基本牌类型：",[
-{label:"降妖",action:()=>{doBian("sha")}},
+let maxBian=1;
+if(p.skills.some(s=>s.key==="bianshen"))maxBian=2;
+if(p.skills.some(s=>s.key==="bian_up"))maxBian+=1;
+if((p.skillUsed.bian||0)>=maxBian)return;
+const hasBianshen=p.skills.some(s=>s.key==="bianshen");
+const opts=[{label:"降妖",action:()=>{doBian("sha")}},
 {label:"遁法",action:()=>{doBian("shan")}},
-{label:"蟠桃",action:()=>{doBian("tao")}},
-]);
+{label:"蟠桃",action:()=>{doBian("tao")}}];
+if(hasBianshen){
+opts.push({label:"神通自现",action:()=>{doBian("wuzhong")}});
+opts.push({label:"护身法",action:()=>{doBian("wuxie")}});
+opts.push({label:"拆桥断路",action:()=>{doBian("guohe")}});
+}
+showResponse(hasBianshen?"七十二变·大圣化身":"七十二变","选择要变化的牌类型：",opts);
 }
 else if(key==="tianpeng"){
 const idx=p.hand.findIndex(c=>c.red&&c.key!=="sha");
@@ -2236,18 +2312,7 @@ renderBattle();
 else if(key==="jinbao"){
 log("筋斗雷霆：造成伤害+1（被动）","log-player");
 }
-else if(key==="bianshen"){
-if((p.skillUsed.bian||0)>=2)return;
-p.skillUsed.bian=(p.skillUsed.bian||0)+1;
-showResponse("七十二变·大圣化身","选择要变化的牌类型：",[
-{label:"降妖",action:()=>{doBian("sha")}},
-{label:"遁法",action:()=>{doBian("shan")}},
-{label:"蟠桃",action:()=>{doBian("tao")}},
-{label:"神通自现",action:()=>{doBian("wuzhong")}},
-{label:"护身法",action:()=>{doBian("wuxie")}},
-{label:"拆桥断路",action:()=>{doBian("guohe")}},
-]);
-}
+// bianshen is now merged into bian handler
 else if(key==="sanshiliu"){
 if((p.skillUsed.sanshiliu||0)>=1)return;
 p.skillUsed.sanshiliu=1;
@@ -2297,6 +2362,68 @@ log("火眼精进：火眼金睛每回合可用+1次（被动）","log-player");
 }
 else if(key==="bian_up"){
 log("变术精通：七十二变每回合可用+1次（被动）","log-player");
+}
+// ====== New active skills ======
+else if(key==="fenghuo"){
+const p=G.player;
+if((p.skillUsed.fenghuo||0)>=1)return;
+const idx=p.hand.findIndex(c=>c.key!=="sha");
+if(idx<0){log("没有可变化的牌","log-system");return}
+p.skillUsed.fenghuo=1;
+const old=p.hand.splice(idx,1)[0];G.discard.push(old);
+p.hand.push({id:Math.random(),key:"sha",name:"风火轮·降妖",type:"basic",basicSubtype:"sha",suit:old.suit,rank:old.rank,red:old.red,desc:"风火轮化降妖",cls:"basic-sha"});
+log(`风火轮：将${old.name}化为降妖`,"log-player");
+SND.skill();renderBattle();
+}
+else if(key==="shenbing"){
+const p=G.player;
+if((p.skillUsed.shenbing||0)>=1)return;
+if(p.shaPlayed){log("本回合已出过降妖","log-system");return}
+p.skillUsed.shenbing=1;
+p._shenbingActive=true;
+log("定海神针：下一张降妖无视防具","log-player");
+SND.skill();renderBattle();
+}
+else if(key==="dachui"){
+const p=G.player;
+if((p.skillUsed.dachui||0)>=1)return;
+if(p.hand.length<2){log("手牌不足","log-system");return}
+p.skillUsed.dachui=1;
+const c1=p.hand.splice(0,1)[0];G.discard.push(c1);
+const c2=p.hand.splice(0,1)[0];G.discard.push(c2);
+log(`天蓬大锤：弃${c1.name}+${c2.name}对敌造成1伤`,"log-player");
+SND.skill();damage(G.enemy,1,p);renderBattle();checkEnd();
+}
+else if(key==="bianshen_zhu"){
+const p=G.player;
+if((p.skillUsed.bianshen_zhu||0)>=1)return;
+if(p.hp>=p.maxHp){log("体力已满","log-system");return}
+const idx=p.hand.findIndex(c=>c.key!=="tao");
+if(idx<0){log("没有可变化的牌","log-system");return}
+p.skillUsed.bianshen_zhu=1;
+const old=p.hand.splice(idx,1)[0];G.discard.push(old);
+p.hp=Math.min(p.maxHp,p.hp+1);
+log(`净坛使者：将${old.name}化为蟠桃，回复1点体力`,"log-player");
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();
+}
+else if(key==="jinta"){
+const p=G.player,e=G.enemy;
+if((p.skillUsed.jinta||0)>=1)return;
+if(p.hand.length<1){log("手牌不足","log-system");return}
+if(e.hand.length<1){log("敌人无手牌可弃","log-system");return}
+p.skillUsed.jinta=1;
+const c=p.hand.splice(0,1)[0];G.discard.push(c);
+const ec=e.hand.splice(Math.floor(Math.random()*e.hand.length),1)[0];G.discard.push(ec);
+log(`金塔镇妖：弃${c.name}，敌人弃${ec.name}`,"log-player");
+SND.skill();renderBattle();
+}
+else if(key==="luohan"){
+const p=G.player;
+if((p.skillUsed.luohan||0)>=1)return;
+p.skillUsed.luohan=1;
+p._luohanActive=true;
+log("罗汉金身：本回合免疫下一张锦囊","log-player");
+SND.skill();renderBattle();
 }
 }
 function doSanshiliu(idx,targetKey){
@@ -2393,6 +2520,7 @@ const ch=CHARS[key];
 const hp=G.partyHp[key];
 const injured=hp<=0;
 const lv=(G.partyLevel&&G.partyLevel[key])||1;
+const displayMaxHp=ch.maxHp+Math.floor((lv-1)/2);
 const exp=(G.partyExp&&G.partyExp[key])||0;
 const expNeed=EXP_TABLE[lv]||999;
 const expPct=Math.min(100,(exp/(expNeed||1))*100);
@@ -2400,7 +2528,7 @@ const div=document.createElement("div");
 div.className="char-card"+(injured?" injured":"")+(key===G.selectedChar?" selected":"");
 const svg=getCharSvg(null,ch.key);const av=svg?'<img src="'+svg+'" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--gold-dim);object-fit:cover">':(ch.key==='wukong'?'🐵':ch.key==='bajie'?'🐷':'🧔');
 const unlockedCount=Object.keys(G.partyUnlocked&&G.partyUnlocked[key]||{}).length;
-div.innerHTML=`<div style="margin-bottom:4px">${av}</div><div class="ch-name">${ch.name}</div><div class="ch-lv">Lv.${lv}</div><div class="ch-hp">体力 ${hp}/${ch.maxHp}</div><div class="ch-skill">${ch.skills.map(s=>s.name).join(" · ")}${unlockedCount>0?" +"+unlockedCount:""}</div><div class="xp-bar-track"><div class="xp-bar-fill" style="width:${expPct}%"></div></div>`;
+div.innerHTML=`<div style="margin-bottom:4px">${av}</div><div class="ch-name">${ch.name}</div><div class="ch-lv">Lv.${lv}</div><div class="ch-hp">体力 ${hp}/${displayMaxHp}</div><div class="ch-skill">${ch.skills.map(s=>s.name).join(" · ")}${unlockedCount>0?" +"+unlockedCount:""}</div><div class="xp-bar-track"><div class="xp-bar-fill" style="width:${expPct}%"></div></div>`;
 if(!injured){
 div.onclick=()=>{
 G.party.forEach(k=>{
@@ -2441,16 +2569,19 @@ if(G.buffs.zhenxiang){extraDraw=2;delete G.buffs.zhenxiang}
 if(G.buffs.xinmo1){extraAtk=1;delete G.buffs.xinmo1}
 if(G.buffs.xinmo2){extraDef=1;delete G.buffs.xinmo2}
 if(G.buffs.dingli){extraDef=(extraDef||0)+1;delete G.buffs.dingli}
-if(G.buffs.guanyin){G.party.forEach(k=>{G.partyHp[k]=CHARS[k].maxHp});delete G.buffs.guanyin}
-if(G.buffs.ruolai){G.party.forEach(k=>{G.partyHp[k]=CHARS[k].maxHp});delete G.buffs.ruolai}
-if(G.buffs.qiyu){G.party.forEach(k=>{G.partyHp[k]=CHARS[k].maxHp});delete G.buffs.qiyu}
+if(G.buffs.guanyin){G.party.forEach(k=>{const kLv=(G.partyLevel&&G.partyLevel[k])||1;G.partyHp[k]=CHARS[k].maxHp+Math.floor((kLv-1)/2)});delete G.buffs.guanyin}
+if(G.buffs.ruolai){G.party.forEach(k=>{const kLv=(G.partyLevel&&G.partyLevel[k])||1;G.partyHp[k]=CHARS[k].maxHp+Math.floor((kLv-1)/2)});delete G.buffs.ruolai}
+if(G.buffs.qiyu){G.party.forEach(k=>{const kLv=(G.partyLevel&&G.partyLevel[k])||1;G.partyHp[k]=CHARS[k].maxHp+Math.floor((kLv-1)/2)});delete G.buffs.qiyu}
 if(n===81&&G.buffs.tuotai){extraHp=2;delete G.buffs.tuotai}
-if(G.buffs.luotai){G.partyHp[G.selectedChar]=Math.min(CHARS[G.selectedChar].maxHp,(G.partyHp[G.selectedChar]??CHARS[G.selectedChar].maxHp)+1);delete G.buffs.luotai}
+if(G.buffs.luotai){const pLv2=(G.partyLevel&&G.partyLevel[G.selectedChar])||1;const pMaxHp2=CHARS[G.selectedChar].maxHp+Math.floor((pLv2-1)/2);G.partyHp[G.selectedChar]=Math.min(pMaxHp2,(G.partyHp[G.selectedChar]??pMaxHp2)+1);delete G.buffs.luotai}
 
 G.player=makeCombatant(G.selectedChar,null);
-G.player.hp=(G.partyHp[G.selectedChar]??CHARS[G.selectedChar].maxHp);
-G.player.maxHp=CHARS[G.selectedChar].maxHp+extraHp;
-G.player.hp=Math.min(G.player.hp+extraHp,G.player.maxHp);
+// preserve level bonus maxHp from makeCombatant, only add extraHp
+const pLv=(G.partyLevel&&G.partyLevel[G.selectedChar])||1;
+const baseMaxHp=CHARS[G.selectedChar].maxHp+Math.floor((pLv-1)/2);
+G.player.maxHp=baseMaxHp+extraHp;
+G.player.hp=Math.min((G.partyHp[G.selectedChar]??baseMaxHp)+extraHp,G.player.maxHp);
+if(G.player.hp<=0)G.player.hp=1;
 G.player._atkBuff=extraAtk;
 G.player._defBuff=extraDef;
 G.player.drawBonus=extraDraw;
@@ -2654,7 +2785,9 @@ ec.appendChild(div);
 function resolveEventChoice(effect){
 if(effect.hp){
 G.party.forEach(key=>{
-G.partyHp[key]=Math.max(0,(G.partyHp[key]??CHARS[key].maxHp)+effect.hp);
+const kLv=(G.partyLevel&&G.partyLevel[key])||1;
+const kMaxHp=CHARS[key].maxHp+Math.floor((kLv-1)/2);
+G.partyHp[key]=Math.max(0,Math.min(kMaxHp,(G.partyHp[key]??kMaxHp)+effect.hp));
 });
 log(`${effect.hp>0?"回复":"失去"}${Math.abs(effect.hp)}点体力（全队）`,"log-system");
 }
@@ -2662,7 +2795,7 @@ if(effect.buff){
 G.buffs[effect.buff]=true;
 }
 if(effect.buff==="guanyin"||effect.buff==="ruolai"||effect.buff==="qiyu"){
-G.party.forEach(key=>{G.partyHp[key]=CHARS[key].maxHp});
+G.party.forEach(key=>{const kLv=(G.partyLevel&&G.partyLevel[key])||1;G.partyHp[key]=CHARS[key].maxHp+Math.floor((kLv-1)/2)});
 log("全队体力回满！","log-heal");
 }
 if(effect.buff==="raolu"){
@@ -2677,8 +2810,10 @@ G.level++;
 G.maxLevel=Math.max(G.maxLevel,G.level);
 // resting characters heal
 G.party.forEach(key=>{
-if(key!==G.selectedChar&&G.partyHp[key]<CHARS[key].maxHp){
-G.partyHp[key]=Math.min(CHARS[key].maxHp,G.partyHp[key]+1);
+const kLv=(G.partyLevel&&G.partyLevel[key])||1;
+const kMaxHp=CHARS[key].maxHp+Math.floor((kLv-1)/2);
+if(key!==G.selectedChar&&G.partyHp[key]<kMaxHp){
+G.partyHp[key]=Math.min(kMaxHp,G.partyHp[key]+1);
 }
 });
 save();
@@ -2705,7 +2840,13 @@ G.partyExp=G.partyExp||{};G.partyExp.bajie=0;
 G.partyLevel=G.partyLevel||{};G.partyLevel.bajie=1;
 G.partySkillPoints=G.partySkillPoints||{};G.partySkillPoints.bajie=0;
 G.partyUnlocked=G.partyUnlocked||{};G.partyUnlocked.bajie={};
+// award XP before showing story
+const xpReward=Math.max(3,Math.floor(n/3)+3);
+G.partyExp[G.selectedChar]=(G.partyExp[G.selectedChar]||0)+xpReward;
+log(`${CHARS[G.selectedChar].name}获得${xpReward}点经验`,"log-heal");
+checkLevelUp(G.selectedChar);
 log("猪八戒加入队伍！","log-system");
+save();
 setTimeout(()=>showStory(n,"收降八戒","高老庄一战，猪八戒败北，愿随唐僧西天取经，拜为二徒弟。"),1000);
 return;
 }
@@ -2778,18 +2919,22 @@ if(n===0){
 showStory(0,"五行山镇压","孙悟空被如来镇压，五百年后唐僧揭去封条，取经之旅开始……");
 return;
 }
-G.partyHp[G.selectedChar]=Math.max(1,Math.floor(G.player.maxHp/2));
+const pLv=(G.partyLevel&&G.partyLevel[G.selectedChar])||1;
+const pMaxHp=CHARS[G.selectedChar].maxHp+Math.floor((pLv-1)/2);
+G.partyHp[G.selectedChar]=Math.max(1,Math.floor(pMaxHp/2));
 showScreen("over-screen");
 document.getElementById("over-title").textContent="败北";
 document.getElementById("over-text").textContent=`${G.enemy.name}击败了你……重整旗鼓，再战一回！`;
 }
 
 function retryLevel(){
-// heal all party members to at least 1 HP, selected char to full
+// heal all party members to at least 1 HP, selected char to full (with level bonus)
 G.party.forEach(key=>{
 G.partyHp[key]=Math.max(G.partyHp[key]??0,1);
 });
-G.partyHp[G.selectedChar]=CHARS[G.selectedChar].maxHp;
+const pLv=(G.partyLevel&&G.partyLevel[G.selectedChar])||1;
+const fullHp=CHARS[G.selectedChar].maxHp+Math.floor((pLv-1)/2);
+G.partyHp[G.selectedChar]=fullHp;
 startLevel(G.level);
 }
 
