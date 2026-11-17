@@ -698,7 +698,7 @@ tianpeng_up:{name:"天蓬精进",desc:"红牌当降妖时伤害+1",cost:2,passiv
 tanshi_up:{name:"贪食精进",desc:"回合结束有蟠桃额外回2血",cost:2,passive:true,maxLv:1,req:"tianpeng_up"},
 dunqi:{name:"遁气护身",desc:"每回合1次红牌当遁法",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
 chanxin:{name:"禅心稳固",desc:"每回合额外摸1张牌",cost:4,passive:true,maxLv:1,req:"tanshi_up"},
-dachui:{name:"天蓬大锤",desc:"每回合1次弃2牌造成1点伤害",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
+dachui:{name:"九齿钉耙",desc:"每回合1次弃2牌造成1点伤害",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
 bianshen_zhu:{name:"净坛使者",desc:"每回合1次将手牌当蟠桃",cost:4,passive:false,maxLv:1,req:"chanxin"},
 },
 shaseng:{
@@ -706,7 +706,7 @@ liusha_up:{name:"流沙精进",desc:"流沙护体每回合可用+1次",cost:2,pa
 juanlian_up:{name:"卷帘精进",desc:"卷帘之盾可当任意黑色基本牌",cost:2,passive:true,maxLv:1,req:"liusha_up"},
 jinshen:{name:"金身罗汉",desc:"受伤时50%概率减1伤",cost:3,passive:true,maxLv:1,req:"liusha_up"},
 foen:{name:"佛恩浩荡",desc:"每回合首张蟠桃回2血",cost:4,passive:true,maxLv:1,req:"juanlian_up"},
-jinta:{name:"金塔镇妖",desc:"每回合1次弃1牌让敌人弃1牌",cost:3,passive:false,maxLv:1,req:"liusha_up"},
+jinta:{name:"降妖宝杖",desc:"每回合1次弃1牌让敌人弃1牌",cost:3,passive:false,maxLv:1,req:"liusha_up"},
 luohan:{name:"罗汉金身",desc:"每回合1次免疫一张锦囊",cost:4,passive:false,maxLv:1,req:"foen"},
 },
 };
@@ -1197,7 +1197,7 @@ ac.appendChild(btn);
 if(p.skills.some(s=>s.key==="dachui")&&!(p.skillUsed.dachui>0)&&p.hand.length>=2){
 const btn=document.createElement("button");
 btn.className="skill-btn";
-btn.textContent="天蓬大锤";
+btn.textContent="九齿钉耙";
 btn.onclick=()=>useSkill("dachui");
 ac.appendChild(btn);
 }
@@ -1213,7 +1213,7 @@ ac.appendChild(btn);
 if(p.skills.some(s=>s.key==="jinta")&&!(p.skillUsed.jinta>0)&&p.hand.length>=1&&G.enemy.hand.length>=1){
 const btn=document.createElement("button");
 btn.className="skill-btn";
-btn.textContent="金塔镇妖";
+btn.textContent="降妖宝杖";
 btn.onclick=()=>useSkill("jinta");
 ac.appendChild(btn);
 }
@@ -2391,7 +2391,7 @@ if(p.hand.length<2){log("手牌不足","log-system");return}
 p.skillUsed.dachui=1;
 const c1=p.hand.splice(0,1)[0];G.discard.push(c1);
 const c2=p.hand.splice(0,1)[0];G.discard.push(c2);
-log(`天蓬大锤：弃${c1.name}+${c2.name}对敌造成1伤`,"log-player");
+log(`九齿钉耙：弃${c1.name}+${c2.name}对敌造成1伤`,"log-player");
 SND.skill();damage(G.enemy,1,p);renderBattle();checkEnd();
 }
 else if(key==="bianshen_zhu"){
@@ -2414,7 +2414,7 @@ if(e.hand.length<1){log("敌人无手牌可弃","log-system");return}
 p.skillUsed.jinta=1;
 const c=p.hand.splice(0,1)[0];G.discard.push(c);
 const ec=e.hand.splice(Math.floor(Math.random()*e.hand.length),1)[0];G.discard.push(ec);
-log(`金塔镇妖：弃${c.name}，敌人弃${ec.name}`,"log-player");
+log(`降妖宝杖：弃${c.name}，敌人弃${ec.name}`,"log-player");
 SND.skill();renderBattle();
 }
 else if(key==="luohan"){
