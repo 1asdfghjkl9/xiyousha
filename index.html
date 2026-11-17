@@ -498,28 +498,104 @@ var CHAR_SVG_DFU={
 function getCharSvg(name,charKey){if(charKey&&CHAR_SVG[charKey]&&CHAR_SVG_DFU[CHAR_SVG[charKey]])return CHAR_SVG_DFU[CHAR_SVG[charKey]];if(name&&BOSS_SVG[name]&&CHAR_SVG_DFU[BOSS_SVG[name]])return CHAR_SVG_DFU[BOSS_SVG[name]];return null}
 
 // ==================== 音效系统 ====================
-const SND={ctx:null,enabled:true,muted:false,
-init(){if(!this.ctx){try{this.ctx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){this.enabled=false}}},
+const SND={ctx:null,master:null,enabled:true,muted:false,
+init(){
+if(this.ctx)return;
+try{
+this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+this.master=this.ctx.createGain();
+this.master.gain.value=.7;
+// simple reverb via convolver
+this.reverb=this.ctx.createConvolver();
+const rl=this.ctx.sampleRate*1.2;
+const rb=this.ctx.createBuffer(2,rl,this.ctx.sampleRate);
+for(let c=0;c<2;c++){const d=rb.getChannelData(c);for(let i=0;i<rl;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/rl,3)}
+this.reverb.buffer=rb;
+this.revGain=this.ctx.createGain();this.revGain.gain.value=.18;
+this.dryGain=this.ctx.createGain();this.dryGain.gain.value=.85;
+this.master.connect(this.dryGain);this.dryGain.connect(this.ctx.destination);
+this.master.connect(this.reverb);this.reverb.connect(this.revGain);this.revGain.connect(this.ctx.destination);
+}catch(e){this.enabled=false}
+},
 toggleMute(){this.muted=!this.muted;return this.muted},
-tone(freq,dur,type,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.value=freq;g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+(dur||.15));o.stop(this.ctx.currentTime+(dur||.15))},
-tone2(freq1,freq2,dur,type,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type||"sine";o.frequency.setValueAtTime(freq1,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(freq2,this.ctx.currentTime+dur);g.gain.value=vol||.08;o.connect(g);g.connect(this.ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);o.stop(this.ctx.currentTime+dur)},
-noise(dur,vol){if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;const bs=Math.floor(this.ctx.sampleRate*dur);const buf=this.ctx.createBuffer(1,bs,this.ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bs,2);const n=this.ctx.createBufferSource();n.buffer=buf;const g=this.ctx.createGain();g.gain.value=vol||.05;n.connect(g);g.connect(this.ctx.destination);n.start()},
-seq(notes){notes.forEach(n=>setTimeout(()=>this.tone(n[0],n[1],n[2],n[3]),n[4]||0))},
-seq2(notes){notes.forEach(n=>setTimeout(()=>{if(n.length===5)this.tone2(n[0],n[1],n[2],n[3],n[4]);else this.tone(n[0],n[1],n[2],n[3])},n[n.length-1]||0))},
-play(){this.tone(440,.1,"square",.06);this.tone(660,.08,"triangle",.04)},
-draw(){this.tone2(300,500,.1,"triangle",.05)},
-damage(){this.noise(.15,.08);this.tone(120,.2,"sawtooth",.1);setTimeout(()=>this.tone(80,.15,"sawtooth",.06),60)},
-heal(){this.seq([[523,.12,"sine",.06,0],[659,.12,"sine",.06,100],[784,.15,"sine",.05,200]])},
-skill(){this.seq([[440,.06,"square",.04,0],[554,.06,"square",.04,50],[659,.06,"square",.05,100],[880,.2,"sine",.06,150]])},
-turn(){this.tone2(180,260,.15,"sine",.05)},
-equip(){this.tone(500,.08,"triangle",.06);setTimeout(()=>this.tone(750,.06,"triangle",.04),60)},
-victory(){this.seq([[523,.12,"sine",.07,0],[659,.12,"sine",.07,120],[784,.12,"sine",.07,240],[1047,.12,"sine",.07,360],[1319,.4,"sine",.08,480]])},
-defeat(){this.seq2([[400,150,.25,"sawtooth",.07,0],[300,100,.25,"sine",.06,200],[200,50,.5,"sine",.05,400]])},
-flip(){this.tone(600,.04,"square",.04);setTimeout(()=>this.tone(800,.03,"square",.03),30)},
-select(){this.tone(440,.04,"triangle",.04);setTimeout(()=>this.tone(660,.04,"triangle",.03),30)},
-levelup(){this.seq([[523,.1,"square",.06,0],[659,.1,"square",.06,80],[784,.1,"square",.06,160],[1047,.1,"square",.07,240],[1319,.3,"sine",.08,320]])},
-boss(){this.seq2([[110,55,.4,"sawtooth",.08,0],[220,110,.3,"square",.05,200]])},
-skillUnlock(){this.seq([[659,.1,"sine",.06,0],[880,.1,"sine",.06,80],[1100,.15,"sine",.07,160],[1320,.2,"sine",.06,280]])},
+// core: oscillator with ADSR envelope + optional filter
+_voice(freq,dur,type,vol,filterFreq,delay){
+if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;
+const t0=this.ctx.currentTime+(delay||0);
+const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+o.type=type||"sine";o.frequency.value=freq;
+const v=vol||.08;
+g.gain.setValueAtTime(0,t0);
+g.gain.linearRampToValueAtTime(v,t0+.008);
+g.gain.exponentialRampToValueAtTime(v*.6,t0+.04);
+g.gain.exponentialRampToValueAtTime(.0001,t0+(dur||.15));
+let node=o;
+if(filterFreq){const f=this.ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=filterFreq;f.Q.value=1;o.connect(f);node=f}
+node.connect(g);g.connect(this.master);
+o.start(t0);o.stop(t0+(dur||.15)+.02);
+},
+// pitch slide voice
+_slide(f1,f2,dur,type,vol,filterFreq,delay){
+if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;
+const t0=this.ctx.currentTime+(delay||0);
+const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+o.type=type||"sine";
+o.frequency.setValueAtTime(f1,t0);
+o.frequency.exponentialRampToValueAtTime(Math.max(f2,1),t0+dur);
+const v=vol||.08;
+g.gain.setValueAtTime(0,t0);
+g.gain.linearRampToValueAtTime(v,t0+.008);
+g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+let node=o;
+if(filterFreq){const f=this.ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=filterFreq;o.connect(f);node=f}
+node.connect(g);g.connect(this.master);
+o.start(t0);o.stop(t0+dur+.02);
+},
+// noise burst with filter
+_noise(dur,vol,filterType,filterFreq,delay){
+if(!this.enabled||this.muted)return;this.init();if(!this.ctx)return;
+const t0=this.ctx.currentTime+(delay||0);
+const bs=Math.floor(this.ctx.sampleRate*dur);
+const buf=this.ctx.createBuffer(1,bs,this.ctx.sampleRate);
+const d=buf.getChannelData(0);
+for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bs,2);
+const n=this.ctx.createBufferSource();n.buffer=buf;
+const g=this.ctx.createGain();
+g.gain.setValueAtTime(vol||.05,t0);
+g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+let node=n;
+if(filterFreq){const f=this.ctx.createBiquadFilter();f.type=filterType||"lowpass";f.frequency.value=filterFreq;n.connect(f);node=f}
+node.connect(g);g.connect(this.master);
+n.start(t0);
+},
+// play multiple voices in parallel
+_chord(freqs,dur,type,vol,delay){freqs.forEach(f=>this._voice(f,dur,type,vol,delay))},
+// sequence with timing
+_seq(notes){notes.forEach(n=>{const d=n[n.length-1]||0;if(n.length>=5&&typeof n[1]==='number'&&typeof n[2]==='number'&&n[1]!==n[2])this._slide(n[0],n[1],n[2],n[3],n[4],null,d);else this._voice(n[0],n[1],n[2],n[3],null,d)})},
+// ---- game sounds ----
+play(){this._voice(440,.08,"square",.05);this._voice(660,.06,"triangle",.035,null,30)},
+draw(){this._slide(300,560,.1,"triangle",.045,2000)},
+damage(){this._noise(.12,.06,"lowpass",800);this._voice(110,.18,"sawtooth",.09,500);this._slide(90,50,.12,"sawtooth",.05,null,50)},
+heal(){this._seq([[523,.1,"sine",.05,0],[659,.1,"sine",.05,90],[784,.14,"sine",.045,180],[1047,.2,"sine",.04,270]])},
+skill(){this._seq([[440,.05,"square",.035,0],[554,.05,"square",.035,45],[659,.05,"square",.04,90],[880,.18,"sine",.05,135]])},
+turn(){this._slide(180,240,.12,"sine",.04,1200)},
+equip(){this._voice(520,.06,"triangle",.05,3000);this._voice(780,.05,"triangle",.035,null,55);this._noise(.04,.02,"highpass",4000,null,30)},
+victory(){this._seq([[523,.1,"sine",.06,0],[659,.1,"sine",.06,110],[784,.1,"sine",.06,220],[1047,.12,"sine",.065,330],[1319,.35,"sine",.07,440],[1568,.35,"sine",.05,440]])},
+defeat(){this._seq([[400,150,.22,"sawtooth",.06,0],[300,100,.22,"sine",.055,180],[200,50,.45,"sine",.045,360],[100,40,.5,"sine",.04,500]])},
+flip(){this._voice(620,.03,"square",.035);this._voice(820,.025,"square",.025,null,25)},
+select(){this._voice(440,.035,"triangle",.035);this._voice(660,.035,"triangle",.025,null,28)},
+levelup(){this._seq([[523,.08,"square",.05,0],[659,.08,"square",.05,70],[784,.08,"square",.05,140],[1047,.08,"square",.06,210],[1319,.08,"square",.065,280],[1568,.25,"sine",.07,350]])},
+boss(){this._slide(110,55,.35,"sawtooth",.07,800,0);this._slide(220,110,.25,"square",.04,null,180);this._noise(.3,.04,"lowpass",300,null,0)},
+skillUnlock(){this._seq([[659,.08,"sine",.05,0],[880,.08,"sine",.05,70],[1100,.1,"sine",.06,140],[1320,.12,"sine",.05,230],[1760,.15,"sine",.04,330]])},
+// new enhanced sounds
+cardPlay(){this._noise(.03,.03,"bandpass",2000);this._voice(330,.06,"square",.04,3000)},
+cardHit(){this._noise(.06,.05,"lowpass",1200);this._voice(200,.08,"sawtooth",.06,600)},
+cardDodge(){this._slide(600,1200,.08,"triangle",.04,4000)},
+trickPlay(){this._seq([[330,.05,"triangle",.04,0],[440,.05,"triangle",.04,40],[550,.08,"triangle",.045,80]])},
+equipSound(){this._voice(440,.05,"square",.04);this._voice(550,.05,"square",.035,null,40);this._voice(660,.08,"triangle",.04,null,80)},
+death(){this._seq([[330,.1,"sawtooth",.05,0],[220,.12,"sawtooth",.045,80],[110,.3,"sine",.05,180]]);this._noise(.15,.04,"lowpass",500,null,100)},
+buttonClick(){this._voice(500,.02,"square",.03);this._voice(700,.02,"square",.02,null,15)},
+titleMusic(){this._seq([[523,.15,"sine",.05,0],[659,.15,"sine",.05,150],[784,.15,"sine",.05,300],[659,.15,"sine",.045,450],[523,.15,"sine",.045,600],[587,.15,"sine",.05,750],[659,.3,"sine",.055,900]])},
 };
 // ==================== 动画系统 ====================
 function fxDamage(side){const el=side==="enemy"?document.querySelector(".enemy-area"):document.querySelector(".player-area");if(el){el.classList.add("fx-damage");setTimeout(()=>el.classList.remove("fx-damage"),400)}const ov=document.getElementById("fx-overlay");if(ov){ov.classList.add("fx-damage");setTimeout(()=>ov.classList.remove("fx-damage"),400)}}
@@ -1284,7 +1360,7 @@ if(card.key==="sha"){
 p.shaPlayed=true;
 G._lastPlayerCardKey="sha";
 log(`${p.name}出了降妖！`,"log-player");
-SND.play();
+SND.cardPlay();
 const fc=showFieldCard(card,"player");
 resolveSha(p,e,card);
 setTimeout(()=>removeFieldCard(fc),1500);
@@ -1326,7 +1402,7 @@ p.hand.splice(idx,1);
 G.discard.push(card);
 G._lastPlayerCardKey=card.key;
 log(`${p.name}出了${card.name}`,"log-player");
-SND.play();
+SND.trickPlay();
 const fc=showFieldCard(card,"player");
 setTimeout(()=>removeFieldCard(fc),1500);
 switch(card.key){
@@ -1366,7 +1442,7 @@ if(card.key==="jiahorse"){if(p.equipment.defMount)G.discard.push(p.equipment.def
 else{if(p.equipment.mount)G.discard.push(p.equipment.mount);p.equipment.mount=card}
 }
 log(`${p.name}装备了${card.name}`,"log-player");
-SND.equip();
+SND.equipSound();
 const fc=showFieldCard(card,"player");
 setTimeout(()=>removeFieldCard(fc),1500);
 renderBattle();
@@ -1400,6 +1476,7 @@ const si=findCard(target,"shan");
 const sc=target.hand.splice(si,1)[0];
 G.discard.push(sc);
 log(`${target.name}出了遁法`,"log-enemy");
+SND.cardDodge();
 // guanshi: discard 2 to force hit
 if(source.equipment.weapon&&source.equipment.weapon.key==="guanshi"&&source.hand.length>=2){
 showResponse("贯石斧",`${target.name}出了遁法！是否弃2牌强制命中？`,[
@@ -1427,6 +1504,7 @@ return;
 }
 }
 // not dodged
+SND.cardHit();
 let dmg=1;
 if(source.skills.some(s=>s.key==="manniu"))dmg=2;
 if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
@@ -1457,6 +1535,7 @@ const si=findCard(target,"shan");
 const sc=target.hand.splice(si,1)[0];
 G.discard.push(sc);
 log(`${target.name}出了遁法`,"log-player");
+SND.cardDodge();
 renderBattle();checkEnd();
 }},
 {label:"受到伤害",danger:true,action:()=>{
@@ -1568,6 +1647,7 @@ if(amount>=2)fxShake();
 if(target.hp<=0){
 target.hp=0;
 target.alive=false;
+SND.death();
 }
 }
 
@@ -1951,7 +2031,7 @@ else{e.hand.push(card);break}
 }
 else{e.hand.push(card);break}
 log(`${e.name}装备了${card.name}`,"log-enemy");
-SND.equip();
+SND.equipSound();
 const fc=showFieldCard(card,"enemy");
 setTimeout(()=>removeFieldCard(fc),1500);
 renderBattle();
@@ -2457,7 +2537,7 @@ renderBattle();
 
 // ==================== 关卡流程 ====================
 function startNewGame(){
-SND.init();
+SND.init();SND.buttonClick();
 G=newGameState();
 G.level=0;
 save();
@@ -2465,6 +2545,7 @@ startLevel(0);
 }
 
 function continueGame(){
+SND.buttonClick();
 const data=load();
 if(data){
 G=Object.assign(newGameState(),data);
