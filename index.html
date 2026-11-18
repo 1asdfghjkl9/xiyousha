@@ -1786,7 +1786,8 @@ function checkEnd(){
 // 结算前归还被人种袋锁走的牌，避免关卡结束时牌凭空消失
 if(G.player._locked&&G.player._locked.length){G.player.hand.push(...G.player._locked);G.player._locked=[]}
 if(!G.player.alive){
-setTimeout(()=>onLevelFail(),800);
+const failLevel=G.level;const bid=G.battleId;
+setTimeout(()=>{if(G.level===failLevel&&G.battleId===bid)onLevelFail()},800);
 return;
 }
 if(!G.enemy.alive){
@@ -1797,7 +1798,8 @@ log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
 fxHeal("enemy");renderBattle();
 return;
 }
-setTimeout(()=>onLevelWin(),800);
+const winLevel=G.level;const bid=G.battleId;
+setTimeout(()=>{if(G.level===winLevel&&G.battleId===bid)onLevelWin()},800);
 return;
 }
 }
@@ -2133,7 +2135,7 @@ damage(p,dmg,e);
 if(p.hp>0)onShaDamage(e,p,card);
 renderBattle();
 setTimeout(()=>removeFieldCard(fc),1500);
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 }
 }
 break;
@@ -2303,7 +2305,7 @@ G.discard.push(card);
 }
 }
 renderBattle();
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 }
 // draw phase
 const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
@@ -2406,7 +2408,7 @@ damage(p,dmg,enemy);
 if(p.hp>0)onShaDamage(enemy,p,card);
 }
 renderBattle();
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 continueEnemyTurn();
 }},
 ]);
@@ -2417,7 +2419,7 @@ if(enemy.skills.includes("sanmei"))dmg=2;
 damage(p,dmg,enemy);
 if(p.hp>0)onShaDamage(enemy,p,card);
 renderBattle();
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 continueEnemyTurn();
 }else if(ehb&&p.hand.length>=2){
 for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}
@@ -2431,7 +2433,7 @@ if(enemy.skills.includes("sanmei"))dmg=2;
 damage(p,dmg,enemy);
 if(p.hp>0)onShaDamage(enemy,p,card);
 renderBattle();
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 continueEnemyTurn();
 }
 }
@@ -2455,7 +2457,7 @@ const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
 if(hasCard(p,"shan")||p.equipment.armor){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
-else{let d=1;if(e.skills.includes("manniu"))d=2;if(e.skills.includes("sanmei"))d=2;damage(p,d,e);if(p.hp>0)onShaDamage(e,p,card);renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>onLevelFail(),800);return}}
+else{let d=1;if(e.skills.includes("manniu"))d=2;if(e.skills.includes("sanmei"))d=2;damage(p,d,e);if(p.hp>0)onShaDamage(e,p,card);renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}}
 }
 break;
 case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
@@ -2466,7 +2468,7 @@ case"trick":aiPlayTrick(e,p);renderBattle();break;
 }
 }
 if(!e.alive){checkEnd();return}
-if(!p.alive){setTimeout(()=>onLevelFail(),800);return}
+if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid)onLevelFail()},800);return}
 aiEndTurn();
 },300);
 }
@@ -2804,6 +2806,7 @@ G.log=[];
 G.turn="player";
 G.awaitingResponse=null;
 G.tutorialStep=0;
+G.battleId=(G.battleId||0)+1; // unique battle session ID to prevent stale callbacks
 
 // starting hands
 const ph=drawFromDeck(4);G.player.hand.push(...ph);
