@@ -1664,6 +1664,7 @@ const fc=showFieldCard(card,"player");
 resolveSha(p,e,card);
 setTimeout(()=>removeFieldCard(fc),1500);
 }else if(card.key==="tao"){
+G._lastPlayerCardKey="tao";
 let healAmt=1;
 // foen: first tao each turn heals 2
 if(p.skills.some(s=>s.key==="foen")&&!(p.skillUsed.foen>0)){
@@ -1676,6 +1677,7 @@ SND.heal();fxHeal("player");fxHealAura("player");fxHpChange("player");fxDmgFloat
 const fc=showFieldCard(card,"player");
 setTimeout(()=>removeFieldCard(fc),1500);
 }else if(card.key==="jiu"){
+G._lastPlayerCardKey="jiu";
 p._jiuActive=true;
 log(`${p.name}饮下仙酿，下一张降妖伤害+1`,"log-player");
 SND.cardPlay();
@@ -1707,6 +1709,14 @@ return;
 p.hand.splice(idx,1);
 G.discard.push(card);
 G._lastPlayerCardKey=card.key;
+// check enemy luohan: immune to next trick
+if(e._luohanActive){
+e._luohanActive=false;
+log(`罗汉金身抵消了${card.name}！`,"log-enemy");
+SND.skill();
+renderBattle();
+return;
+}
 log(`${p.name}出了${card.name}`,"log-player");
 SND.trickPlay();
 const fc=showFieldCard(card,"player");
@@ -1940,11 +1950,13 @@ renderBattle();checkEnd();
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
+if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;
 if(hasSk(source,"jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
+if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
 damage(target,dmg,source);
 if(target.hp>0)onShaDamage(source,target,card);
 renderBattle();checkEnd();
@@ -1953,11 +1965,13 @@ renderBattle();checkEnd();
 }else{
 let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
+if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;
 if(hasSk(source,"jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
+if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
 damage(target,dmg,source);
 if(target.hp>0)onShaDamage(source,target,card);
 }
@@ -2149,7 +2163,7 @@ applyBossStart(e,p);
 // draw phase
 const drawn=drawFromDeck(e.drawCount);
 e.hand.push(...drawn);
-e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};e._jiuActive=false;
+e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 SND.draw();
 log(`${e.name}摸了${e.drawCount}张牌`,"log-enemy");
 fxTurn("enemy");
@@ -4405,7 +4419,9 @@ mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
 myChained:!!e._chained,myJiu:!!e._jiuActive,
+myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,
 oppChained:!!p._chained,oppJiu:!!p._jiuActive,
+oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,
 myTurn:G.turn==='enemy',
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
 oppHandCount:p.hand.length,
@@ -4450,6 +4466,7 @@ judge:(state.myJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',
 skills:state.mySkills||[],
 skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
 _chained:state.myChained||false,_jiuActive:state.myJiu||false,
+_shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
 skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):null,
 };
@@ -4461,6 +4478,7 @@ judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?'
 skills:state.oppSkills||[],
 alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,
 _chained:state.oppChained||false,_jiuActive:state.oppJiu||false,
+_shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,
 };
 G.turn=state.myTurn?'player':'enemy';
 G.phase=state.phase||'play';
@@ -4640,6 +4658,15 @@ function mpEnemyPlayTrick(idx){
 var e=G.enemy,p=G.player;
 var card=e.hand[idx];
 if(!card)return;
+// check player luohan: immune to next trick
+if(p._luohanActive){
+p._luohanActive=false;
+e.hand.splice(idx,1);G.discard.push(card);
+log('罗汉金身抵消了'+card.name+'！','log-player');
+SND.skill();
+renderBattle();mpSendState();
+return;
+}
 // player wuxie choice
 if(p.hand.some(function(c){return c.key==='wuxie'})){
 showResponse('对手出了'+card.name,'是否使用护身法抵消？',[
@@ -4939,6 +4966,7 @@ else if(key==='chuandao'){if((e.skillUsed.chuandao||0)>=1||e.hand.length<1)retur
 else if(key==='shengsi'){if((e.skillUsed.shengsi||0)>=1||p.hand.length<1)return;e.skillUsed.shengsi=1;var pc2=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc2);log(e.name+'生死簿：令你弃'+pc2.name,'log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='leiting'){if((e.skillUsed.leiting||0)>=1)return;var li=e.hand.findIndex(function(c){return c.red});if(li<0)return;e.skillUsed.leiting=1;var lc=e.hand.splice(li,1)[0];G.discard.push(lc);log(e.name+'雷霆万钧：弃'+lc.name+'造1伤','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='dianshu'){if((e.skillUsed.dianshu||0)>=1)return;var di2=e.hand.findIndex(function(c){return !c.red});if(di2<0)return;e.skillUsed.dianshu=1;var dc2=e.hand.splice(di2,1)[0];G.discard.push(dc2);var dr3=drawFromDeck(2);e.hand.push(...dr3);log(e.name+'电术：弃1黑牌摸2牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='bingdian'){var bi2=e.hand.findIndex(function(c){return !c.red&&c.key!=='sha'});if(bi2<0)return;var old4=e.hand[bi2];e.hand[bi2]={id:old4.id,key:'sha',name:'冰电·降妖',type:'basic',basicSubtype:'sha',suit:old4.suit,rank:old4.rank,red:old4.red,desc:'冰电化降妖',cls:'basic-sha'};log(e.name+'冰电：将'+old4.name+'变为降妖','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='xingyun'){if((e.skillUsed.xingyun||0)>=1)return;e.skillUsed.xingyun=1;var ec2=drawFromDeck(1)[0];e.hand.push(ec2);var pc3=drawFromDeck(1)[0];p.hand.push(pc3);log(e.name+'兴云布雨：双方各摸1牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='shuiyu'){if((e.skillUsed.shuiyu||0)>=1)return;e.skillUsed.shuiyu=1;e._tiedanActive=true;log(e.name+'水御：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='fusheng'){if((e.skillUsed.fusheng||0)>=1||e.hp>0||e.hand.length<3)return;e.skillUsed.fusheng=1;for(var i=0;i<3;i++){var fc2=e.hand.splice(0,1)[0];G.discard.push(fc2)}e.hp=1;log(e.name+'复生：弃3牌回1血！','log-enemy');SND.heal();fxHeal('enemy');renderBattle();mpSendState();}
@@ -4947,6 +4975,7 @@ else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.l
 else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='wuzhishan'){if((e.skillUsed.wuzhishan||0)>=1||e.hand.length<2)return;e.skillUsed.wuzhishan=1;for(var w=0;w<2;w++){var wc2=e.hand.splice(0,1)[0];G.discard.push(wc2)}log(e.name+'五指山：弃2牌造2伤！','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,2,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='chanti'){if((e.skillUsed.chanti||0)>=1)return;e.skillUsed.chanti=1;e._tiedanActive=true;log(e.name+'禅体：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='bingdian'){var bi2=e.hand.findIndex(function(c){return !c.red&&c.key!=='sha'});if(bi2<0)return;var old4=e.hand[bi2];e.hand[bi2]={id:old4.id,key:'sha',name:'冰电·降妖',type:'basic',basicSubtype:'sha',suit:old4.suit,rank:old4.rank,red:old4.red,desc:'冰电化降妖',cls:'basic-sha'};log(e.name+'冰电：将'+old4.name+'变为降妖','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 }
 
 function mpEnemyEndTurn(){
@@ -5190,7 +5219,8 @@ el.innerHTML=`
 <p style="margin:0 0 4px"><span style="color:#e85555">■ 基本牌</span></p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>降妖</b>（杀）：对目标造成1点伤害，每回合限出1张</p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>遁法</b>（闪）：抵消一张降妖的伤害</p>
-<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>蟠桃</b>（桃）：回复1点体力</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>蟠桃</b>（桃）：回复1点体力</p>
+<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>仙酿</b>（酒）：下一张降妖伤害+1，或濒死时回1血</p>
 <p style="margin:0 0 4px"><span style="color:#cc66cc">■ 锦囊牌</span></p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>神通自现</b>（无中生有）：摸2张牌</p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>拆桥断路</b>（过河拆桥）：弃掉对方1张装备或手牌</p>
@@ -5205,9 +5235,9 @@ el.innerHTML=`
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>火攻</b>（新）：弃1张同花色牌，对目标造成1伤</p>
 <p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>铁索连环</b>（新）：将2个目标连环，一伤俱伤</p>
 <p style="margin:0 0 4px"><span style="color:#cc9944">■ 装备牌</span></p>
-<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>武器</b>：定海神针、青龙偃月刀、贯石斧、丈八蛇矛、方天画戟、麒麟弓</p>
-<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>防具</b>：寒冰剑（弃牌代伤）、金刚护盾、八卦阵（新）</p>
-<p style="color:var(--text-dim);margin:0 0 14px;padding-left:12px">• <b>坐骑</b>：+1防御（紫骍/华骝）、-1进攻（大宛/乌雅）</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>武器</b>：连环火铳/诸葛连弩（无限出杀）、雌雄双剑、寒冰剑、青釭剑、丈八蛇矛、贯石斧、青龙偃月刀、方天画戟（末牌+1伤）、麒麟弓、银月枪（闪后弃牌造伤）、火灵珠（火属性+1对藤甲）</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>防具</b>：八卦阵（判定红当闪）、玄铁盾（黑杀无效）、藤甲（普通杀无效，火攻+1）</p>
+<p style="color:var(--text-dim);margin:0 0 14px;padding-left:12px">• <b>坐骑</b>：祥云/紫金钵（+1防御）、筋斗云/腾云兽（-1进攻）</p>
 
 <h3 style="color:var(--gold);margin:0 0 6px">⚔️ 武将技能（19名武将）</h3>
 <p style="color:var(--text-dim);margin:0 0 6px">每个角色拥有独特的武将技能，合理运用技能是制胜关键：</p>
@@ -5220,16 +5250,16 @@ el.innerHTML=`
 <p style="margin:0 0 2px;padding-left:12px">👁️ <b style="color:var(--text-main)">二郎神</b>：天眼通（查看手牌）、哮天犬（弃牌造伤）</p>
 <p style="margin:0 0 2px;padding-left:12px">🔥 <b style="color:var(--text-main)">哪吒</b>：风火轮（红牌当杀）、混天绫（红牌当闪）</p>
 <p style="margin:0 0 2px;padding-left:12px">🐂 <b style="color:var(--text-main)">牛魔王</b>：狂暴（残血+1伤）、铁胆（免疫1伤/回合）</p>
-<p style="margin:0 0 2px;padding-left:12px">👸 <b style="color:var(--text-main)">铁扇公主</b>：芭蕉扇（弃1牌造1伤）、风情万种（摸牌）</p>
-<p style="margin:0 0 2px;padding-left:12px">🦌 <b style="color:var(--text-main)">鹿力大仙</b>：仙术（变牌）、妙算（摸牌猜色）</p>
-<p style="margin:0 0 2px;padding-left:12px">🐀 <b style="color:var(--text-main)">黄风怪</b>：妖风（弃牌摸牌）、黄风（弃牌造伤）</p>
-<p style="margin:0 0 2px;padding-left:12px">🕷️ <b style="color:var(--text-main)">蜘蛛精</b>：蛛丝（锁装备）、魔障（弃牌伤敌）</p>
-<p style="margin:0 0 2px;padding-left:12px">👑 <b style="color:var(--text-main)">玉皇大帝</b>：威严（免疫1伤）、天恩（摸牌）</p>
-<p style="margin:0 0 2px;padding-left:12px">⚡ <b style="color:var(--text-main)">雷公</b>：雷击（弃牌造伤）、遁世（免疫1伤）</p>
-<p style="margin:0 0 2px;padding-left:12px">🌩️ <b style="color:var(--text-main)">电母</b>：闪电（弃牌造伤）、镜花（反伤）</p>
-<p style="margin:0 0 2px;padding-left:12px">💀 <b style="color:var(--text-main)">阎罗王</b>：索命（残血+1伤）、判官（弃牌伤敌）</p>
-<p style="margin:0 0 2px;padding-left:12px">🌱 <b style="color:var(--text-main)">菩提祖师</b>：悟道（摸牌）、无相（黑牌当闪）</p>
-<p style="margin:0 0 14px;padding-left:12px">🌍 <b style="color:var(--text-main)">后土娘娘</b>：地载（弃牌减伤）、厚德（回血）</p>
+<p style="margin:0 0 2px;padding-left:12px">⭐ <b style="color:var(--text-main)">太白金星</b>：指引（摸2牌）、仙知（查看手牌）</p>
+<p style="margin:0 0 2px;padding-left:12px">🧘 <b style="color:var(--text-main)">菩提祖师</b>：传道（弃1摸2）、无相（黑牌当闪）</p>
+<p style="margin:0 0 2px;padding-left:12px">💀 <b style="color:var(--text-main)">阎罗王</b>：生死簿（弃敌方1牌）、索命（残血+1伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">⚡ <b style="color:var(--text-main)">雷公</b>：雷霆万钧（弃红牌造伤）、遁世（红牌当闪）</p>
+<p style="margin:0 0 2px;padding-left:12px">💡 <b style="color:var(--text-main)">电母</b>：电术（弃黑牌摸2）、冰电（黑牌当杀）</p>
+<p style="margin:0 0 2px;padding-left:12px">🌊 <b style="color:var(--text-main)">东海龙王</b>：兴云布雨（双方摸1牌）、水御（免疫1伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🌍 <b style="color:var(--text-main)">后土娘娘</b>：大地之护（弃牌减伤）、复生（弃3牌回1血）</p>
+<p style="margin:0 0 2px;padding-left:12px">🪓 <b style="color:var(--text-main)">樵夫</b>：砍木（弃装备造伤）、禅术（弃牌回血）</p>
+<p style="margin:0 0 2px;padding-left:12px">👑 <b style="color:var(--text-main)">玉帝</b>：天命（弃敌方2牌）、至圣（残血减伤）</p>
+<p style="margin:0 0 14px;padding-left:12px">🙏 <b style="color:var(--text-main)">如来佛祖</b>：五指山（弃2牌造2伤）、禅体（免疫1伤）</p>
 
 <h3 style="color:var(--gold);margin:0 0 6px">🎮 游戏模式</h3>
 <p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">单人闯关：</b>击败各路妖怪BOSS，解锁技能树，推进剧情</p>
