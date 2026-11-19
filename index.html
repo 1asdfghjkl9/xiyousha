@@ -2794,7 +2794,7 @@ if(jc.red){log("八卦阵判定红色，视为遁法","log-system");renderBattle
 const eqg=enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinggang";
 // check enemy hanbing: replace damage with discard
 const ehb=enemy.equipment.weapon&&enemy.equipment.weapon.key==="hanbing";
-const noDodge=!!hasSk(enemy,"jiutou2");
+const noDodge=!!hasSk(enemy,"jiutou2")||(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0);
 if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
 if(!eqg&&!noDodge&&(hasCard(p,"shan")||((p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan"))||((p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan")))){
 const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan");
@@ -2803,9 +2803,10 @@ const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
 ...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}renderBattle();if(!enemy.alive){checkEnd();return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
 ...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":"龙威护体"}：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
-...(canHuntian?[{label:"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`混天绫：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
+...(canHuntian?[{label:p.charKey==="leigong"?"遁世(红牌当遁法)":"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="leigong"?"遁世":"混天绫"}：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
+if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(enemy._jiuActive){dmg+=1;enemy._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(enemy,"manniu"))dmg=2;
 if(hasSk(enemy,"sanmei"))dmg=2;
@@ -2830,6 +2831,7 @@ continueEnemyTurn();
 ]);
 }else if(!eqg&&!ehb){
 let dmg=1;
+if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(enemy._jiuActive){dmg+=1;enemy._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(enemy,"manniu"))dmg=2;
 if(hasSk(enemy,"sanmei"))dmg=2;
@@ -4559,7 +4561,7 @@ if(msg.huntian&&(e.charKey==='nezha'||e.charKey==='leigong')){
 var hi=e.hand.findIndex(function(c){return c.red&&c.key!=='shan'});
 if(hi>=0){
 var hc=e.hand.splice(hi,1)[0];G.discard.push(hc);
-log(e.name+'混天绫：将'+hc.name+'当遁法','log-enemy');
+log(e.name+(e.charKey==='leigong'?'遁世':'混天绫')+'：将'+hc.name+'当遁法','log-enemy');
 SND.cardDodge();
 renderBattle();mpSendState();
 return;
@@ -5130,10 +5132,20 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.7',date:'2026-11-20',items:[
+{tag:'fix',text:'修复银月枪效果未实现的问题（出遁法后弃1牌造1伤）'},
+{tag:'fix',text:'修复方天画戟效果未实现的问题（手牌为0时出降妖+1伤且不可闪避）'},
+{tag:'fix',text:'修复九灵元圣圣威技能未实现的问题（每损失1体力额外摸1牌）'},
+{tag:'fix',text:'修复六耳猕猴镜像技能只有日志无实际模仿的问题'},
+{tag:'fix',text:'修复电母冰电技能在MP模式下无效的问题'},
+{tag:'fix',text:'修复MP状态序列化缺少_chained和_jiuActive标志的问题'},
+{tag:'fix',text:'修复帮助页面武将信息错误（技能名称、缺失武将）'},
+{tag:'fix',text:'帮助页面新增仙酿、银月枪、火灵珠、诸葛连弩等卡牌装备说明'},
+]},
 {ver:'v1.6',date:'2026-11-20',items:[
-{tag:'new',text:'新增10名武将：铁扇公主、鹿力大仙、黄风怪、蜘蛛精、玉皇大帝、雷公、电母、阎罗王、菩提祖师、后土娘娘，总计19名可选武将'},
+{tag:'new',text:'新增10名武将：太白金星、菩提祖师、阎罗王、雷公、电母、东海龙王、后土娘娘、樵夫、玉帝、如来佛祖，总计19名可选武将'},
 {tag:'new',text:'新增卡牌：火攻、铁索连环、仙酿（酒）、八卦阵、诸葛连弩、藤甲、银月枪、火灵珠等'},
-{tag:'new',text:'新增装备：+1防御坐骑（紫骍/华骝）、-1进攻坐骑（大宛/乌雅）'},
+{tag:'new',text:'新增装备：+1防御坐骑（紫金钵）、-1进攻坐骑（腾云兽）'},
 {tag:'new',text:'联机对战新增实时聊天功能'},
 {tag:'opt',text:'AI智能优化：新武将技能AI使用、仙酿配合杀使用策略'},
 {tag:'opt',text:'帮助页面全面更新，涵盖19名武将技能说明'},
