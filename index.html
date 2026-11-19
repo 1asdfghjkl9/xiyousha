@@ -1052,6 +1052,8 @@ function getSkillLv(charKey,skillKey){
 const u=G.partyUnlocked&&G.partyUnlocked[charKey];
 return u&&u[skillKey]?u[skillKey]:0;
 }
+// 检查战斗技能是否存在(兼容角色对象数组与Boss字符串数组)
+function hasSk(s,k){if(!s||!s.skills)return false;return s.skills.some(x=>typeof x==='string'?x===k:x.key===k)}
 
 // ==================== 八十一难数据 ====================
 const L81_NAMES=["大闹天宫","金蝉遭贬","出胎几杀","满月抛江","寻亲报冤","出城逢虎","落坑折从","双叉岭上","两界山头","陡涧换马","夜被火烧","失却袈裟","收降八戒","请求灵吉","黄风怪阻","流沙难渡","收得沙僧","四圣显化","五庄观中","难活人参","贬退心猿","黑松林失散","宝象国捎书","金銮殿变虎","平顶山逢魔","莲花洞高悬","乌鸡国救主","被魔化身","号山逢怪","风摄圣僧","心猿遭害","请圣降妖","黑河沉没","搬运车迟","大赌输赢","祛道兴僧","路逢大水","身落天河","鱼篮现身","金兜山遇怪","普天神难伏","问佛根源","吃水遭毒","西梁国留婚","琵琶洞受苦","再贬心猿","难辨猕猴","路阻火焰山","求取芭蕉扇","收缚魔王","赛城扫塔","取宝救僧","棘林吟咏","小雷音遇难","诸天神遭困","稀柿衕秽阻","朱紫国行医","拯救疲癃","降妖取后","七情迷没","多目遭伤","路阻狮驼","怪分三色","城里遇灾","请佛收魔","比丘救子","辨认真邪","松林救怪","僧房卧病","无底洞遭困","灭法国难行","隐雾山遇魔","凤仙郡求雨","失落兵器","会庆钉钯","竹节山遭难","玄英洞受苦","赶捉犀牛","天竺招婚","铜台府监禁","凌云渡脱胎","通天河遇鼋湿经书"];
@@ -1699,7 +1701,7 @@ switch(card.key){
 case"wuzhong":const drawn=drawFromDeck(2);p.hand.push(...drawn);log(`${p.name}摸了2张牌`,"log-heal");break;
 case"guohe":aiEnemyDiscardCard();break;
 case"shunshou":if(dist(p,e)<=1){const si=Math.floor(Math.random()*e.hand.length);if(e.hand.length>0){const stolen=e.hand.splice(si,1)[0];p.hand.push(stolen);log(`${p.name}顺手牵走了${e.name}一张牌`,"log-player")}else log(`${e.name}没有手牌`,"log-system")}else log("距离不够","log-system");break;
-case"nanman":if(hasCard(e,"sha")){const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);log(`${e.name}出了降妖抵挡群妖来袭`,"log-enemy")}else{damage(e,1,p);log(`${e.name}受群妖来袭1点伤害`,"log-damage")}break;
+case"nanman":if(hasCard(e,"sha")){const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);log(`${e.name}出了降妖抵挡群妖来袭`,"log-enemy")}else if(e.equipment.armor&&e.equipment.armor.key==="tengjia"){log(`${e.name}藤甲免疫群妖来袭`,"log-system")}else{damage(e,1,p);log(`${e.name}受群妖来袭1点伤害`,"log-damage")}break;
 case"wanjian":enemyRespondWanjian();break;
 case"taoyuan":p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log("结义同行，双方各回1点体力","log-heal");break;
 case"jiedao":if(e.equipment.weapon){const w=e.equipment.weapon;G.discard.push(w);e.equipment.weapon=null;log(`${e.name}被迫弃去${w.name}`,"log-enemy")}else{damage(e,1,p);log(`${e.name}无武器，受1点伤害`,"log-damage")}break;
@@ -1786,10 +1788,10 @@ for(let g=0;g<2;g++){const gc=source.hand.splice(0,1)[0];G.discard.push(gc)}
 log(`贯石斧：弃2牌强制命中！`,"log-player");
 let dmg=1;
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
-if(source.skills.some(s=>s.key==="manniu"))dmg=2;
-if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
+if(hasSk(source,"manniu"))dmg=2;
+if(hasSk(source,"sanmei"))dmg=2;
 if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
-if(target.skills&&target.skills.some(s=>s.key==="xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
+if(hasSk(target,"xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
 if(dmg>0){damage(target,dmg,source);if(target.hp>0)onShaDamage(source,target,card)}
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected)mpSendState();
@@ -1825,6 +1827,10 @@ if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 // 小白龙化龙一击：降妖伤害+1
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
+}
+// huosha: fire damage, +1 vs tengjia
+if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){
+dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')
 }
 // xiniu: reduce sha damage by 1
 if(target.skills&&target.skills.some(s=>s.key==="xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消降妖伤害`,"log-system")}
@@ -1979,7 +1985,7 @@ return;
 const shown=target.hand[Math.floor(Math.random()*target.hand.length)];
 showResponse("火攻",`${target.name}展示了${shown.suit}${shown.rank}花色，是否弃同花色手牌？`,[
 {label:"弃牌火攻",action:()=>{
-const si=findCard(source,c=>c.suit===shown.suit);
+const si=source.hand.findIndex(c=>c.suit===shown.suit);
 if(si>=0){const sc=source.hand.splice(si,1)[0];G.discard.push(sc);let dmg=1;if(target.equipment.armor&&target.equipment.armor.key==="tengjia")dmg=2;damage(target,dmg,source);log(`火攻命中！${target.name}受${dmg}点伤害`,"log-damage")}
 else{log("没有同花色手牌，火攻失败","log-system")}
 renderBattle();checkEnd();
@@ -2044,6 +2050,18 @@ if(target.hp<=0){
 target.hp=0;
 target.alive=false;
 SND.death();
+}
+// tiesuo chain damage: if both chained, other takes same damage
+if(target._chained&&amount>0){
+const other=target===G.player?G.enemy:G.player;
+if(other&&other.alive&&other._chained){
+log('铁索连环传导伤害！','log-damage');
+other._chained=false;target._chained=false;
+other.hp=Math.max(0,other.hp-amount);
+const oside=(other.isEnemy||(G.mpMode&&other===G.enemy))?"enemy":"player";
+fxDamage(oside);fxDmgFloat(oside,amount);
+if(other.hp<=0){other.hp=0;other.alive=false;SND.death()}
+}
 }
 }
 
@@ -2425,9 +2443,8 @@ const st=card.equipSubtype;
 if(st==="weapon"&&!e.equipment.weapon)e.equipment.weapon=card;
 else if(st==="armor"&&!e.equipment.armor)e.equipment.armor=card;
 else if(st==="mount"){
-if(card.key==="jiahorse"&&!e.equipment.defMount)e.equipment.defMount=card;
-else if(card.key!=="jiahorse"&&!e.equipment.mount)e.equipment.mount=card;
-else{e.hand.push(card);break}
+if(card.key==="jiahorse"||card.key==="hualiu"){if(!e.equipment.defMount)e.equipment.defMount=card;else{e.hand.push(card);break}}
+else if(card.key!=="jiahorse"&&card.key!=="hualiu"){if(!e.equipment.mount)e.equipment.mount=card;else{e.hand.push(card);break}}
 }
 else{e.hand.push(card);break}
 log(`${e.name}装备了${card.name}`,"log-enemy");
@@ -2458,8 +2475,8 @@ const sk=e.skills||[];
 // heal when low
 if(e.hp<=2){
 if(e.charKey==='guanyin'&&!(e.skillUsed.cibei>0)){e.skillUsed.cibei=1;e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'慈悲为怀：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'cibei'}}
-if(e.charKey==='jingping'&&!(e.skillUsed.jingping>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.jingping=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+2);log(e.name+'净瓶甘露：回2血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'jingping'}}
-if(e.charKey==='chanshu'&&!(e.skillUsed.chanshu>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.chanshu=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'禅术：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'chanshu'}}
+if(e.charKey==='guanyin'&&!(e.skillUsed.jingping>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.jingping=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+2);log(e.name+'净瓶甘露：回2血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'jingping'}}
+if(e.charKey==='qiaodi'&&!(e.skillUsed.chanshu>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.chanshu=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'禅术：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'chanshu'}}
 }
 // aggressive skills
 if(p.hp>0){
@@ -2469,15 +2486,15 @@ if(e.charKey==='qiaodi'&&!(e.skillUsed.kanmu>0)&&e.hand.some(c=>c.type==='equip'
 if(e.charKey==='rulai'&&!(e.skillUsed.wuzhishan>0)&&e.hand.length>=2&&p.hp<=2){e.skillUsed.wuzhishan=1;for(let i=0;i<2;i++){const c=e.hand.splice(0,1)[0];G.discard.push(c)}log(e.name+'五指山：造2伤！','log-enemy');SND.skill();fxImpact('player');damage(p,2,e);return{type:'skill',key:'wuzhishan'}}
 if(e.charKey==='yanwang'&&!(e.skillUsed.shengsi>0)&&p.hand.length>0){e.skillUsed.shengsi=1;const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec);log(e.name+'生死簿：弃你1牌','log-enemy');SND.skill();return{type:'skill',key:'shengsi'}}
 if(e.charKey==='yudi'&&!(e.skillUsed.tianming>0)&&p.hand.length>0){e.skillUsed.tianming=1;const dn=Math.min(2,p.hand.length);for(let i=0;i<dn;i++){const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec)}log(e.name+'天命：弃你'+dn+'牌','log-enemy');SND.skill();return{type:'skill',key:'tianming'}}
-if(e.charKey==='jingu'&&!(e.skillUsed.jingu>0)&&p.hand.length>0){e.skillUsed.jingu=1;const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec);log(e.name+'紧箍咒：弃你1牌','log-enemy');SND.skill();return{type:'skill',key:'jingu'}}
+if(e.charKey==='tang'&&!(e.skillUsed.jingu>0)&&p.hand.length>0){e.skillUsed.jingu=1;const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec);log(e.name+'紧箍咒：弃你1牌','log-enemy');SND.skill();return{type:'skill',key:'jingu'}}
 }
 // buff/utility skills
 if(e.charKey==='taibai'&&!(e.skillUsed.zhiyin>0)){e.skillUsed.zhiyin=1;const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'指引：摸2牌','log-enemy');SND.draw();return{type:'skill',key:'zhiyin'}}
 if(e.charKey==='puti'&&!(e.skillUsed.chuandao>0)&&e.hand.length>0){e.skillUsed.chuandao=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'传道：弃1摸2','log-enemy');SND.skill();return{type:'skill',key:'chuandao'}}
 if(e.charKey==='dianmu'&&!(e.skillUsed.dianshu>0)&&e.hand.some(c=>!c.red)){e.skillUsed.dianshu=1;const idx=e.hand.findIndex(c=>!c.red);const c=e.hand.splice(idx,1)[0];G.discard.push(c);const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'电术：弃1黑摸2','log-enemy');SND.skill();return{type:'skill',key:'dianshu'}}
 if(e.charKey==='hailong'&&!(e.skillUsed.xingyun>0)){e.skillUsed.xingyun=1;const c1=drawFromDeck(1)[0];e.hand.push(c1);const c2=drawFromDeck(1)[0];p.hand.push(c2);log(e.name+'兴云布雨','log-enemy');SND.skill();return{type:'skill',key:'xingyun'}}
-if(e.charKey==='tiedan'&&!(e.skillUsed.tiedan>0)){e.skillUsed.tiedan=1;e._tiedanActive=true;log(e.name+'铁胆：免疫1伤','log-enemy');SND.skill();return{type:'skill',key:'tiedan'}}
-if(e.charKey==='shilong'&&!(e.skillUsed.shilong>0)&&hasCard(e,'sha')&&!e.shaPlayed){e.skillUsed.shilong=1;e._shilongActive=true;log(e.name+'化龙一击','log-enemy');SND.skill();return{type:'skill',key:'shilong'}}
+if(e.charKey==='niulang'&&!(e.skillUsed.tiedan>0)){e.skillUsed.tiedan=1;e._tiedanActive=true;log(e.name+'铁胆：免疫1伤','log-enemy');SND.skill();return{type:'skill',key:'tiedan'}}
+if(e.charKey==='bailong'&&!(e.skillUsed.shilong>0)&&hasCard(e,'sha')&&!e.shaPlayed){e.skillUsed.shilong=1;e._shilongActive=true;log(e.name+'化龙一击','log-enemy');SND.skill();return{type:'skill',key:'shilong'}}
 }
 if(e.hp<=2&&hasCard(e,"tao")&&e.hp<e.maxHp)return{type:"tao"};
 if(hasCard(e,"sha")&&!e.shaPlayed&&dist(e,p)<=((e.equipment.weapon&&e.equipment.weapon.range)||1))return{type:"sha"};
@@ -2540,8 +2557,8 @@ const fc=showFieldCard(card,"enemy");
 setTimeout(()=>removeFieldCard(fc),1500);
 switch(key){
 case"wuzhong":const dr=drawFromDeck(2);e.hand.push(...dr);log(`${e.name}摸了2牌`,"log-enemy");break;
-case"nanman":if(hasCard(p,"sha")){const si=findCard(p,"sha");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了降妖抵挡群妖来袭`,"log-player")}else{damage(p,1,e);log("你受群妖来袭1伤","log-damage")}break;
-case"wanjian":{let dodged=false;if(p.equipment.armor&&p.equipment.armor.key==="bagua"){const jc=drawFromDeck(1)[0];G.discard.push(jc);log(`八卦阵判定：${jc.suit}${jc.rank}`,"log-system");if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");dodged=true}}if(!dodged&&hasCard(p,"shan")){const si=findCard(p,"shan");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了遁法抵挡万箭穿云`,"log-player");dodged=true}if(!dodged){damage(p,1,e);log("你受万箭穿云1伤","log-damage")}break;}
+case"nanman":if(hasCard(p,"sha")){const si=findCard(p,"sha");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了降妖抵挡群妖来袭`,"log-player")}else if(p.equipment.armor&&p.equipment.armor.key==="tengjia"){log(`藤甲免疫群妖来袭`,"log-system")}else{damage(p,1,e);log("你受群妖来袭1伤","log-damage")}break;
+case"wanjian":{let dodged=false;if(p.equipment.armor&&(p.equipment.armor.key==="tengjia")){log("藤甲免疫万箭穿云","log-system");dodged=true}else if(p.equipment.armor&&p.equipment.armor.key==="bagua"){const jc=drawFromDeck(1)[0];G.discard.push(jc);log(`八卦阵判定：${jc.suit}${jc.rank}`,"log-system");if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");dodged=true}}if(!dodged&&hasCard(p,"shan")){const si=findCard(p,"shan");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了遁法抵挡万箭穿云`,"log-player");dodged=true}if(!dodged){damage(p,1,e);log("你受万箭穿云1伤","log-damage")}break;}
 case"guohe":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`${e.name}拆掉了你的${w.name}`,"log-enemy")}else if(p.hand.length>0){const di=Math.floor(Math.random()*p.hand.length);const dc=p.hand.splice(di,1)[0];G.discard.push(dc);log(`${e.name}拆掉你一张手牌`,"log-enemy")}break;
 case"shunshou":if(dist(e,p)<=1&&p.hand.length>0){const si=Math.floor(Math.random()*p.hand.length);const stolen=p.hand.splice(si,1)[0];e.hand.push(stolen);log(`${e.name}顺走你一张牌`,"log-enemy")}break;
 case"lebu":p.judge.push(card);log(`${e.name}对你使用迷心劫`,"log-enemy");break;
@@ -2780,7 +2797,7 @@ else{let d=1;if(e.skills.includes("manniu"))d=2;if(e.skills.includes("sanmei"))d
 break;
 case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
 break;
-case"equip":{const ei=e.hand.findIndex(c=>c.type==="equip");if(ei>=0){const c=e.hand.splice(ei,1)[0];const st=c.equipSubtype;if(st==="weapon"){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=c}else if(st==="armor"){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=c}else if(st==="mount"){if(c.key==="jiahorse"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=c}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=c}}log(`${e.name}装备${c.name}`,"log-enemy");SND.equip();const fc=showFieldCard(c,"enemy");setTimeout(()=>removeFieldCard(fc),1500);renderBattle()}}
+case"equip":{const ei=e.hand.findIndex(c=>c.type==="equip");if(ei>=0){const c=e.hand.splice(ei,1)[0];const st=c.equipSubtype;if(st==="weapon"){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=c}else if(st==="armor"){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=c}else if(st==="mount"){if(c.key==="jiahorse"||c.key==="hualiu"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=c}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=c}}log(`${e.name}装备${c.name}`,"log-enemy");SND.equip();const fc=showFieldCard(c,"enemy");setTimeout(()=>removeFieldCard(fc),1500);renderBattle()}}
 break;
 case"trick":aiPlayTrick(e,p);renderBattle();break;
 }
@@ -4581,7 +4598,7 @@ e.hand.splice(idx,1);
 var st=card.equipSubtype;
 if(st==='weapon'){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=card}
 else if(st==='armor'){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=card}
-else if(st==='mount'){if(card.key==='jiahorse'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}
+else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}
 log(e.name+'装备了'+card.name,'log-enemy');
 SND.equipSound();
 var fc=showFieldCard(card,'enemy');
