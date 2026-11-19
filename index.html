@@ -1805,6 +1805,11 @@ mpSendState();
 return;
 }
 if(target.isEnemy||(G.mpMode&&G.mpBot&&target===G.enemy)){
+// feixiang: 25% chance to auto-dodge
+if(!qinggang&&!fangtian&&hasSk(target,"feixiang")&&Math.random()<0.25){
+log(target.name+"飞翔：凌空闪避降妖！","log-enemy");
+SND.cardDodge();return;
+}
 // AI dodge
 if(!qinggang&&!fangtian&&hasCard(target,"shan")){
 if(target.hp<=2||target.hand.length>4||Math.random()<0.5){
@@ -1828,8 +1833,8 @@ let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
-if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
+if(source._atkBuff)dmg+=source._atkBuff;
 if(hasSk(target,"xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消`,"log-system")}
 if(dmg>0){damage(target,dmg,source);onShaDamage(source,target,card)}
 renderBattle();checkEnd();
@@ -1853,8 +1858,8 @@ let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
-if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
+if(source._atkBuff)dmg+=source._atkBuff;
 // unlocked attack skills: jinbao (wukong) +1 damage per level, tianpeng_up (bajie) +1 per level
 if(!source.isEnemy){
 const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
@@ -1910,9 +1915,9 @@ let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
-if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
-if(!source.isEnemy&&source._shilongActive){dmg+=1;source._shilongActive=false}
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
+if(source._atkBuff)dmg+=source._atkBuff;
+if(source._shilongActive){dmg+=1;source._shilongActive=false}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -1930,8 +1935,8 @@ if(source.equipment.weapon&&source.equipment.weapon.key==="fangtian"&&source.han
 if(hasSk(source,"jiutou2"))dmg=1;
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
-if(!source.isEnemy&&source._shilongActive){dmg+=1;source._shilongActive=false}
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
+if(source._shilongActive){dmg+=1;source._shilongActive=false}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(hasSk(target,"xiniu")&&dmg>0)dmg=Math.max(0,dmg-1);
@@ -1963,7 +1968,7 @@ let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(hasSk(source,"jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
@@ -1978,7 +1983,7 @@ let dmg=1;
 if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
-if(hasSk(source,"sanmei"))dmg=2;
+if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(hasSk(source,"jiutou2")){dmg=1;log("九灵元圣圣威：降妖不可闪避","log-enemy")}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
@@ -2490,6 +2495,80 @@ if(e.skills.includes("tianpeng_e")){
 if(e.skills.includes("juanlian_e")){
 // handled in AI dodge - black cards can be used as shan
 }
+// 青毛狮子·狮子吼: 每回合30%概率让你弃1张牌
+if(e.skills.includes("shizi")){
+if(p.hand.length>0&&Math.random()<0.3){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
+log("狮子吼：青毛狮子震慑，你弃1张牌！","log-enemy");
+SND.skill();fxSkill("enemy");renderBattle();
+}
+}
+// 假国王·幻化: 每回合25%概率偷你一件装备
+if(e.skills.includes("huanshen")){
+if(Math.random()<0.25){
+const slots=[];
+if(p.equipment.weapon)slots.push("weapon");
+if(p.equipment.armor)slots.push("armor");
+if(slots.length>0){
+const slot=slots[Math.floor(Math.random()*slots.length)];
+const item=p.equipment[slot];p.equipment[slot]=null;
+if(e.equipment[slot])G.discard.push(e.equipment[slot]);
+e.equipment[slot]=item;
+log("幻化：假国王窃取你的"+item.name+"！","log-enemy");
+SND.skill();fxSkill("enemy");renderBattle();
+}
+}
+}
+// 鼍龙·水淹: 每回合20%概率让你弃2张牌
+if(e.skills.includes("tuolong")){
+if(p.hand.length>0&&Math.random()<0.2){
+const n=Math.min(2,p.hand.length);
+for(let d=0;d<n;d++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}
+log("水淹：鼍龙兴风作浪，你弃"+n+"张牌！","log-enemy");
+SND.skill();fxSkill("enemy");renderBattle();
+}
+}
+// 虎力大仙·虎威: 降妖伤害+1（在resolveSha和promptPlayerDodge中处理）
+if(e.skills.includes("huli")){
+// passive, handled in damage calculation
+}
+// 鹿力大仙·鹿角: 每回合30%概率额外摸1牌
+if(e.skills.includes("luli")){
+if(Math.random()<0.3){
+const extra=drawFromDeck(1);e.hand.push(...extra);
+log("鹿角通灵：鹿力大仙额外摸1牌","log-enemy");
+SND.draw();fxSkill("enemy");renderBattle();
+}
+}
+// 九头虫·二阶·飞翔: 25%概率闪避降妖（在resolveSha中处理）
+if(e.skills.includes("feixiang")){
+// passive, handled in resolveSha
+}
+// 狮驼三魔王·三魔: 每回合额外摸2牌
+if(e.skills.includes("sanmo")){
+const extra=drawFromDeck(2);e.hand.push(...extra);
+log("三魔合力：狮驼三魔王额外摸2牌","log-enemy");
+SND.draw();fxSkill("enemy");renderBattle();
+}
+// 三犀大王·犀冲: 每回合30%概率直接造成1点伤害
+if(e.skills.includes("sanxi")){
+if(Math.random()<0.3){
+log("犀冲：三犀大王横冲直撞！","log-enemy");
+SND.skill();fxSkill("enemy");
+damage(p,1,e);
+renderBattle();
+}
+}
+// 白鹿精·二阶·兽掌: 每回合25%概率偷你一张手牌
+if(e.skills.includes("shouzhang")){
+if(p.hand.length>0&&Math.random()<0.25){
+const di=Math.floor(Math.random()*p.hand.length);
+const dc=p.hand.splice(di,1)[0];e.hand.push(dc);
+log("兽掌擒拿：白鹿精偷走你一张牌！","log-enemy");
+SND.skill();fxSkill("enemy");renderBattle();
+}
+}
 }
 
 function aiPlayPhase(e,p){
@@ -2518,7 +2597,7 @@ if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d
 if(hasSk(e,"jiutou2"))dmg=1;
 if(e._jiuActive){dmg+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(e,"manniu"))dmg=2;
-if(hasSk(e,"sanmei"))dmg=2;
+if(hasSk(e,"sanmei"))dmg=2;if(hasSk(e,"huli"))dmg+=1;
 if(e.charKey==="yanwang"&&e.hp<=2)dmg+=1;
 if(e.charKey==="niulang"&&e.hp<=2)dmg+=1;
 if(hasSk(p,"xiniu")&&dmg>0)dmg=Math.max(0,dmg-1);
@@ -2842,9 +2921,9 @@ let dmg=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(enemy._jiuActive){dmg+=1;enemy._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(enemy,"manniu"))dmg=2;
-if(hasSk(enemy,"sanmei"))dmg=2;
-if(!enemy.isEnemy&&enemy._atkBuff)dmg+=enemy._atkBuff;
-if(!enemy.isEnemy&&enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
+if(enemy._atkBuff)dmg+=enemy._atkBuff;
+if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2867,8 +2946,8 @@ let dmg=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(enemy._jiuActive){dmg+=1;enemy._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(enemy,"manniu"))dmg=2;
-if(hasSk(enemy,"sanmei"))dmg=2;
-if(!enemy.isEnemy&&enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
+if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2888,8 +2967,8 @@ if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.l
 if(hasSk(enemy,"jiutou2"))dmg=1;
 if(enemy._jiuActive){dmg+=1;enemy._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(enemy,"manniu"))dmg=2;
-if(hasSk(enemy,"sanmei"))dmg=2;
-if(!enemy.isEnemy&&enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
+if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(hasSk(p,"xiniu")&&dmg>0)dmg=Math.max(0,dmg-1);
@@ -2921,7 +3000,7 @@ const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
 if(hasCard(p,"shan")||p.equipment.armor){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
-else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(hasSk(e,"jiutou2"))d=1;if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(p._defBuff)d=Math.max(0,d-p._defBuff);if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid){if(G.mpMode)mpEndBattle(false);else onLevelFail()}},800);return}}
+else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(hasSk(e,"jiutou2"))d=1;if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(hasSk(e,"huli"))d+=1;if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(p._defBuff)d=Math.max(0,d-p._defBuff);if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid){if(G.mpMode)mpEndBattle(false);else onLevelFail()}},800);return}}
 }
 break;
 case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
@@ -4632,8 +4711,8 @@ var tp=dodge.source.skills.find(function(s){return s.key==='tianpeng_up'});
 dmg+=(typeof tp.perTurn==='number'?tp.perTurn:1);
 }
 }
-if(!dodge.source.isEnemy&&dodge.source._atkBuff)dmg+=dodge.source._atkBuff;
-if(!dodge.source.isEnemy&&dodge.source._shilongActive){dmg+=1;dodge.source._shilongActive=false}
+if(dodge.source._atkBuff)dmg+=dodge.source._atkBuff;
+if(dodge.source._shilongActive){dmg+=1;dodge.source._shilongActive=false}
 if(dodge.source.charKey==='yanwang'&&dodge.source.hp<=2)dmg+=1;
 if(dodge.source.charKey==='niulang'&&dodge.source.hp<=2)dmg+=1;
 if(dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='huosha'&&e.equipment.armor&&e.equipment.armor.key==='tengjia'){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
