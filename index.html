@@ -2132,6 +2132,15 @@ if(other.hp<=0){other.hp=0;other.alive=false;SND.death()}
 function checkEnd(){
 // 结算前归还被人种袋锁走的牌，避免关卡结束时牌凭空消失
 if(G.player._locked&&G.player._locked.length){G.player.hand.push(...G.player._locked);G.player._locked=[]}
+// fusheng auto-trigger for player
+if(!G.player.alive&&G.player.charKey==="houtu"&&!(G.player.skillUsed.fusheng>0)&&G.player.hand.length>=3){
+G.player.skillUsed.fusheng=1;
+for(let i=0;i<3;i++){const c=G.player.hand.splice(0,1)[0];G.discard.push(c)}
+G.player.hp=1;G.player.alive=true;
+log("复生：弃3牌回复1点体力！","log-player");
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();
+return;
+}
 if(!G.player.alive){
 if(G.mpMode){const bid2=G.battleId;setTimeout(()=>{if(G.battleId===bid2)mpEndBattle(false)},800);return}
 const failLevel=G.level;const bid=G.battleId;
@@ -2139,6 +2148,15 @@ setTimeout(()=>{if(G.level===failLevel&&G.battleId===bid)onLevelFail()},800);
 return;
 }
 if(!G.enemy.alive){
+// check fusheng auto-trigger
+if(G.enemy.charKey==="houtu"&&!(G.enemy.skillUsed.fusheng>0)&&G.enemy.hand.length>=3){
+G.enemy.skillUsed.fusheng=1;
+for(let i=0;i<3;i++){const c=G.enemy.hand.splice(0,1)[0];G.discard.push(c)}
+G.enemy.hp=1;G.enemy.alive=true;
+log("后土娘娘复生：弃3牌回1血！","log-enemy");
+SND.heal();fxHeal("enemy");renderBattle();
+return;
+}
 // check huapo revive
 if(G.enemy.skills&&G.enemy.skills.includes("huapo")&&!G.enemy._revived){
 G.enemy._revived=true;G.enemy.hp=Math.min(G.enemy.maxHp,3);G.enemy.alive=true;
