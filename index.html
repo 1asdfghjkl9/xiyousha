@@ -5158,6 +5158,24 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.8',date:'2026-11-20',items:[
+{tag:'fix',text:'修复所有被动技能树升级无效的严重bug（筋斗雷霆、火眼精进、变术精进等10+个被动技能现在正常生效）'},
+{tag:'fix',text:'修复MP对战结束时因over-buttons元素缺失导致崩溃的问题'},
+{tag:'fix',text:'修复七十二变使用次数不递增导致可无限使用的问题'},
+{tag:'fix',text:'修复仙知技能在MP模式下查看手牌而非牌堆顶3张的问题'},
+{tag:'fix',text:'修复MP模式下主机自动替访客出护身法的问题'},
+{tag:'fix',text:'修复每回合skillUsed重置导致复生等每局1次技能实际为每回合1次的问题'},
+{tag:'fix',text:'修复mpEnemyUseSkill中bingdian重复定义的问题'},
+{tag:'fix',text:'修复MP技能信息弹窗标题始终显示"火眼金睛"的问题'},
+{tag:'fix',text:'修复MP状态序列化缺少_atkBuff和_defBuff的问题'},
+{tag:'fix',text:'修复AI技能检查charKey与skillKey混淆（紧箍咒、禅术、铁胆、化龙一击等5处）'},
+{tag:'fix',text:'修复索命和狂暴被动加成仅在玩家攻击时生效、敌人攻击时无效的问题'},
+{tag:'fix',text:'修复技能检查.some()与.includes()不一致导致Boss技能失效的问题（新增hasSk辅助函数）'},
+{tag:'fix',text:'修复华骝坐骑在AI/MP中被错误放入进攻坐骑槽的问题'},
+{tag:'fix',text:'新增连锁和仙酿状态的可视化指示器'},
+{tag:'fix',text:'新增AI电母冰电技能：无降妖时自动将黑色牌转为降妖'},
+{tag:'fix',text:'修复MP模式下火攻自动展示访客手牌的问题'},
+]},
 {ver:'v1.7',date:'2026-11-20',items:[
 {tag:'fix',text:'修复银月枪效果未实现的问题（出遁法后弃1牌造1伤）'},
 {tag:'fix',text:'修复方天画戟效果未实现的问题（手牌为0时出降妖+1伤且不可闪避）'},
