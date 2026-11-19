@@ -430,6 +430,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <button class="btn title-btn-2" id="continue-btn" style="display:none" onclick="continueGame()">继续游戏</button>
 <button class="btn-sm" onclick="showAccount()" style="margin-top:8px;opacity:.6">账号</button>
 <button class="btn-sm" onclick="showMP()" style="margin-top:4px;opacity:.6">联机对战</button>
+<button class="btn-sm" onclick="showHelp()" style="margin-top:4px;opacity:.6">游戏介绍</button>
 <button class="btn-sm" onclick="showChangelog()" style="margin-top:4px;opacity:.6">更新日志</button>
 </div>
 <div class="title-footer">
@@ -589,6 +590,13 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <button class="btn-sm" onclick="showScreen('title-screen')" style="margin-top:15px">返回</button>
 </div>
 
+<!-- 游戏介绍界面 -->
+<div id="help-screen" class="screen hidden">
+<h2 class="story-title">游戏介绍</h2>
+<div id="help-content" style="max-width:460px;margin:0 auto;padding:0 12px;text-align:left;font-size:.88em;line-height:1.7"></div>
+<button class="btn-sm" onclick="showScreen('title-screen')" style="margin-top:15px">返回</button>
+</div>
+
 </div>
 <div id="fx-overlay"></div>
 
@@ -597,7 +605,8 @@ try{
 "use strict";
 
 // ==================== Boss头像映射 ====================
-const CHAR_SVG={wukong:"sunwukong",bajie:"zhubajie",shaseng:"shawujing"};
+const CHAR_SVG={wukong:"sunwukong",bajie:"zhubajie",shaseng:"shawujing",tang:null,bailong:null,guanyin:null,erlang:null,nezha:null,niulang:null};
+const CHAR_EMOJI={wukong:"🐵",bajie:"🐷",shaseng:"🧔",tang:"🧑‍🦲",bailong:"🐉",guanyin:"🪷",erlang:"👁️",nezha:"🔥",niulang:"🐂"};
 const BOSS_SVG={"如来佛祖":"rulaifo","黑熊精":"heixiongjing","红孩儿":"honghaier","蝎子精":"xiezijing","牛魔王":"niumowang","牛魔王·现原形":"niumowang","黄眉大王":"huangmei","黄眉大王·强化":"huangmei","老鼋":"laoyuan","白骨精":"baigujing","灵感大王":"linggan","六耳猕猴":"liuer","铁扇公主":"tieshan","蜘蛛精":"zhizhujing","独角兕大王":"dujiaosi"};
 var CHAR_SVG_DFU={
   "baigujing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJvbmVCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMWEyOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzE4MGExNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODA0MGEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvbmVXaGl0ZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjBlOGQ4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZDhjOGI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2E4OTg4OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCNib25lQmcpIiBzdHJva2U9IiNiODkwZDgiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzc4NDhhMCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtZGFzaGFycmF5PSI0LDMiLz4KICAKICA8IS0tIFdoaXRlIGJvbmUgZGVtb24gLSBlbGVnYW50IGZlbWFsZSBza3VsbCBzcGlyaXQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA4MikiPgogICAgPCEtLSBTa3VsbCBmYWNlIGJhc2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI4IiBmaWxsPSJ1cmwoI2JvbmVXaGl0ZSkiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuOSIvPgogICAgPCEtLSBDaGVla2JvbmVzIChob2xsb3cpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xMiIgY3k9IjUiIHJ4PSI1IiByeT0iNyIgZmlsbD0iIzVhNDgzOCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTIiIGN5PSI1IiByeD0iNSIgcnk9IjciIGZpbGw9IiM1YTQ4MzgiIG9wYWNpdHk9IjAuNCIvPgogICAgPCEtLSBFeWUgc29ja2V0cyAoZGVlcCwgZ2xvd2luZyBwdXJwbGUpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii04IiBjeT0iLTUiIHJ4PSI2IiByeT0iNyIgZmlsbD0iIzFhMGExNCIvPgogICAgPGVsbGlwc2UgY3g9IjgiIGN5PSItNSIgcng9IjYiIHJ5PSI3IiBmaWxsPSIjMWEwYTE0Ii8+CiAgICA8IS0tIEdsb3dpbmcgZXllcyAtLT4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjIuNSIgZmlsbD0iI2I4OTBkOCIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9Ii01IiByPSIyLjUiIGZpbGw9IiNiODkwZDgiLz4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjEiIGZpbGw9IiNlOGM4ZmYiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSItNSIgcj0iMSIgZmlsbD0iI2U4YzhmZiIvPgogICAgPCEtLSBOb3NlIGNhdml0eSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIsMiBMIDAsOCBMIDIsMiBaIiBmaWxsPSIjNWE0ODM4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gVGVldGggcm93IC0tPgogICAgPHJlY3QgeD0iLTEwIiB5PSIxMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjYm9uZVdoaXRlKSIgc3Ryb2tlPSIjOGE3ODQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPGxpbmUgeDE9Ii02IiB5MT0iMTIiIHgyPSItNiIgeTI9IjE4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8bGluZSB4MT0iLTIiIHkxPSIxMiIgeDI9Ii0yIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSIyIiB5MT0iMTIiIHgyPSIyIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSI2IiB5MT0iMTIiIHgyPSI2IiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwhLS0gRmxvd2luZyB3aGl0ZSBoYWlyIC0tPgogICAgPHBhdGggZD0iTSAtMjAsLTE1IFEgLTMwLC0xMCAtMzUsNSBRIC0zMCwxMCAtMjUsNSBRIC0yMiwwIC0xOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDxwYXRoIGQ9Ik0gMjAsLTE1IFEgMzAsLTEwIDM1LDUgUSAzMCwxMCAyNSw1IFEgMjIsMCAxOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgb3JuYW1lbnRzIC0tPgogICAgPGNpcmNsZSBjeD0iLTE4IiBjeT0iMTAiIHI9IjIiIGZpbGw9IiNjOGMwYjAiIG9wYWNpdHk9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTgiIGN5PSIxMCIgcj0iMiIgZmlsbD0iI2M4YzBiMCIgb3BhY2l0eT0iMC42Ii8+CiAgPC9nPgogIAogIDwhLS0gRmxvd2luZyB3aGl0ZSByb2JlcyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiPgogICAgPHBhdGggZD0iTSAtMjgsMCBRIDAsOCAyOCwwIEwgMzUsNDAgUSAwLDUwIC0zNSw0MCBaIiBmaWxsPSIjZDhkMGM4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjciLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgcGF0dGVybiAtLT4KICAgIDxnIG9wYWNpdHk9IjAuNCIgZmlsbD0iI2I4YjBhMCI+CiAgICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9IjE1IiByPSIyIi8+CiAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIyMCIgcj0iMiIvPgogICAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjE1IiByPSIyIi8+CiAgICA8L2c+CiAgICA8IS0tIEZsb3dpbmcgcmliYm9ucyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTMwLDEwIFEgLTQwLDI1IC0zNSw0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDhkMGM4IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTSAzMCwxMCBRIDQwLDI1IDM1LDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkOGQwYzgiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC40Ii8+CiAgPC9nPgogIAogIDwhLS0gRWVyaWUgcHVycGxlIG1vb25saWdodCAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMTUiIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuMDgiLz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4MiIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjYjg5MGQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+55m96aqo57K+PC90ZXh0PgogIAogIDxnIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
@@ -960,6 +969,12 @@ const CHARS={
 wukong:{name:"孙悟空",maxHp:4,skills:[{key:"huoyan",name:"火眼金睛",desc:"查看对手手牌",perTurn:1},{key:"bian",name:"七十二变",desc:"将一张手牌当任意基本牌",perTurn:1}]},
 bajie:{name:"猪八戒",maxHp:4,skills:[{key:"tianpeng",name:"天蓬之力",desc:"红色牌当降妖",perTurn:0},{key:"tanshi",name:"贪食",desc:"回合结束有蟠桃则额外回1血",perTurn:1}]},
 shaseng:{name:"沙和尚",maxHp:4,skills:[{key:"juanlian",name:"卷帘之盾",desc:"黑色牌当遁法",perTurn:0},{key:"liusha",name:"流沙护体",desc:"受伤弃1牌抵1伤",perTurn:1}]},
+tang:{name:"唐僧",maxHp:3,skills:[{key:"jingxin",name:"静心诵经",desc:"每回合回复1点体力",perTurn:0},{key:"jingu",name:"紧箍咒",desc:"每回合1次令对手弃1牌",perTurn:1}]},
+bailong:{name:"小白龙",maxHp:4,skills:[{key:"longwei",name:"龙威护体",desc:"黑色牌当遁法",perTurn:0},{key:"shilong",name:"化龙一击",desc:"每回合1次降妖伤害+1",perTurn:1}]},
+guanyin:{name:"观音菩萨",maxHp:3,skills:[{key:"cibei",name:"慈悲为怀",desc:"每回合1次回1血或摸1牌",perTurn:1},{key:"jingping",name:"净瓶甘露",desc:"每回合1次弃1牌回2血",perTurn:1}]},
+erlang:{name:"二郎神",maxHp:4,skills:[{key:"tianyan",name:"天眼通",desc:"查看对手手牌",perTurn:1},{key:"xiao",name:"哮天犬",desc:"每回合1次弃1牌造成1伤",perTurn:1}]},
+nezha:{name:"哪吒",maxHp:4,skills:[{key:"fenghuolun",name:"风火轮",desc:"红色牌当降妖",perTurn:0},{key:"huntian",name:"混天绫",desc:"每回合1次红色牌当遁法",perTurn:1}]},
+niulang:{name:"牛魔王",maxHp:5,skills:[{key:"kuangbao",name:"狂暴",desc:"体力≤2时降妖伤害+1",perTurn:0},{key:"tiedan",name:"铁胆",desc:"每回合1次免疫1点伤害",perTurn:1}]},
 };
 // 升级所需经验表
 const EXP_TABLE=[0,10,25,45,70,100,140,190,250,320];
@@ -1329,10 +1344,10 @@ else{en.style.textShadow="none";pn.style.textShadow="none"}
 // avatar
 const pav=document.getElementById("player-avatar");
 const pSvg=getCharSvg(null,p.charKey);
-pav.innerHTML=pSvg?'<img src="'+pSvg+'" alt="'+p.name+'">':(p.charKey==="wukong"?"🐵":p.charKey==="bajie"?"🐷":"🧔");
+pav.innerHTML=pSvg?'<img src="'+pSvg+'" alt="'+p.name+'">':CHAR_EMOJI[p.charKey]||"🧔";
 const eav=document.getElementById("enemy-avatar");
 const eSvg=getCharSvg(e.name,null)||(e.charKey?getCharSvg(null,e.charKey):null);
-eav.innerHTML=eSvg?'<img src="'+eSvg+'" alt="'+e.name+'">':"👹";
+eav.innerHTML=eSvg?'<img src="'+eSvg+'" alt="'+e.name+'">':(CHAR_EMOJI[e.charKey]||"👹");
 // equips
 renderEquips("enemy-equips",e);
 renderEquips("player-equips",p);
@@ -1762,6 +1777,10 @@ const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
 if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
 const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
 if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+// 牛魔王狂暴：体力≤2时降妖伤害+1
+if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
+// 小白龙化龙一击：降妖伤害+1
+if(source._shilongActive){dmg+=1;source._shilongActive=false}
 }
 // xiniu: reduce sha damage by 1
 if(target.skills&&target.skills.some(s=>s.key==="xiniu")){dmg=Math.max(0,dmg-1);if(dmg===0)log(`${target.name}犀角护体抵消降妖伤害`,"log-system")}
@@ -1924,6 +1943,12 @@ if(amount>0&&isPC&&target.skills&&target.skills.some(s=>s.key==="jinshen")&&(tar
 target.skillUsed.jinshen=1;
 amount=Math.max(0,amount-1);
 log("金身罗汉：减伤1点","log-heal");
+}
+// tiedan: niulang immune 1 damage
+if(amount>0&&isPC&&target.charKey==="niulang"&&target._tiedanActive){
+target._tiedanActive=false;
+amount=Math.max(0,amount-1);
+log("铁胆：免疫1点伤害","log-heal");
 }
 if(amount<=0)return;
 target.hp-=amount;
@@ -2476,7 +2501,9 @@ if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
 p.hand.push(...drawn);
 p._extraDraw=0;
-p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;
+p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;p._tiedanActive=false;p._shilongActive=false;
+// 唐僧静心诵经：每回合回1血
+if(p.charKey==="tang"&&p.hp<p.maxHp){p.hp=Math.min(p.maxHp,p.hp+1);log("静心诵经：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player")}
 G._lastPlayerCardKey=null;
 SND.draw();
 log(`你的回合，摸了${drawN}张牌`,"log-player");
@@ -2560,12 +2587,14 @@ const eqg=enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinggang";
 const ehb=enemy.equipment.weapon&&enemy.equipment.weapon.key==="hanbing";
 const noDodge=!!(enemy.skills&&enemy.skills.includes("jiutou2"));
 if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
-if(!eqg&&!noDodge&&(hasCard(p,"shan")||(p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan")))){
-const canJuanlian=p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan");
+if(!eqg&&!noDodge&&(hasCard(p,"shan")||(p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan"))||(p.charKey==="bailong"&&p.hand.some(c=>!c.red&&c.key!=="shan"))||(p.charKey==="nezha"&&p.hand.some(c=>c.red&&c.key!=="shan")))){
+const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong")&&p.hand.some(c=>!c.red&&c.key!=="shan");
+const canHuntian=p.charKey==="nezha"&&p.hand.some(c=>c.red&&c.key!=="shan");
 const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
 ...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");renderBattle();continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
-...(canJuanlian?[{label:"卷帘之盾(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`卷帘之盾：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
+...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":"龙威护体"}：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
+...(canHuntian?[{label:"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`混天绫：将${jc.name}当遁法`,"log-player");renderBattle();continueEnemyTurn()}}}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
 if(enemy.skills.some(s=>s.key==="manniu"))dmg=2;
@@ -2837,6 +2866,100 @@ if((p.skillUsed.luohan||0)>=1)return;
 p.skillUsed.luohan=1;
 p._luohanActive=true;
 log("罗汉金身：本回合免疫下一张锦囊","log-player");
+SND.skill();renderBattle();
+}
+// ====== 唐僧 ======
+else if(key==="jingxin"){
+log("静心诵经：每回合自动回复1点体力（被动）","log-player");
+}
+else if(key==="jingu"){
+const p=G.player,e=G.enemy;
+if((p.skillUsed.jingu||0)>=1)return;
+if(e.hand.length<1){log("对手无手牌可弃","log-system");return}
+p.skillUsed.jingu=1;
+const ec=e.hand.splice(Math.floor(Math.random()*e.hand.length),1)[0];G.discard.push(ec);
+log(`紧箍咒：令${e.name}弃掉${ec.name}`,"log-player");
+SND.skill();renderBattle();checkEnd();
+}
+// ====== 小白龙 ======
+else if(key==="longwei"){
+log("龙威护体：黑色牌可当遁法（被动）","log-player");
+}
+else if(key==="shilong"){
+const p=G.player;
+if((p.skillUsed.shilong||0)>=1)return;
+p.skillUsed.shilong=1;
+p._shilongActive=true;
+log("化龙一击：下一张降妖伤害+1","log-player");
+SND.skill();renderBattle();
+}
+// ====== 观音菩萨 ======
+else if(key==="cibei"){
+const p=G.player;
+if((p.skillUsed.cibei||0)>=1)return;
+p.skillUsed.cibei=1;
+showResponse("慈悲为怀","选择效果：",[
+{label:"回复1点体力",action:function(){p.hp=Math.min(p.maxHp,p.hp+1);log("慈悲为怀：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();}},
+{label:"摸1张牌",action:function(){const c=drawFromDeck(1);p.hand.push(...c);log("慈悲为怀：摸1张牌","log-player");renderBattle();}},
+]);
+}
+else if(key==="jingping"){
+const p=G.player;
+if((p.skillUsed.jingping||0)>=1)return;
+if(p.hand.length<1){log("手牌不足","log-system");return}
+if(p.hp>=p.maxHp){log("体力已满","log-system");return}
+p.skillUsed.jingping=1;
+const c=p.hand.splice(0,1)[0];G.discard.push(c);
+p.hp=Math.min(p.maxHp,p.hp+2);
+log(`净瓶甘露：弃${c.name}回复2点体力`,"log-player");
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();
+}
+// ====== 二郎神 ======
+else if(key==="tianyan"){
+if((p.skillUsed.tianyan||0)>=1)return;
+p.skillUsed.tianyan=1;
+const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
+showResponse("天眼通",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
+log("二郎神使用天眼通查看敌方手牌","log-player");
+}
+else if(key==="xiao"){
+const p=G.player,e=G.enemy;
+if((p.skillUsed.xiao||0)>=1)return;
+if(p.hand.length<1){log("手牌不足","log-system");return}
+p.skillUsed.xiao=1;
+const c=p.hand.splice(0,1)[0];G.discard.push(c);
+log(`哮天犬：弃${c.name}对敌造成1伤`,"log-player");
+SND.skill();fxSkillBurst("enemy","#ff8844");damage(e,1,p);renderBattle();checkEnd();
+}
+// ====== 哪吒 ======
+else if(key==="fenghuolun"){
+const idx=p.hand.findIndex(c=>c.red&&c.key!=="sha");
+if(idx<0){log("没有可用的红色牌","log-system");return}
+const old=p.hand[idx];
+const def=CARD_DEF["sha"];
+p.hand[idx]={...old,key:"sha",name:def.n,type:"basic",basicSubtype:"sha",desc:def.d,cls:"basic-sha"};
+log(`风火轮：将${old.name}(${old.suit}${old.rank})变为降妖`,"log-player");
+renderBattle();
+}
+else if(key==="huntian"){
+if((p.skillUsed.huntian||0)>=1)return;
+const idx=p.hand.findIndex(c=>c.red&&c.key!=="shan");
+if(idx<0){log("没有可用的红色牌","log-system");return}
+p.skillUsed.huntian=1;
+const old=p.hand[idx];
+p.hand[idx]={...old,key:"shan",name:"遁法",type:"basic",basicSubtype:"shan",desc:"混天绫化遁法",cls:"basic-shan"};
+log(`混天绫：将${old.name}(${old.suit}${old.rank})变为遁法`,"log-player");
+renderBattle();
+}
+// ====== 牛魔王 ======
+else if(key==="kuangbao"){
+log("狂暴：体力≤2时降妖伤害+1（被动）","log-player");
+}
+else if(key==="tiedan"){
+if((p.skillUsed.tiedan||0)>=1)return;
+p.skillUsed.tiedan=1;
+p._tiedanActive=true;
+log("铁胆：下次受伤免疫1点","log-player");
 SND.skill();renderBattle();
 }
 if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot&&G.player.alive&&G.enemy.alive)mpSendState();
@@ -3701,7 +3824,15 @@ renderMPCharSelect();
 function renderMPCharSelect(){
 const el=document.getElementById('mp-char-select');
 el.innerHTML='';
-const chars=[['wukong','🐵','孙悟空'],['bajie','🐷','猪八戒'],['shaseng','🧔','沙和尚']];
+const chars=[['wukong','🐵','孙悟空'],['bajie','🐷','猪八戒'],['shaseng','🧔','沙和尚'],['tang','🧑‍🦲','唐僧'],['bailong','🐉','小白龙'],['guanyin','🪷','观音菩萨'],['erlang','👁️','二郎神'],['nezha','🔥','哪吒'],['niulang','🐂','牛魔王']];
+// 随机抽武将按钮
+const randBtn=document.createElement('div');
+randBtn.className='mp-char-card';
+randBtn.style.borderColor='var(--gold)';
+randBtn.style.background='linear-gradient(135deg,rgba(201,168,76,.15),rgba(220,80,60,.1))';
+randBtn.innerHTML='<div class="mp-char-icon">🎲</div><div class="mp-char-name">随机武将</div>';
+randBtn.onclick=()=>{SND.select();const r=chars[Math.floor(Math.random()*chars.length)];MP.mpSelectedChar=r[0];renderMPCharSelect()};
+el.appendChild(randBtn);
 chars.forEach(([key,icon,name])=>{
 const card=document.createElement('div');
 card.className='mp-char-card'+(MP.mpSelectedChar===key?' selected':'');
@@ -3880,7 +4011,9 @@ renderBattle();
 }
 const drawn=drawFromDeck(2);
 e.hand.push(...drawn);
-e.shaPlayed=false;e.skillUsed={};e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;
+e.shaPlayed=false;e.skillUsed={};e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;
+// 唐僧静心诵经
+if(e.charKey==='tang'&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log('静心诵经：'+e.name+'回复1点体力','log-heal');SND.heal();fxHeal('enemy');fxHpChange('enemy')}
 SND.draw();
 log(e.name+'摸了2张牌','log-enemy');
 fxTurn('enemy');
@@ -3978,7 +4111,8 @@ renderHand();
 function mpShowGuestDodge(prompt){
 hideResponse();
 var hasShan=G.player.hand.some(function(c){return c.key==='shan'});
-var canJuanlian=G.player.charKey==='shaseng'&&G.player.hand.some(function(c){return !c.red&&c.key!=='shan'});
+var canJuanlian=(G.player.charKey==='shaseng'||G.player.charKey==='bailong')&&G.player.hand.some(function(c){return !c.red&&c.key!=='shan'});
+var canHuntian=G.player.charKey==='nezha'&&G.player.hand.some(function(c){return c.red&&c.key!=='shan'});
 var btns=[];
 if(hasShan){
 btns.push({label:'出遁法',action:function(){
@@ -3987,8 +4121,14 @@ hideResponse();
 }});
 }
 if(canJuanlian){
-btns.push({label:'卷帘之盾(黑牌当遁法)',action:function(){
+btns.push({label:G.player.charKey==='shaseng'?'卷帘之盾(黑牌当遁法)':'龙威护体(黑牌当遁法)',action:function(){
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_dodge',id:MP.myId,useShan:true,juanlian:true,ts:Date.now()});
+hideResponse();
+}});
+}
+if(canHuntian){
+btns.push({label:'混天绫(红牌当遁法)',action:function(){
+MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_dodge',id:MP.myId,useShan:true,huntian:true,ts:Date.now()});
 hideResponse();
 }});
 }
@@ -4015,11 +4155,21 @@ if(!dodge)return;
 G._mpPendingDodge=null;
 var e=G.enemy,p=G.player;
 if(msg.useShan){
-if(msg.juanlian&&e.charKey==='shaseng'){
+if(msg.juanlian&&(e.charKey==='shaseng'||e.charKey==='bailong')){
 var ji=e.hand.findIndex(function(c){return !c.red&&c.key!=='shan'});
 if(ji>=0){
 var jc=e.hand.splice(ji,1)[0];G.discard.push(jc);
-log(e.name+'卷帘之盾：将'+jc.name+'当遁法','log-enemy');
+log(e.name+(e.charKey==='shaseng'?'卷帘之盾':'龙威护体')+'：将'+jc.name+'当遁法','log-enemy');
+SND.cardDodge();
+renderBattle();mpSendState();
+return;
+}
+}
+if(msg.huntian&&e.charKey==='nezha'){
+var hi=e.hand.findIndex(function(c){return c.red&&c.key!=='shan'});
+if(hi>=0){
+var hc=e.hand.splice(hi,1)[0];G.discard.push(hc);
+log(e.name+'混天绫：将'+hc.name+'当遁法','log-enemy');
 SND.cardDodge();
 renderBattle();mpSendState();
 return;
@@ -4306,6 +4456,98 @@ log(e.name+'三十六变：将'+sc.name+'变为'+(def?def.n:param),'log-enemy');
 SND.skill();fxSkill('enemy');
 renderBattle();mpSendState();
 }
+// ====== 唐僧 ======
+else if(key==='jingu'){
+if((e.skillUsed.jingu||0)>=1||p.hand.length<1)return;
+e.skillUsed.jingu=1;
+var pi2=Math.floor(Math.random()*p.hand.length);
+var pc2=p.hand.splice(pi2,1)[0];G.discard.push(pc2);
+log(e.name+'紧箍咒：令你弃'+pc2.name,'log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();checkEnd();mpSendState();
+}
+// ====== 小白龙 ======
+else if(key==='shilong'){
+if((e.skillUsed.shilong||0)>=1)return;
+e.skillUsed.shilong=1;e._shilongActive=true;
+log(e.name+'化龙一击：下张降妖+1伤','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}
+// ====== 观音菩萨 ======
+else if(key==='cibei'){
+if((e.skillUsed.cibei||0)>=1)return;
+e.skillUsed.cibei=1;
+if(e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'慈悲为怀：回1血','log-enemy');SND.heal();fxHeal('enemy')}
+else{var cc=drawFromDeck(1);e.hand.push(...cc);log(e.name+'慈悲为怀：摸1牌','log-enemy')}
+renderBattle();mpSendState();
+}
+else if(key==='jingping'){
+if((e.skillUsed.jingping||0)>=1||e.hand.length<1||e.hp>=e.maxHp)return;
+e.skillUsed.jingping=1;
+var jc2=e.hand.splice(0,1)[0];G.discard.push(jc2);
+e.hp=Math.min(e.maxHp,e.hp+2);
+log(e.name+'净瓶甘露：弃1牌回2血','log-enemy');
+SND.heal();fxHeal('enemy');
+renderBattle();mpSendState();
+}
+// ====== 二郎神 ======
+else if(key==='tianyan'){
+if((e.skillUsed.tianyan||0)>=1)return;
+e.skillUsed.tianyan=1;
+var cards2=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');
+MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:{
+myHp:e.hp,myMaxHp:e.maxHp,myName:e.name,
+myHand:e.hand.map(function(c){return{id:c.id,key:c.key,name:c.name,type:c.type,suit:c.suit,rank:c.rank,red:c.red,cls:c.cls,desc:c.desc,equipSubtype:c.equipSubtype,range:c.range}}),
+myEquips:JSON.parse(JSON.stringify(e.equipment)),myJudge:[],mySkills:e.skills.map(function(s){return{key:s.key,name:s.name}}),
+myShaPlayed:e.shaPlayed,myTurn:true,
+oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,
+oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],
+phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用天眼通查看你的手牌',cls:'log-enemy'}),
+skillInfo:'对手查看你的手牌: '+cards2,deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});
+log(e.name+'使用天眼通','log-enemy');SND.skill();fxSkill('enemy');
+renderBattle();
+}
+else if(key==='xiao'){
+if((e.skillUsed.xiao||0)>=1||e.hand.length<1)return;
+e.skillUsed.xiao=1;
+var xc=e.hand.splice(0,1)[0];G.discard.push(xc);
+log(e.name+'哮天犬：弃'+xc.name+'造成1伤','log-enemy');
+SND.skill();fxSkill('enemy');fxImpact('player');
+damage(p,1,e);
+renderBattle();checkEnd();
+if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
+}
+// ====== 哪吒 ======
+else if(key==='fenghuolun'){
+var fi2=e.hand.findIndex(function(c){return c.red&&c.key!=='sha'});
+if(fi2<0)return;
+var old2=e.hand[fi2];
+var def2=CARD_DEF['sha'];
+e.hand[fi2]={id:old2.id,key:'sha',name:'风火轮·降妖',type:'basic',basicSubtype:'sha',suit:old2.suit,rank:old2.rank,red:old2.red,desc:'风火轮化降妖',cls:'basic-sha'};
+log(e.name+'风火轮：将'+old2.name+'变为降妖','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}
+else if(key==='huntian'){
+if((e.skillUsed.huntian||0)>=1)return;
+var hi2=e.hand.findIndex(function(c){return c.red&&c.key!=='shan'});
+if(hi2<0)return;
+e.skillUsed.huntian=1;
+var old3=e.hand[hi2];
+e.hand[hi2]={id:old3.id,key:'shan',name:'混天绫·遁法',type:'basic',basicSubtype:'shan',suit:old3.suit,rank:old3.rank,red:old3.red,desc:'混天绫化遁法',cls:'basic-shan'};
+log(e.name+'混天绫：将'+old3.name+'变为遁法','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}
+// ====== 牛魔王 ======
+else if(key==='tiedan'){
+if((e.skillUsed.tiedan||0)>=1)return;
+e.skillUsed.tiedan=1;e._tiedanActive=true;
+log(e.name+'铁胆：下次受伤免疫1点','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}
 }
 
 function mpEnemyEndTurn(){
@@ -4426,6 +4668,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.5',date:'2026-11-19',items:[
+{tag:'new',text:'新增6名可选武将：唐僧、小白龙、观音菩萨、二郎神、哪吒、牛魔王'},
+{tag:'new',text:'每名武将拥有独特技能，联机对战可选随机武将'},
+{tag:'new',text:'新增游戏介绍页面：包含基础玩法、卡牌类型、武将技能说明'},
+{tag:'fix',text:'修复联机模式21项bug（竞态、断线、技能、显示等）'},
+]},
 {ver:'v1.4',date:'2026-11-19',items:[
 {tag:'fix',text:'修复访客出杀时主机闪避期间访客仍可出牌的竞态条件'},
 {tag:'fix',text:'修复断线/离开时对手无通知导致无限等待的问题'},
@@ -4483,6 +4731,52 @@ const CHANGELOG=[
 ]},
 ];
 
+function showHelp(){
+SND.buttonClick();
+showScreen('help-screen');
+const el=document.getElementById('help-content');
+el.innerHTML=`
+<h3 style="color:var(--gold);margin:0 0 6px">📖 游戏背景</h3>
+<p style="color:var(--text-dim);margin:0 0 14px">取经路上的八十一难，化为牌桌上的生死博弈。你将扮演西游记中的经典角色，运用独特的武将技能，在降妖除魔的旅程中一路西行。</p>
+
+<h3 style="color:var(--gold);margin:0 0 6px">🎴 基础玩法</h3>
+<p style="color:var(--text-dim);margin:0 0 6px"><b style="color:var(--text-main)">回合流程：</b>判定阶段 → 摸牌阶段（摸2张）→ 出牌阶段 → 弃牌阶段</p>
+<p style="color:var(--text-dim);margin:0 0 6px"><b style="color:var(--text-main)">胜利条件：</b>将敌方体力降至0即可获胜</p>
+<p style="color:var(--text-dim);margin:0 0 14px"><b style="color:var(--text-main)">手牌上限：</b>回合结束时手牌数不能超过当前体力值</p>
+
+<h3 style="color:var(--gold);margin:0 0 6px">🃏 卡牌类型</h3>
+<p style="margin:0 0 4px"><span style="color:#e85555">■ 基本牌</span></p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>降妖</b>（杀）：对目标造成1点伤害，每回合限出1张</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>遁法</b>（闪）：抵消一张降妖的伤害</p>
+<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>蟠桃</b>（桃）：回复1点体力</p>
+<p style="margin:0 0 4px"><span style="color:#cc66cc">■ 锦囊牌</span></p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>神通自现</b>（无中生有）：摸2张牌</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>拆桥断路</b>（过河拆桥）：弃掉对方1张装备或手牌</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>护身法</b>（无懈可击）：抵消一张锦囊牌</p>
+<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>迷心劫</b>（乐不思蜀）：跳过目标出牌阶段</p>
+<p style="margin:0 0 4px"><span style="color:#cc9944">■ 装备牌</span></p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>武器</b>：提升攻击范围，如定海神针、青龙偃月刀等</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>防具</b>：如寒冰剑（受伤时弃2牌代伤害）、金刚护盾等</p>
+<p style="color:var(--text-dim);margin:0 0 14px;padding-left:12px">• <b>坐骑</b>：+1坐骑（防御距离），-1坐骑（攻击距离）</p>
+
+<h3 style="color:var(--gold);margin:0 0 6px">⚔️ 武将技能</h3>
+<p style="color:var(--text-dim);margin:0 0 6px">每个角色拥有独特的武将技能，合理运用技能是制胜关键：</p>
+<p style="margin:0 0 2px;padding-left:12px">🐵 <b style="color:var(--text-main)">孙悟空</b>：火眼金睛（查看手牌）、七十二变（变牌）</p>
+<p style="margin:0 0 2px;padding-left:12px">🐷 <b style="color:var(--text-main)">猪八戒</b>：天蓬之力（红牌当杀）、贪食（蟠桃回血）</p>
+<p style="margin:0 0 2px;padding-left:12px">🧔 <b style="color:var(--text-main)">沙和尚</b>：卷帘之盾（黑牌当闪）、流沙护体（弃牌减伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🧑‍🦲 <b style="color:var(--text-main)">唐僧</b>：静心诵经（回合回血）、紧箍咒（弃敌方牌）</p>
+<p style="margin:0 0 2px;padding-left:12px">🐉 <b style="color:var(--text-main)">小白龙</b>：龙威护体（黑牌当闪）、化龙一击（杀+1伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🪷 <b style="color:var(--text-main)">观音菩萨</b>：慈悲为怀（回血或摸牌）、净瓶甘露（弃牌回2血）</p>
+<p style="margin:0 0 2px;padding-left:12px">👁️ <b style="color:var(--text-main)">二郎神</b>：天眼通（查看手牌）、哮天犬（弃牌造伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🔥 <b style="color:var(--text-main)">哪吒</b>：风火轮（红牌当杀）、混天绫（红牌当闪）</p>
+<p style="margin:0 0 14px;padding-left:12px">🐂 <b style="color:var(--text-main)">牛魔王</b>：狂暴（残血+1伤）、铁胆（免疫1伤）</p>
+
+<h3 style="color:var(--gold);margin:0 0 6px">🎮 游戏模式</h3>
+<p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">单人闯关：</b>击败各路妖怪BOSS，解锁技能树，推进剧情</p>
+<p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">联机对战：</b>快速匹配或创建房间，与其他玩家实时对战</p>
+<p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">随机武将：</b>联机模式可选择随机抽取武将，增加策略多样性</p>
+`;
+}
 function showChangelog(){
 SND.buttonClick();
 showScreen('changelog-screen');
@@ -4527,7 +4821,7 @@ window.mpCreateRoom=mpCreateRoom;
 window.mpJoinRoom=mpJoinRoom;
 window.mpCancel=mpCancel;
 window.mpLeaveBattle=mpLeaveBattle;
-window.showChangelog=showChangelog;
+window.showChangelog=showChangelog;window.showHelp=showHelp;
 
 }catch(e){
 console.error("Game init error:",e);
