@@ -1020,13 +1020,13 @@ jinbao:{name:"筋斗雷霆",desc:"造成伤害+1",cost:2,passive:true,maxLv:2},
 huoyan_up:{name:"火眼精进",desc:"火眼金睛每回合可用+1次",cost:2,passive:true,maxLv:1,req:"jinbao"},
 bian_up:{name:"变术精通",desc:"七十二变每回合可用+1次",cost:2,passive:true,maxLv:1,req:"jinbao"},
 bianshen:{name:"大圣化身",desc:"变术可当任意牌(含锦囊)",cost:4,passive:false,maxLv:1,req:"bian_up"},
-sanshiliu:{name:"三十六变",desc:"每回合1次将手牌当遁法",cost:3,passive:false,maxLv:1,req:"bian_up"},
+sanshiliu:{name:"三十六变",desc:"每回合1次将手牌当锦囊(神通/拆桥/护身法)",cost:3,passive:false,maxLv:1,req:"bian_up"},
 fenghuo:{name:"风火轮",desc:"每回合1次将手牌当降妖",cost:3,passive:false,maxLv:1,req:"jinbao"},
 shenbing:{name:"定海神针",desc:"每回合1次无视防具出降妖",cost:4,passive:false,maxLv:1,req:"bianshen"},
 },
 bajie:{
 tianpeng_up:{name:"天蓬精进",desc:"红牌当降妖时伤害+1",cost:2,passive:true,maxLv:2},
-tanshi_up:{name:"贪食精进",desc:"回合结束有蟠桃额外回2血",cost:2,passive:true,maxLv:1,req:"tianpeng_up"},
+tanshi_up:{name:"贪食精进",desc:"回合结束有蟠桃改为回2血",cost:2,passive:true,maxLv:1,req:"tianpeng_up"},
 dunqi:{name:"遁气护身",desc:"每回合1次红牌当遁法",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
 chanxin:{name:"禅心稳固",desc:"每回合额外摸1张牌",cost:4,passive:true,maxLv:1,req:"tanshi_up"},
 dachui:{name:"九齿钉耙",desc:"每回合1次弃2牌造成1点伤害",cost:3,passive:false,maxLv:1,req:"tianpeng_up"},
@@ -1740,7 +1740,7 @@ case"juedou":resolveDuel(p,e);break;
 case"wugu":const c1=drawFromDeck(1)[0];const c2=drawFromDeck(1)[0];p.hand.push(c1);e.hand.push(c2);log(`仙果普降，双方各得1牌`,"log-heal");break;
 case"huogong":resolveHuogong(p,e);break;
 case"tiesuo":if(e._chained){e._chained=false;log(`${e.name}解除连环`,"log-system")}else{e._chained=true;log(`${e.name}被连环`,"log-system")}break;
-case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.push(card);G.discard.pop();break;
+case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.splice(cardIdx,0,card);G.discard.pop();break;
 }
 renderBattle();
 checkEnd();
