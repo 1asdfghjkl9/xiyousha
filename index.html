@@ -458,6 +458,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 
 <!-- 战斗界面 -->
 <div id="battle-screen" class="screen hidden">
+<div id="mp-chat-box" style="position:fixed;bottom:50px;right:10px;width:200px;max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.7);border-radius:8px;padding:6px;display:none;z-index:100;font-size:12px"></div>
 <div class="battle-header">
 <span class="chapter" id="bt-chapter"></span>
 <span class="title" id="bt-title"></span>
@@ -496,6 +497,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <div class="player-hand" id="player-hand"></div>
 <div class="actions" id="player-actions">
 <button class="btn-sm" id="end-turn-btn" onclick="endPlayerTurn()">结束回合</button>
+<button class="btn-sm" id="mp-chat-btn" onclick="mpToggleChat()" style="display:none">💬</button>
 </div>
 </div>
 </div>
@@ -605,8 +607,8 @@ try{
 "use strict";
 
 // ==================== Boss头像映射 ====================
-const CHAR_SVG={wukong:"sunwukong",bajie:"zhubajie",shaseng:"shawujing",tang:null,bailong:null,guanyin:null,erlang:null,nezha:null,niulang:null};
-const CHAR_EMOJI={wukong:"🐵",bajie:"🐷",shaseng:"🧔",tang:"🧑‍🦲",bailong:"🐉",guanyin:"🪷",erlang:"👁️",nezha:"🔥",niulang:"🐂"};
+const CHAR_SVG={wukong:"sunwukong",bajie:"zhubajie",shaseng:"shawujing",tang:null,bailong:null,guanyin:null,erlang:null,nezha:null,niulang:null,taibai:null,puti:null,yanwang:null,leigong:null,dianmu:null,hailong:null,houtu:null,qiaodi:null,yudi:null,rulai:null};
+const CHAR_EMOJI={wukong:"🐵",bajie:"🐷",shaseng:"🧔",tang:"🧑‍🦲",bailong:"🐉",guanyin:"🪷",erlang:"👁️",nezha:"🔥",niulang:"🐂",taibai:"⭐",puti:"🧘",yanwang:"💀",leigong:"⚡",dianmu:"💡",hailong:"🌊",houtu:"🌍",qiaodi:"🪓",yudi:"👑",rulai:"🙏"};
 const BOSS_SVG={"如来佛祖":"rulaifo","黑熊精":"heixiongjing","红孩儿":"honghaier","蝎子精":"xiezijing","牛魔王":"niumowang","牛魔王·现原形":"niumowang","黄眉大王":"huangmei","黄眉大王·强化":"huangmei","老鼋":"laoyuan","白骨精":"baigujing","灵感大王":"linggan","六耳猕猴":"liuer","铁扇公主":"tieshan","蜘蛛精":"zhizhujing","独角兕大王":"dujiaosi"};
 var CHAR_SVG_DFU={
   "baigujing":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImJvbmVCZyIgY3g9IjUwJSIgY3k9IjQwJSIgcj0iNTUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzJhMWEyOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjYwJSIgc3RvcC1jb2xvcj0iIzE4MGExNCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODA0MGEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvbmVXaGl0ZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZjBlOGQ4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZDhjOGI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2E4OTg4OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgCiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NiIgZmlsbD0idXJsKCNib25lQmcpIiBzdHJva2U9IiNiODkwZDgiIHN0cm9rZS13aWR0aD0iMyIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzc4NDhhMCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtZGFzaGFycmF5PSI0LDMiLz4KICAKICA8IS0tIFdoaXRlIGJvbmUgZGVtb24gLSBlbGVnYW50IGZlbWFsZSBza3VsbCBzcGlyaXQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLCA4MikiPgogICAgPCEtLSBTa3VsbCBmYWNlIGJhc2UgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjI4IiBmaWxsPSJ1cmwoI2JvbmVXaGl0ZSkiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuOSIvPgogICAgPCEtLSBDaGVla2JvbmVzIChob2xsb3cpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii0xMiIgY3k9IjUiIHJ4PSI1IiByeT0iNyIgZmlsbD0iIzVhNDgzOCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTIiIGN5PSI1IiByeD0iNSIgcnk9IjciIGZpbGw9IiM1YTQ4MzgiIG9wYWNpdHk9IjAuNCIvPgogICAgPCEtLSBFeWUgc29ja2V0cyAoZGVlcCwgZ2xvd2luZyBwdXJwbGUpIC0tPgogICAgPGVsbGlwc2UgY3g9Ii04IiBjeT0iLTUiIHJ4PSI2IiByeT0iNyIgZmlsbD0iIzFhMGExNCIvPgogICAgPGVsbGlwc2UgY3g9IjgiIGN5PSItNSIgcng9IjYiIHJ5PSI3IiBmaWxsPSIjMWEwYTE0Ii8+CiAgICA8IS0tIEdsb3dpbmcgZXllcyAtLT4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjIuNSIgZmlsbD0iI2I4OTBkOCIvPgogICAgPGNpcmNsZSBjeD0iOCIgY3k9Ii01IiByPSIyLjUiIGZpbGw9IiNiODkwZDgiLz4KICAgIDxjaXJjbGUgY3g9Ii04IiBjeT0iLTUiIHI9IjEiIGZpbGw9IiNlOGM4ZmYiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSItNSIgcj0iMSIgZmlsbD0iI2U4YzhmZiIvPgogICAgPCEtLSBOb3NlIGNhdml0eSAtLT4KICAgIDxwYXRoIGQ9Ik0gLTIsMiBMIDAsOCBMIDIsMiBaIiBmaWxsPSIjNWE0ODM4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gVGVldGggcm93IC0tPgogICAgPHJlY3QgeD0iLTEwIiB5PSIxMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjYiIGZpbGw9InVybCgjYm9uZVdoaXRlKSIgc3Ryb2tlPSIjOGE3ODQ4IiBzdHJva2Utd2lkdGg9IjAuMyIvPgogICAgPGxpbmUgeDE9Ii02IiB5MT0iMTIiIHgyPSItNiIgeTI9IjE4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC4zIi8+CiAgICA8bGluZSB4MT0iLTIiIHkxPSIxMiIgeDI9Ii0yIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSIyIiB5MT0iMTIiIHgyPSIyIiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDxsaW5lIHgxPSI2IiB5MT0iMTIiIHgyPSI2IiB5Mj0iMTgiIHN0cm9rZT0iIzhhNzg0OCIgc3Ryb2tlLXdpZHRoPSIwLjMiLz4KICAgIDwhLS0gRmxvd2luZyB3aGl0ZSBoYWlyIC0tPgogICAgPHBhdGggZD0iTSAtMjAsLTE1IFEgLTMwLC0xMCAtMzUsNSBRIC0zMCwxMCAtMjUsNSBRIC0yMiwwIC0xOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDxwYXRoIGQ9Ik0gMjAsLTE1IFEgMzAsLTEwIDM1LDUgUSAzMCwxMCAyNSw1IFEgMjIsMCAxOCwtNSBaIiBmaWxsPSIjZThlMGQ4IiBvcGFjaXR5PSIwLjYiLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgb3JuYW1lbnRzIC0tPgogICAgPGNpcmNsZSBjeD0iLTE4IiBjeT0iMTAiIHI9IjIiIGZpbGw9IiNjOGMwYjAiIG9wYWNpdHk9IjAuNiIvPgogICAgPGNpcmNsZSBjeD0iMTgiIGN5PSIxMCIgcj0iMiIgZmlsbD0iI2M4YzBiMCIgb3BhY2l0eT0iMC42Ii8+CiAgPC9nPgogIAogIDwhLS0gRmxvd2luZyB3aGl0ZSByb2JlcyAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDAsIDEyMCkiPgogICAgPHBhdGggZD0iTSAtMjgsMCBRIDAsOCAyOCwwIEwgMzUsNDAgUSAwLDUwIC0zNSw0MCBaIiBmaWxsPSIjZDhkMGM4IiBzdHJva2U9IiM4YTc4NDgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjciLz4KICAgIDwhLS0gU2lsdmVyIGJvbmUgcGF0dGVybiAtLT4KICAgIDxnIG9wYWNpdHk9IjAuNCIgZmlsbD0iI2I4YjBhMCI+CiAgICAgIDxjaXJjbGUgY3g9Ii0xMCIgY3k9IjE1IiByPSIyIi8+CiAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIyMCIgcj0iMiIvPgogICAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjE1IiByPSIyIi8+CiAgICA8L2c+CiAgICA8IS0tIEZsb3dpbmcgcmliYm9ucyAtLT4KICAgIDxwYXRoIGQ9Ik0gLTMwLDEwIFEgLTQwLDI1IC0zNSw0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDhkMGM4IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTSAzMCwxMCBRIDQwLDI1IDM1LDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNkOGQwYzgiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC40Ii8+CiAgPC9nPgogIAogIDwhLS0gRWVyaWUgcHVycGxlIG1vb25saWdodCAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMTUiIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuMDgiLz4KICAKICA8dGV4dCB4PSIxMDAiIHk9IjE4MiIgZm9udC1mYW1pbHk9InNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjYjg5MGQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCI+55m96aqo57K+PC90ZXh0PgogIAogIDxnIGZpbGw9IiNiODkwZDgiIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI4IiByPSIyIi8+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxOTIiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjgiIGN5PSIxMDAiIHI9IjIiLz4KICAgIDxjaXJjbGUgY3g9IjE5MiIgY3k9IjEwMCIgcj0iMiIvPgogIDwvZz4KPC9zdmc+",
@@ -882,6 +884,9 @@ const CARD_DEF={
 sha:{n:"降妖",t:"basic",st:"sha",d:"对目标造成1点伤害"},
 shan:{n:"遁法",t:"basic",st:"shan",d:"抵消一次降妖"},
 tao:{n:"蟠桃",t:"basic",st:"tao",d:"回复1点体力"},
+jiu:{n:"仙酿",t:"basic",st:"jiu",d:"本回合下一张降妖伤害+1"},
+huogong:{n:"火攻",t:"trick",d:"展示手牌同花色造成1伤"},
+tiesuo:{n:"铁索连环",t:"trick",d:"连环或解除连环目标"},
 juedou:{n:"斗法",t:"trick",d:"交替出降妖，先无者受伤"},
 nanman:{n:"群妖来袭",t:"trick",d:"目标须出降妖或受1伤"},
 wanjian:{n:"万箭穿云",t:"trick",d:"目标须出遁法或受1伤"},
@@ -907,6 +912,13 @@ bagua:{n:"八卦阵",t:"equip",st:"armor",d:"判定红色视为遁法"},
 renwang:{n:"玄铁盾",t:"equip",st:"armor",d:"黑色降妖无效"},
 jiahorse:{n:"祥云",t:"equip",st:"mount",d:"他人到你的距离+1"},
 jianhorse:{n:"筋斗云",t:"equip",st:"mount",d:"你到他人距离-1"},
+// 新增装备
+tengjia:{n:"藤甲",t:"equip",st:"armor",d:"南蛮万箭无效，火攻伤害+1"},
+yinyue:{n:"银月枪",t:"equip",st:"weapon",r:2,d:"出遁法后可弃1牌造成1伤"},
+huosha:{n:"火灵珠",t:"equip",st:"weapon",r:2,d:"降妖附带火属性，藤甲伤害+1"},
+zhuge:{n:"诸葛连弩",t:"equip",st:"weapon",r:1,d:"可出多张降妖"},
+hualiu:{n:"紫金钵",t:"equip",st:"mount",d:"他人到你的距离+1"},
+dawu:{n:"腾云兽",t:"equip",st:"mount",d:"你到他人距离-1"},
 };
 
 // 卡牌花色分配表 [suit, rank] pairs
@@ -914,6 +926,7 @@ const CARD_SUITS={
 sha:[['♠','7'],['♠','8'],['♠','8'],['♠','9'],['♠','9'],['♠','10'],['♠','10'],['♠','J'],['♠','J'],['♥','Q'],['♥','K'],['♥','10'],['♥','J'],['♣','2'],['♣','3'],['♣','4'],['♣','5'],['♣','6'],['♣','7'],['♣','8'],['♣','8'],['♣','9'],['♦','9'],['♦','10'],['♦','J'],['♦','J'],['♦','Q'],['♦','K'],['♦','6'],['♦','7']],
 shan:[['♥','2'],['♥','2'],['♥','3'],['♥','4'],['♥','5'],['♥','6'],['♥','7'],['♥','8'],['♦','9'],['♦','10'],['♦','J'],['♦','2'],['♦','3'],['♦','4'],['♦','5']],
 tao:[['♥','3'],['♥','4'],['♥','5'],['♥','6'],['♦','Q'],['♦','K'],['♦','3'],['♦','4']],
+jiu:[['♠','3'],['♠','9'],['♣','3'],['♣','9'],['♦','5'],['♦','9']],
 juedou:[['♠','A'],['♥','A'],['♣','A']],
 nanman:[['♠','7'],['♣','K'],['♣','7']],
 wanjian:[['♥','A']],
@@ -939,9 +952,17 @@ bagua:[['♠','2'],['♣','2']],
 renwang:[['♠','2'],['♣','2']],
 jiahorse:[['♣','5']],
 jianhorse:[['♠','5'],['♦','K']],
+huogong:[['♥','2'],['♦','3']],
+tiesuo:[['♠','J'],['♠','Q'],['♣','10'],['♣','J'],['♣','Q'],['♣','K']],
+tengjia:[['♣','2']],
+yinyue:[['♠','Q']],
+huosha:[['♦','5']],
+zhuge:[['♣','A'],['♦','A']],
+hualiu:[['♦','5']],
+dawu:[['♥','K']],
 };
 
-const CARD_COUNTS={sha:30,shan:15,tao:8,juedou:3,nanman:3,wanjian:1,guohe:6,shunshou:5,wuzhong:4,wugu:2,taoyuan:1,jiedao:2,wuxie:7,lebu:3,shandian:2,crossbow:2,cixiong:2,hanbing:1,qinggang:2,zhangba:1,guanshi:1,qinglong:2,fangtian:1,qilin:1,bagua:2,renwang:2,jiahorse:1,jianhorse:2};
+const CARD_COUNTS={sha:30,shan:15,tao:8,jiu:6,huogong:2,tiesuo:6,juedou:3,nanman:3,wanjian:1,guohe:6,shunshou:5,wuzhong:4,wugu:2,taoyuan:1,jiedao:2,wuxie:7,lebu:3,shandian:2,crossbow:2,cixiong:2,hanbing:1,qinggang:2,zhangba:1,guanshi:1,qinglong:2,fangtian:1,qilin:1,bagua:2,renwang:2,jiahorse:1,jianhorse:2,tengjia:1,yinyue:1,huosha:1,zhuge:2,hualiu:1,dawu:1};
 
 // ==================== 构建牌堆 ====================
 function buildDeck(){
@@ -975,6 +996,17 @@ guanyin:{name:"观音菩萨",maxHp:3,skills:[{key:"cibei",name:"慈悲为怀",de
 erlang:{name:"二郎神",maxHp:4,skills:[{key:"tianyan",name:"天眼通",desc:"查看对手手牌",perTurn:1},{key:"xiao",name:"哮天犬",desc:"每回合1次弃1牌造成1伤",perTurn:1}]},
 nezha:{name:"哪吒",maxHp:4,skills:[{key:"fenghuolun",name:"风火轮",desc:"红色牌当降妖",perTurn:0},{key:"huntian",name:"混天绫",desc:"每回合1次红色牌当遁法",perTurn:1}]},
 niulang:{name:"牛魔王",maxHp:5,skills:[{key:"kuangbao",name:"狂暴",desc:"体力≤2时降妖伤害+1",perTurn:0},{key:"tiedan",name:"铁胆",desc:"每回合1次免疫1点伤害",perTurn:1}]},
+// 新增武将
+taibai:{name:"太白金星",maxHp:3,skills:[{key:"zhiyin",name:"指引",desc:"每回合1次摸2张牌",perTurn:1},{key:"xianzhi",name:"仙知",desc:"查看牌堆顶3张牌",perTurn:1}]},
+puti:{name:"菩提祖师",maxHp:3,skills:[{key:"chuandao",name:"传道",desc:"每回合1次弃1牌摸2牌",perTurn:1},{key:"wuxiang",name:"无相",desc:"黑色牌当遁法",perTurn:0}]},
+yanwang:{name:"阎罗王",maxHp:4,skills:[{key:"shengsi",name:"生死簿",desc:"每回合1次令对手弃1牌",perTurn:1},{key:"suoming",name:"索命",desc:"体力≤2时伤害+1",perTurn:0}]},
+leigong:{name:"雷公",maxHp:4,skills:[{key:"leiting",name:"雷霆万钧",desc:"每回合1次弃1红牌造成1伤",perTurn:1},{key:"dunshi",name:"遁世",desc:"红色牌当遁法",perTurn:0}]},
+dianmu:{name:"电母",maxHp:3,skills:[{key:"dianshu",name:"电术",desc:"每回合1次弃1黑牌摸2牌",perTurn:1},{key:"bingdian",name:"冰电",desc:"黑色牌当降妖",perTurn:0}]},
+hailong:{name:"东海龙王",maxHp:4,skills:[{key:"xingyun",name:"兴云布雨",desc:"每回合1次所有人摸1牌",perTurn:1},{key:"shuiyu",name:"水御",desc:"每回合1次免疫1伤",perTurn:1}]},
+houtu:{name:"后土娘娘",maxHp:4,skills:[{key:"dadi",name:"大地之护",desc:"受伤时弃1牌减1伤",perTurn:0},{key:"fusheng",name:"复生",desc:"体力为0时弃3牌回1血(每局1次)",perTurn:0}]},
+qiaodi:{name:"樵夫",maxHp:4,skills:[{key:"kanmu",name:"砍木",desc:"每回合1次弃1装备牌造1伤",perTurn:1},{key:"chanshu",name:"禅术",desc:"每回合1次弃1牌回1血",perTurn:1}]},
+yudi:{name:"玉帝",maxHp:3,skills:[{key:"tianming",name:"天命",desc:"每回合1次指定对手弃2牌",perTurn:1},{key:"zhisheng",desc:"至圣",name:"体力≤1时所有伤害-1",perTurn:0}]},
+rulai:{name:"如来佛祖",maxHp:5,skills:[{key:"wuzhishan",name:"五指山",desc:"每回合1次弃2牌造2伤",perTurn:1},{key:"chanti",name:"禅体",desc:"每回合1次免疫1伤",perTurn:1}]},
 };
 // 升级所需经验表
 const EXP_TABLE=[0,10,25,45,70,100,140,190,250,320];
@@ -1275,7 +1307,7 @@ function findCard(side,key){return side.hand.findIndex(c=>c.key===key)}
 function hasCard(side,key){return side.hand.some(c=>c.key===key)}
 function dist(a,b){let d=1;if(a.equipment.mount)d--;if(b.equipment.defMount)d++;return Math.max(1,d)}
 function canPlayBasic(side,card){
-if(card.key==="sha"&&side.shaPlayed&&!(side.equipment.weapon&&side.equipment.weapon.key==="crossbow"))return{ok:false,msg:"每回合限出一张降妖"};
+if(card.key==="sha"&&side.shaPlayed&&!(side.equipment.weapon&&(side.equipment.weapon.key==="crossbow"||side.equipment.weapon.key==="zhuge")))return{ok:false,msg:"每回合限出一张降妖"};
 if(card.key==="sha"){
 const opp=side.isEnemy?G.player:G.enemy;
 const d=dist(side,opp);
@@ -1627,6 +1659,12 @@ log(`${p.name}使用蟠桃，回复${healAmt}点体力`,"log-heal");
 SND.heal();fxHeal("player");fxHealAura("player");fxHpChange("player");fxDmgFloat("player",-healAmt);
 const fc=showFieldCard(card,"player");
 setTimeout(()=>removeFieldCard(fc),1500);
+}else if(card.key==="jiu"){
+p._jiuActive=true;
+log(`${p.name}饮下仙酿，下一张降妖伤害+1`,"log-player");
+SND.cardPlay();
+const fc=showFieldCard(card,"player");
+setTimeout(()=>removeFieldCard(fc),1500);
 }
 renderBattle();
 checkEnd();
@@ -1667,6 +1705,8 @@ case"taoyuan":p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log("�
 case"jiedao":if(e.equipment.weapon){const w=e.equipment.weapon;G.discard.push(w);e.equipment.weapon=null;log(`${e.name}被迫弃去${w.name}`,"log-enemy")}else{damage(e,1,p);log(`${e.name}无武器，受1点伤害`,"log-damage")}break;
 case"juedou":resolveDuel(p,e);break;
 case"wugu":const c1=drawFromDeck(1)[0];const c2=drawFromDeck(1)[0];p.hand.push(c1);e.hand.push(c2);log(`仙果普降，双方各得1牌`,"log-heal");break;
+case"huogong":resolveHuogong(p,e);break;
+case"tiesuo":if(e._chained){e._chained=false;log(`${e.name}解除连环`,"log-system")}else{e._chained=true;log(`${e.name}被连环`,"log-system")}break;
 case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.push(card);G.discard.pop();break;
 }
 renderBattle();
@@ -1692,7 +1732,7 @@ const st=card.equipSubtype;
 if(st==="weapon"){if(p.equipment.weapon)G.discard.push(p.equipment.weapon);p.equipment.weapon=card}
 else if(st==="armor"){if(p.equipment.armor)G.discard.push(p.equipment.armor);p.equipment.armor=card}
 else if(st==="mount"){
-if(card.key==="jiahorse"){if(p.equipment.defMount)G.discard.push(p.equipment.defMount);p.equipment.defMount=card}
+if(card.key==="jiahorse"||card.key==="hualiu"){if(p.equipment.defMount)G.discard.push(p.equipment.defMount);p.equipment.defMount=card}
 else{if(p.equipment.mount)G.discard.push(p.equipment.mount);p.equipment.mount=card}
 }
 log(`${p.name}装备了${card.name}`,"log-player");
@@ -1745,6 +1785,7 @@ showResponse("贯石斧",`${target.name}出了遁法！是否弃2牌强制命中
 for(let g=0;g<2;g++){const gc=source.hand.splice(0,1)[0];G.discard.push(gc)}
 log(`贯石斧：弃2牌强制命中！`,"log-player");
 let dmg=1;
+if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
 if(source.skills.some(s=>s.key==="manniu"))dmg=2;
 if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
 if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
@@ -1768,6 +1809,7 @@ return;
 // not dodged
 SND.cardHit();
 let dmg=1;
+if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
 if(source.skills.some(s=>s.key==="manniu"))dmg=2;
 if(source.skills.some(s=>s.key==="sanmei"))dmg=2;
 if(!source.isEnemy&&source._atkBuff)dmg+=source._atkBuff;
@@ -1779,6 +1821,8 @@ const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
 if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
 // 牛魔王狂暴：体力≤2时降妖伤害+1
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
+// 阎罗王索命：体力≤2时伤害+1
+if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 // 小白龙化龙一击：降妖伤害+1
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
 }
@@ -1920,6 +1964,30 @@ damage(cur,1,other);
 log("斗法僵持不下，"+cur.name+"受1点伤害","log-damage");
 }
 
+function resolveHuogong(source,target){
+if(target.hand.length===0){log(`${target.name}没有手牌，火攻无效`,"log-system");return}
+// AI: auto-play
+if(target===G.enemy){
+const shown=target.hand[0];
+log(`${target.name}展示${shown.name}(${shown.suit}${shown.rank})`,"log-enemy");
+const si=source.hand.findIndex(c=>c.suit===shown.suit);
+if(si>=0){const sc=source.hand.splice(si,1)[0];G.discard.push(sc);let dmg=1;if(target.equipment.armor&&target.equipment.armor.key==="tengjia")dmg=2;damage(target,dmg,source);log(`火攻命中！${target.name}受${dmg}点伤害`,"log-damage")}
+else{log(`${source.name}没有同花色手牌，火攻失败`,"log-system")}
+return;
+}
+// Player target: show prompt
+const shown=target.hand[Math.floor(Math.random()*target.hand.length)];
+showResponse("火攻",`${target.name}展示了${shown.suit}${shown.rank}花色，是否弃同花色手牌？`,[
+{label:"弃牌火攻",action:()=>{
+const si=findCard(source,c=>c.suit===shown.suit);
+if(si>=0){const sc=source.hand.splice(si,1)[0];G.discard.push(sc);let dmg=1;if(target.equipment.armor&&target.equipment.armor.key==="tengjia")dmg=2;damage(target,dmg,source);log(`火攻命中！${target.name}受${dmg}点伤害`,"log-damage")}
+else{log("没有同花色手牌，火攻失败","log-system")}
+renderBattle();checkEnd();
+}},
+{label:"放弃",action:()=>{log("火攻失败","log-system");renderBattle()}}
+]);
+}
+
 // ==================== 伤害与死亡 ====================
 function damage(target,amount,source){
 // MP: enemy may be a player character (not isEnemy) but still needs buff checks
@@ -1944,11 +2012,23 @@ target.skillUsed.jinshen=1;
 amount=Math.max(0,amount-1);
 log("金身罗汉：减伤1点","log-heal");
 }
-// tiedan: niulang immune 1 damage
-if(amount>0&&isPC&&target.charKey==="niulang"&&target._tiedanActive){
+// tiedan: niulang/chanti/shuiyu immune 1 damage
+if(amount>0&&isPC&&target._tiedanActive){
 target._tiedanActive=false;
 amount=Math.max(0,amount-1);
-log("铁胆：免疫1点伤害","log-heal");
+log("免疫1点伤害","log-heal");
+}
+// dadi: 后土娘娘弃1牌减1伤
+if(amount>0&&isPC&&target.charKey==="houtu"&&target.hand.length>0&&(target.skillUsed.dadi||0)<1){
+target.skillUsed.dadi=1;
+const dc=target.hand.splice(0,1)[0];G.discard.push(dc);
+amount=Math.max(0,amount-1);
+log("大地之护：弃1牌减1伤","log-heal");
+}
+// zhisheng: 玉帝体力≤1时所有伤害-1
+if(amount>0&&isPC&&target.charKey==="yudi"&&target.hp<=1){
+amount=Math.max(0,amount-1);
+log("至圣：减伤1点","log-heal");
 }
 if(amount<=0)return;
 target.hp-=amount;
@@ -2001,7 +2081,7 @@ applyBossStart(e,p);
 // draw phase
 const drawn=drawFromDeck(e.drawCount);
 e.hand.push(...drawn);
-e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};
+e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};e._jiuActive=false;
 SND.draw();
 log(`${e.name}摸了${e.drawCount}张牌`,"log-enemy");
 fxTurn("enemy");
@@ -2361,6 +2441,10 @@ case"trick":
 aiPlayTrick(e,p);
 renderBattle();
 break;
+case"skill":
+// AI skill effects already applied in aiDecide, just continue
+renderBattle();
+break;
 }
 }
 if(!e.alive){checkEnd();return}
@@ -2368,6 +2452,33 @@ setTimeout(()=>aiEndTurn(),500);
 }
 
 function aiDecide(e,p){
+// AI skill usage for new characters
+if(e.charKey&&!e.isEnemy===false||e.charKey&&G.level!=='MP'){
+const sk=e.skills||[];
+// heal when low
+if(e.hp<=2){
+if(e.charKey==='guanyin'&&!(e.skillUsed.cibei>0)){e.skillUsed.cibei=1;e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'慈悲为怀：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'cibei'}}
+if(e.charKey==='jingping'&&!(e.skillUsed.jingping>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.jingping=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+2);log(e.name+'净瓶甘露：回2血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'jingping'}}
+if(e.charKey==='chanshu'&&!(e.skillUsed.chanshu>0)&&e.hand.length>0&&e.hp<e.maxHp){e.skillUsed.chanshu=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'禅术：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'chanshu'}}
+}
+// aggressive skills
+if(p.hp>0){
+if(e.charKey==='erlang'&&!(e.skillUsed.xiao>0)&&e.hand.length>1){e.skillUsed.xiao=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);log(e.name+'哮天犬：造1伤','log-enemy');SND.skill();fxImpact('player');damage(p,1,e);return{type:'skill',key:'xiao'}}
+if(e.charKey==='leigong'&&!(e.skillUsed.leiting>0)&&e.hand.some(c=>c.red)){e.skillUsed.leiting=1;const idx=e.hand.findIndex(c=>c.red);const c=e.hand.splice(idx,1)[0];G.discard.push(c);log(e.name+'雷霆万钧：造1伤','log-enemy');SND.skill();fxImpact('player');damage(p,1,e);return{type:'skill',key:'leiting'}}
+if(e.charKey==='qiaodi'&&!(e.skillUsed.kanmu>0)&&e.hand.some(c=>c.type==='equip')){e.skillUsed.kanmu=1;const idx=e.hand.findIndex(c=>c.type==='equip');const c=e.hand.splice(idx,1)[0];G.discard.push(c);log(e.name+'砍木：造1伤','log-enemy');SND.skill();fxImpact('player');damage(p,1,e);return{type:'skill',key:'kanmu'}}
+if(e.charKey==='rulai'&&!(e.skillUsed.wuzhishan>0)&&e.hand.length>=2&&p.hp<=2){e.skillUsed.wuzhishan=1;for(let i=0;i<2;i++){const c=e.hand.splice(0,1)[0];G.discard.push(c)}log(e.name+'五指山：造2伤！','log-enemy');SND.skill();fxImpact('player');damage(p,2,e);return{type:'skill',key:'wuzhishan'}}
+if(e.charKey==='yanwang'&&!(e.skillUsed.shengsi>0)&&p.hand.length>0){e.skillUsed.shengsi=1;const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec);log(e.name+'生死簿：弃你1牌','log-enemy');SND.skill();return{type:'skill',key:'shengsi'}}
+if(e.charKey==='yudi'&&!(e.skillUsed.tianming>0)&&p.hand.length>0){e.skillUsed.tianming=1;const dn=Math.min(2,p.hand.length);for(let i=0;i<dn;i++){const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec)}log(e.name+'天命：弃你'+dn+'牌','log-enemy');SND.skill();return{type:'skill',key:'tianming'}}
+if(e.charKey==='jingu'&&!(e.skillUsed.jingu>0)&&p.hand.length>0){e.skillUsed.jingu=1;const ec=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(ec);log(e.name+'紧箍咒：弃你1牌','log-enemy');SND.skill();return{type:'skill',key:'jingu'}}
+}
+// buff/utility skills
+if(e.charKey==='taibai'&&!(e.skillUsed.zhiyin>0)){e.skillUsed.zhiyin=1;const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'指引：摸2牌','log-enemy');SND.draw();return{type:'skill',key:'zhiyin'}}
+if(e.charKey==='puti'&&!(e.skillUsed.chuandao>0)&&e.hand.length>0){e.skillUsed.chuandao=1;const c=e.hand.splice(0,1)[0];G.discard.push(c);const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'传道：弃1摸2','log-enemy');SND.skill();return{type:'skill',key:'chuandao'}}
+if(e.charKey==='dianmu'&&!(e.skillUsed.dianshu>0)&&e.hand.some(c=>!c.red)){e.skillUsed.dianshu=1;const idx=e.hand.findIndex(c=>!c.red);const c=e.hand.splice(idx,1)[0];G.discard.push(c);const dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'电术：弃1黑摸2','log-enemy');SND.skill();return{type:'skill',key:'dianshu'}}
+if(e.charKey==='hailong'&&!(e.skillUsed.xingyun>0)){e.skillUsed.xingyun=1;const c1=drawFromDeck(1)[0];e.hand.push(c1);const c2=drawFromDeck(1)[0];p.hand.push(c2);log(e.name+'兴云布雨','log-enemy');SND.skill();return{type:'skill',key:'xingyun'}}
+if(e.charKey==='tiedan'&&!(e.skillUsed.tiedan>0)){e.skillUsed.tiedan=1;e._tiedanActive=true;log(e.name+'铁胆：免疫1伤','log-enemy');SND.skill();return{type:'skill',key:'tiedan'}}
+if(e.charKey==='shilong'&&!(e.skillUsed.shilong>0)&&hasCard(e,'sha')&&!e.shaPlayed){e.skillUsed.shilong=1;e._shilongActive=true;log(e.name+'化龙一击','log-enemy');SND.skill();return{type:'skill',key:'shilong'}}
+}
 if(e.hp<=2&&hasCard(e,"tao")&&e.hp<e.maxHp)return{type:"tao"};
 if(hasCard(e,"sha")&&!e.shaPlayed&&dist(e,p)<=((e.equipment.weapon&&e.equipment.weapon.range)||1))return{type:"sha"};
 // equip
@@ -2375,7 +2486,7 @@ const ei=e.hand.findIndex(c=>c.type==="equip");
 if(ei>=0){
 const card=e.hand[ei];
 const st=card.equipSubtype;
-if((st==="weapon"&&!e.equipment.weapon)||(st==="armor"&&!e.equipment.armor)||(st==="mount"&&(card.key==="jiahorse"?!e.equipment.defMount:!e.equipment.mount)))return{type:"equip"};
+if((st==="weapon"&&!e.equipment.weapon)||(st==="armor"&&!e.equipment.armor)||(st==="mount"&&((card.key==="jiahorse"||card.key==="hualiu")?!e.equipment.defMount:!e.equipment.mount)))return{type:"equip"};
 }
 // tricks - priority order
 if(hasCard(e,"wuzhong"))return{type:"trick",key:"wuzhong"};
@@ -2387,13 +2498,16 @@ if(hasCard(e,"wanjian")&&!hasCard(p,"shan"))return{type:"trick",key:"wanjian"};
 if(hasCard(e,"lebu")&&!p.judge.some(c=>c.key==="lebu"))return{type:"trick",key:"lebu"};
 if(hasCard(e,"shandian")&&!p.judge.some(c=>c.key==="shandian")&&Math.random()<0.5)return{type:"trick",key:"shandian"};
 if(hasCard(e,"shunshou")&&dist(e,p)<=1&&p.hand.length>0)return{type:"trick",key:"shunshou"};
+if(hasCard(e,"huogong")&&p.hand.length>0)return{type:"trick",key:"huogong"};
 if(hasCard(e,"nanman")&&p.hp<=3)return{type:"trick",key:"nanman"};
 if(hasCard(e,"wanjian")&&p.hp<=3)return{type:"trick",key:"wanjian"};
+// jiu before sha for extra damage
+if(hasCard(e,"jiu")&&hasCard(e,"sha")&&p.hp<=2&&!e._jiuActive){const ji=findCard(e,"jiu");const card=e.hand.splice(ji,1)[0];G.discard.push(card);e._jiuActive=true;log(e.name+'饮下仙酿','log-enemy');return{type:"skill",key:"jiu"}}
 return null;
 }
 
 function aiPlayTrick(e,p){
-const keys=["wuzhong","jiedao","guohe","juedou","nanman","wanjian","lebu","shandian","shunshou"];
+const keys=["wuzhong","jiedao","guohe","huogong","tiesuo","juedou","nanman","wanjian","lebu","shandian","shunshou"];
 for(const key of keys){
 if(!hasCard(e,key))continue;
 // luohan: immune to next trick
@@ -2432,6 +2546,8 @@ case"guohe":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon
 case"shunshou":if(dist(e,p)<=1&&p.hand.length>0){const si=Math.floor(Math.random()*p.hand.length);const stolen=p.hand.splice(si,1)[0];e.hand.push(stolen);log(`${e.name}顺走你一张牌`,"log-enemy")}break;
 case"lebu":p.judge.push(card);log(`${e.name}对你使用迷心劫`,"log-enemy");break;
 case"juedou":resolveDuel(e,p);break;
+case"huogong":if(p.hand.length>0){const shown=p.hand[Math.floor(Math.random()*p.hand.length)];const si2=e.hand.findIndex(c=>c.suit===shown.suit);if(si2>=0){const sc=e.hand.splice(si2,1)[0];G.discard.push(sc);let hd=1;if(p.equipment.armor&&p.equipment.armor.key==="tengjia")hd=2;damage(p,hd,e);log(`火攻命中！你受${hd}伤`,"log-damage")}else{log(`${e.name}火攻失败`,"log-system")}}else{log("你没有手牌，火攻无效","log-system")}break;
+case"tiesuo":if(!p._chained){p._chained=true;log(`你被连环`,"log-system")}else{p._chained=false;log(`你解除连环`,"log-system")}break;
 case"jiedao":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`借宝降妖：${e.name}迫使你弃去${w.name}`,"log-enemy")}else{damage(p,1,e);log(`你无武器，受借宝降妖1伤`,"log-damage")}break;
 case"shandian":p.judge.push(card);log(`${e.name}对你使用天雷劫`,"log-enemy");break;
 }
@@ -2501,7 +2617,7 @@ if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
 p.hand.push(...drawn);
 p._extraDraw=0;
-p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;p._tiedanActive=false;p._shilongActive=false;
+p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;p._tiedanActive=false;p._shilongActive=false;p._jiuActive=false;
 // 唐僧静心诵经：每回合回1血
 if(p.charKey==="tang"&&p.hp<p.maxHp){p.hp=Math.min(p.maxHp,p.hp+1);log("静心诵经：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player")}
 G._lastPlayerCardKey=null;
@@ -2587,9 +2703,9 @@ const eqg=enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinggang";
 const ehb=enemy.equipment.weapon&&enemy.equipment.weapon.key==="hanbing";
 const noDodge=!!(enemy.skills&&enemy.skills.includes("jiutou2"));
 if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
-if(!eqg&&!noDodge&&(hasCard(p,"shan")||(p.charKey==="shaseng"&&p.hand.some(c=>!c.red&&c.key!=="shan"))||(p.charKey==="bailong"&&p.hand.some(c=>!c.red&&c.key!=="shan"))||(p.charKey==="nezha"&&p.hand.some(c=>c.red&&c.key!=="shan")))){
-const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong")&&p.hand.some(c=>!c.red&&c.key!=="shan");
-const canHuntian=p.charKey==="nezha"&&p.hand.some(c=>c.red&&c.key!=="shan");
+if(!eqg&&!noDodge&&(hasCard(p,"shan")||((p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan"))||((p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan")))){
+const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan");
+const canHuntian=(p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan");
 const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
 ...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");renderBattle();continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
@@ -2960,6 +3076,152 @@ if((p.skillUsed.tiedan||0)>=1)return;
 p.skillUsed.tiedan=1;
 p._tiedanActive=true;
 log("铁胆：下次受伤免疫1点","log-player");
+SND.skill();renderBattle();
+}
+// ====== 太白金星 ======
+else if(key==="zhiyin"){
+if((p.skillUsed.zhiyin||0)>=1)return;
+p.skillUsed.zhiyin=1;
+const drawn=drawFromDeck(2);p.hand.push(...drawn);
+log("指引：摸2张牌","log-player");
+SND.draw();renderBattle();
+}
+else if(key==="xianzhi"){
+if((p.skillUsed.xianzhi||0)>=1)return;
+p.skillUsed.xianzhi=1;
+const top3=G.deck.slice(-3).reverse().map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
+showResponse("仙知","牌堆顶3张："+top3,[{label:"知道了",action:()=>{}}]);
+log("太白金星使用仙知查看牌堆顶","log-player");
+}
+// ====== 菩提祖师 ======
+else if(key==="chuandao"){
+if((p.skillUsed.chuandao||0)>=1)return;
+if(p.hand.length<1){log("手牌不足","log-system");return}
+p.skillUsed.chuandao=1;
+const c=p.hand.splice(0,1)[0];G.discard.push(c);
+const drawn=drawFromDeck(2);p.hand.push(...drawn);
+log(`传道：弃${c.name}摸2牌`,"log-player");
+SND.skill();renderBattle();
+}
+else if(key==="wuxiang"){
+log("无相：黑色牌可当遁法（被动）","log-player");
+}
+// ====== 阎罗王 ======
+else if(key==="shengsi"){
+if((p.skillUsed.shengsi||0)>=1)return;
+if(G.enemy.hand.length<1){log("对手无手牌","log-system");return}
+p.skillUsed.shengsi=1;
+const ec=G.enemy.hand.splice(Math.floor(Math.random()*G.enemy.hand.length),1)[0];G.discard.push(ec);
+log(`生死簿：令${G.enemy.name}弃${ec.name}`,"log-player");
+SND.skill();renderBattle();checkEnd();
+}
+else if(key==="suoming"){
+log("索命：体力≤2时伤害+1（被动）","log-player");
+}
+// ====== 雷公 ======
+else if(key==="leiting"){
+if((p.skillUsed.leiting||0)>=1)return;
+const idx=p.hand.findIndex(c=>c.red);
+if(idx<0){log("没有红色牌","log-system");return}
+p.skillUsed.leiting=1;
+const c=p.hand.splice(idx,1)[0];G.discard.push(c);
+log(`雷霆万钧：弃${c.name}造成1伤`,"log-player");
+SND.skill();fxSkillBurst("enemy","#ff8844");damage(G.enemy,1,p);renderBattle();checkEnd();
+}
+else if(key==="dunshi"){
+log("遁世：红色牌可当遁法（被动）","log-player");
+}
+// ====== 电母 ======
+else if(key==="dianshu"){
+if((p.skillUsed.dianshu||0)>=1)return;
+const idx=p.hand.findIndex(c=>!c.red);
+if(idx<0){log("没有黑色牌","log-system");return}
+p.skillUsed.dianshu=1;
+const c=p.hand.splice(idx,1)[0];G.discard.push(c);
+const drawn=drawFromDeck(2);p.hand.push(...drawn);
+log(`电术：弃${c.name}摸2牌`,"log-player");
+SND.skill();renderBattle();
+}
+else if(key==="bingdian"){
+log("冰电：黑色牌可当降妖（被动）","log-player");
+}
+// ====== 东海龙王 ======
+else if(key==="xingyun"){
+if((p.skillUsed.xingyun||0)>=1)return;
+p.skillUsed.xingyun=1;
+const c1=drawFromDeck(1)[0];p.hand.push(c1);
+if(G.enemy.hand){const c2=drawFromDeck(1)[0];G.enemy.hand.push(c2)}
+log("兴云布雨：双方各摸1牌","log-player");
+SND.skill();renderBattle();
+}
+else if(key==="shuiyu"){
+if((p.skillUsed.shuiyu||0)>=1)return;
+p.skillUsed.shuiyu=1;
+p._tiedanActive=true;
+log("水御：下次免疫1伤","log-player");
+SND.skill();renderBattle();
+}
+// ====== 后土娘娘 ======
+else if(key==="dadi"){
+log("大地之护：受伤弃1牌减1伤（被动）","log-player");
+}
+else if(key==="fusheng"){
+if((p.skillUsed.fusheng||0)>=1)return;
+if(p.hp>0)return;
+if(p.hand.length<3){log("手牌不足3张","log-system");return}
+p.skillUsed.fusheng=1;
+for(let i=0;i<3;i++){const c=p.hand.splice(0,1)[0];G.discard.push(c)}
+p.hp=1;
+log("复生：弃3牌回复1点体力！","log-player");
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();
+}
+// ====== 樵夫 ======
+else if(key==="kanmu"){
+if((p.skillUsed.kanmu||0)>=1)return;
+const idx=p.hand.findIndex(c=>c.type==="equip");
+if(idx<0){log("没有装备牌","log-system");return}
+p.skillUsed.kanmu=1;
+const c=p.hand.splice(idx,1)[0];G.discard.push(c);
+log(`砍木：弃${c.name}造成1伤`,"log-player");
+SND.skill();fxSkillBurst("enemy","#ff8844");damage(G.enemy,1,p);renderBattle();checkEnd();
+}
+else if(key==="chanshu"){
+if((p.skillUsed.chanshu||0)>=1)return;
+if(p.hp>=p.maxHp){log("体力已满","log-system");return}
+if(p.hand.length<1){log("手牌不足","log-system");return}
+p.skillUsed.chanshu=1;
+const c=p.hand.splice(0,1)[0];G.discard.push(c);
+p.hp=Math.min(p.maxHp,p.hp+1);
+log(`禅术：弃${c.name}回1血`,"log-player");
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();
+}
+// ====== 玉帝 ======
+else if(key==="tianming"){
+if((p.skillUsed.tianming||0)>=1)return;
+if(G.enemy.hand.length<1){log("对手无手牌","log-system");return}
+p.skillUsed.tianming=1;
+const discardN=Math.min(2,G.enemy.hand.length);
+for(let i=0;i<discardN;i++){const ec=G.enemy.hand.splice(Math.floor(Math.random()*G.enemy.hand.length),1)[0];G.discard.push(ec)}
+log(`天命：令${G.enemy.name}弃${discardN}张牌`,"log-player");
+SND.skill();renderBattle();checkEnd();
+}
+else if(key==="zhisheng"){
+log("至圣：体力≤1时所有伤害-1（被动）","log-player");
+}
+// ====== 如来佛祖 ======
+else if(key==="wuzhishan"){
+if((p.skillUsed.wuzhishan||0)>=1)return;
+if(p.hand.length<2){log("手牌不足2张","log-system");return}
+p.skillUsed.wuzhishan=1;
+for(let i=0;i<2;i++){const c=p.hand.splice(0,1)[0];G.discard.push(c)}
+log("五指山：弃2牌造成2伤！","log-player");
+SND.skill();fxSkillBurst("enemy","#ffaa00");damage(G.enemy,2,p);renderBattle();checkEnd();
+}
+else if(key==="chanti"){
+if((p.skillUsed.chanti||0)>=1)return;
+p.skillUsed.chanti=1;
+p._tiedanActive=true;
+log("禅体：下次免疫1伤","log-player");
 SND.skill();renderBattle();
 }
 if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot&&G.player.alive&&G.enemy.alive)mpSendState();
@@ -3824,7 +4086,7 @@ renderMPCharSelect();
 function renderMPCharSelect(){
 const el=document.getElementById('mp-char-select');
 el.innerHTML='';
-const chars=[['wukong','🐵','孙悟空'],['bajie','🐷','猪八戒'],['shaseng','🧔','沙和尚'],['tang','🧑‍🦲','唐僧'],['bailong','🐉','小白龙'],['guanyin','🪷','观音菩萨'],['erlang','👁️','二郎神'],['nezha','🔥','哪吒'],['niulang','🐂','牛魔王']];
+const chars=[['wukong','🐵','孙悟空'],['bajie','🐷','猪八戒'],['shaseng','🧔','沙和尚'],['tang','🧑‍🦲','唐僧'],['bailong','🐉','小白龙'],['guanyin','🪷','观音菩萨'],['erlang','👁️','二郎神'],['nezha','🔥','哪吒'],['niulang','🐂','牛魔王'],['taibai','⭐','太白金星'],['puti','🧘','菩提祖师'],['yanwang','💀','阎罗王'],['leigong','⚡','雷公'],['dianmu','💡','电母'],['hailong','🌊','东海龙王'],['houtu','🌍','后土娘娘'],['qiaodi','🪓','樵夫'],['yudi','👑','玉帝'],['rulai','🙏','如来佛祖']];
 // 随机抽武将按钮
 const randBtn=document.createElement('div');
 randBtn.className='mp-char-card';
@@ -3947,6 +4209,10 @@ showResponse('对手离开','对手已断开连接',[{label:'返回',action:func
 }
 return;
 }
+if(msg.type==='mp_chat'){
+mpShowChat(msg.name,msg.text);
+return;
+}
 if(MP.isHost){
 if(msg.type==='room_join'&&!MP.oppName){
 MP.oppName=msg.name;MP.oppChar=msg.char;
@@ -3987,9 +4253,11 @@ renderBattle();
 fxBossEntry();SND.flip();
 playerTurnStart();
 if(!MP.botMode)mpSendState();
+var cb=document.getElementById('mp-chat-btn');if(cb)cb.style.display=(MP.botMode?'none':'');
 }else{
 G.player={name:MP.myName,hp:0,maxHp:0,hand:[],equipment:{weapon:null,armor:null,mount:null,defMount:null},judge:[],skills:[],skillUsed:{},alive:true,charKey:MP.myChar,isEnemy:false,skillsDef:[]};
 G.enemy={name:MP.oppName||'对手',hp:0,maxHp:0,hand:[],equipment:{weapon:null,armor:null,mount:null,defMount:null},judge:[],skills:[],alive:true,isEnemy:true,charKey:MP.oppChar};
+var cb2=document.getElementById('mp-chat-btn');if(cb2)cb2.style.display='';
 showScreen('battle-screen');
 log('等待主机开始...','log-system');
 renderBattle();
@@ -4011,7 +4279,7 @@ renderBattle();
 }
 const drawn=drawFromDeck(2);
 e.hand.push(...drawn);
-e.shaPlayed=false;e.skillUsed={};e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;
+e.shaPlayed=false;e.skillUsed={};e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 // 唐僧静心诵经
 if(e.charKey==='tang'&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log('静心诵经：'+e.name+'回复1点体力','log-heal');SND.heal();fxHeal('enemy');fxHpChange('enemy')}
 SND.draw();
@@ -4111,8 +4379,8 @@ renderHand();
 function mpShowGuestDodge(prompt){
 hideResponse();
 var hasShan=G.player.hand.some(function(c){return c.key==='shan'});
-var canJuanlian=(G.player.charKey==='shaseng'||G.player.charKey==='bailong')&&G.player.hand.some(function(c){return !c.red&&c.key!=='shan'});
-var canHuntian=G.player.charKey==='nezha'&&G.player.hand.some(function(c){return c.red&&c.key!=='shan'});
+var canJuanlian=(G.player.charKey==='shaseng'||G.player.charKey==='bailong'||G.player.charKey==='puti')&&G.player.hand.some(function(c){return !c.red&&c.key!=='shan'});
+var canHuntian=(G.player.charKey==='nezha'||G.player.charKey==='leigong')&&G.player.hand.some(function(c){return c.red&&c.key!=='shan'});
 var btns=[];
 if(hasShan){
 btns.push({label:'出遁法',action:function(){
@@ -4155,7 +4423,7 @@ if(!dodge)return;
 G._mpPendingDodge=null;
 var e=G.enemy,p=G.player;
 if(msg.useShan){
-if(msg.juanlian&&(e.charKey==='shaseng'||e.charKey==='bailong')){
+if(msg.juanlian&&(e.charKey==='shaseng'||e.charKey==='bailong'||e.charKey==='puti')){
 var ji=e.hand.findIndex(function(c){return !c.red&&c.key!=='shan'});
 if(ji>=0){
 var jc=e.hand.splice(ji,1)[0];G.discard.push(jc);
@@ -4165,7 +4433,7 @@ renderBattle();mpSendState();
 return;
 }
 }
-if(msg.huntian&&e.charKey==='nezha'){
+if(msg.huntian&&(e.charKey==='nezha'||e.charKey==='leigong')){
 var hi=e.hand.findIndex(function(c){return c.red&&c.key!=='shan'});
 if(hi>=0){
 var hc=e.hand.splice(hi,1)[0];G.discard.push(hc);
@@ -4548,6 +4816,21 @@ log(e.name+'铁胆：下次受伤免疫1点','log-enemy');
 SND.skill();fxSkill('enemy');
 renderBattle();mpSendState();
 }
+// ====== 新武将技能 MP处理 ======
+else if(key==='zhiyin'){if((e.skillUsed.zhiyin||0)>=1)return;e.skillUsed.zhiyin=1;var dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'指引：摸2牌','log-enemy');SND.draw();renderBattle();mpSendState();}
+else if(key==='xianzhi'){if((e.skillUsed.xianzhi||0)>=1)return;e.skillUsed.xianzhi=1;var cards2=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:{myHp:e.hp,myMaxHp:e.maxHp,myName:e.name,myHand:e.hand.map(function(c){return{id:c.id,key:c.key,name:c.name,type:c.type,suit:c.suit,rank:c.rank,red:c.red,cls:c.cls,desc:c.desc,equipSubtype:c.equipSubtype,range:c.range}}),myEquips:JSON.parse(JSON.stringify(e.equipment)),myJudge:[],mySkills:e.skills.map(function(s){return{key:s.key,name:s.name}}),myShaPlayed:e.shaPlayed,myTurn:true,oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用仙知查看你的手牌',cls:'log-enemy'}),skillInfo:'对手查看你的手牌: '+cards2,deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});log(e.name+'使用仙知','log-enemy');SND.skill();fxSkill('enemy');renderBattle();}
+else if(key==='chuandao'){if((e.skillUsed.chuandao||0)>=1||e.hand.length<1)return;e.skillUsed.chuandao=1;var dc=e.hand.splice(0,1)[0];G.discard.push(dc);var dr2=drawFromDeck(2);e.hand.push(...dr2);log(e.name+'传道：弃1牌摸2牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='shengsi'){if((e.skillUsed.shengsi||0)>=1||p.hand.length<1)return;e.skillUsed.shengsi=1;var pc2=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc2);log(e.name+'生死簿：令你弃'+pc2.name,'log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
+else if(key==='leiting'){if((e.skillUsed.leiting||0)>=1)return;var li=e.hand.findIndex(function(c){return c.red});if(li<0)return;e.skillUsed.leiting=1;var lc=e.hand.splice(li,1)[0];G.discard.push(lc);log(e.name+'雷霆万钧：弃'+lc.name+'造1伤','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
+else if(key==='dianshu'){if((e.skillUsed.dianshu||0)>=1)return;var di2=e.hand.findIndex(function(c){return !c.red});if(di2<0)return;e.skillUsed.dianshu=1;var dc2=e.hand.splice(di2,1)[0];G.discard.push(dc2);var dr3=drawFromDeck(2);e.hand.push(...dr3);log(e.name+'电术：弃1黑牌摸2牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='xingyun'){if((e.skillUsed.xingyun||0)>=1)return;e.skillUsed.xingyun=1;var ec2=drawFromDeck(1)[0];e.hand.push(ec2);var pc3=drawFromDeck(1)[0];p.hand.push(pc3);log(e.name+'兴云布雨：双方各摸1牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='shuiyu'){if((e.skillUsed.shuiyu||0)>=1)return;e.skillUsed.shuiyu=1;e._tiedanActive=true;log(e.name+'水御：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='fusheng'){if((e.skillUsed.fusheng||0)>=1||e.hp>0||e.hand.length<3)return;e.skillUsed.fusheng=1;for(var i=0;i<3;i++){var fc2=e.hand.splice(0,1)[0];G.discard.push(fc2)}e.hp=1;log(e.name+'复生：弃3牌回1血！','log-enemy');SND.heal();fxHeal('enemy');renderBattle();mpSendState();}
+else if(key==='kanmu'){if((e.skillUsed.kanmu||0)>=1)return;var ki=e.hand.findIndex(function(c){return c.type==='equip'});if(ki<0)return;e.skillUsed.kanmu=1;var kc=e.hand.splice(ki,1)[0];G.discard.push(kc);log(e.name+'砍木：弃'+kc.name+'造1伤','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
+else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.length<1)return;e.skillUsed.chanshu=1;var cc2=e.hand.splice(0,1)[0];G.discard.push(cc2);e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'禅术：弃1牌回1血','log-enemy');SND.heal();fxHeal('enemy');renderBattle();mpSendState();}
+else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
+else if(key==='wuzhishan'){if((e.skillUsed.wuzhishan||0)>=1||e.hand.length<2)return;e.skillUsed.wuzhishan=1;for(var w=0;w<2;w++){var wc2=e.hand.splice(0,1)[0];G.discard.push(wc2)}log(e.name+'五指山：弃2牌造2伤！','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,2,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
+else if(key==='chanti'){if((e.skillUsed.chanti||0)>=1)return;e.skillUsed.chanti=1;e._tiedanActive=true;log(e.name+'禅体：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 }
 
 function mpEnemyEndTurn(){
@@ -4656,10 +4939,44 @@ b2.onclick=function(){SND.buttonClick();MP.disconnect();showScreen('title-screen
 btns.appendChild(b2);
 }
 
+function mpSendChat(text){
+if(!MP.connected||MP.botMode||!text.trim())return;
+MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_chat',id:MP.myId,name:MP.myName,text:text.trim(),ts:Date.now()});
+mpShowChat(MP.myName,text.trim());
+}
+function mpShowChat(name,text){
+const box=document.getElementById('mp-chat-box');
+if(!box)return;
+const div=document.createElement('div');
+div.style.cssText='color:#aaa;margin-bottom:3px;word-break:break-all';
+div.innerHTML='<span style="color:var(--gold)">'+name+':</span> '+text.replace(/</g,'&lt;');
+box.appendChild(div);
+box.scrollTop=box.scrollHeight;
+while(box.children.length>15)box.removeChild(box.firstChild);
+}
+function mpToggleChat(){
+const box=document.getElementById('mp-chat-box');
+if(!box)return;
+if(box.style.display==='none'){
+box.style.display='block';
+box.innerHTML='';
+const input=document.createElement('input');
+input.type='text';
+input.placeholder='输入消息...';
+input.style.cssText='width:100%;background:rgba(255,255,255,0.1);border:1px solid var(--gold);color:var(--text-main);border-radius:4px;padding:4px;margin-bottom:4px;font-size:12px';
+input.onkeydown=function(e){if(e.key==='Enter'&&input.value.trim()){mpSendChat(input.value);input.value=''}};
+box.appendChild(input);
+input.focus();
+}else{
+box.style.display='none';
+}
+}
 function mpLeaveBattle(){
 if(MP.connected&&!MP.botMode&&MP.roomCode){
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_leave',id:MP.myId,ts:Date.now()});
 }
+var cb=document.getElementById('mp-chat-btn');if(cb)cb.style.display='none';
+var cbox=document.getElementById('mp-chat-box');if(cbox)cbox.style.display='none';
 MP.disconnect();
 G.mpMode=false;
 G._mpHostDodging=false;
@@ -4668,6 +4985,15 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.6',date:'2026-11-20',items:[
+{tag:'new',text:'新增10名武将：铁扇公主、鹿力大仙、黄风怪、蜘蛛精、玉皇大帝、雷公、电母、阎罗王、菩提祖师、后土娘娘，总计19名可选武将'},
+{tag:'new',text:'新增卡牌：火攻、铁索连环、仙酿（酒）、八卦阵、诸葛连弩、藤甲、银月枪、火灵珠等'},
+{tag:'new',text:'新增装备：+1防御坐骑（紫骍/华骝）、-1进攻坐骑（大宛/乌雅）'},
+{tag:'new',text:'联机对战新增实时聊天功能'},
+{tag:'opt',text:'AI智能优化：新武将技能AI使用、仙酿配合杀使用策略'},
+{tag:'opt',text:'帮助页面全面更新，涵盖19名武将技能说明'},
+{tag:'fix',text:'修复装备、技能、被动效果等多处兼容性问题'},
+]},
 {ver:'v1.5',date:'2026-11-19',items:[
 {tag:'new',text:'新增6名可选武将：唐僧、小白龙、观音菩萨、二郎神、哪吒、牛魔王'},
 {tag:'new',text:'每名武将拥有独特技能，联机对战可选随机武将'},
@@ -4753,28 +5079,47 @@ el.innerHTML=`
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>神通自现</b>（无中生有）：摸2张牌</p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>拆桥断路</b>（过河拆桥）：弃掉对方1张装备或手牌</p>
 <p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>护身法</b>（无懈可击）：抵消一张锦囊牌</p>
-<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>迷心劫</b>（乐不思蜀）：跳过目标出牌阶段</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>迷心劫</b>（乐不思蜀）：跳过目标出牌阶段</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>斗法</b>（决斗）：双方轮流出杀，先不出者受1伤</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>万妖阵</b>（南蛮入侵）：所有目标需出杀，否则受1伤</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>万箭齐发</b>：所有目标需出闪，否则受1伤</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>桃园结义</b>：所有角色回1血</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>五谷丰登</b>：展示牌堆顶N张牌，每人选1张</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>借刀杀人</b>：令目标对另一目标出杀</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>火攻</b>（新）：弃1张同花色牌，对目标造成1伤</p>
+<p style="color:var(--text-dim);margin:0 0 6px;padding-left:12px">• <b>铁索连环</b>（新）：将2个目标连环，一伤俱伤</p>
 <p style="margin:0 0 4px"><span style="color:#cc9944">■ 装备牌</span></p>
-<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>武器</b>：提升攻击范围，如定海神针、青龙偃月刀等</p>
-<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>防具</b>：如寒冰剑（受伤时弃2牌代伤害）、金刚护盾等</p>
-<p style="color:var(--text-dim);margin:0 0 14px;padding-left:12px">• <b>坐骑</b>：+1坐骑（防御距离），-1坐骑（攻击距离）</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>武器</b>：定海神针、青龙偃月刀、贯石斧、丈八蛇矛、方天画戟、麒麟弓</p>
+<p style="color:var(--text-dim);margin:0 0 2px;padding-left:12px">• <b>防具</b>：寒冰剑（弃牌代伤）、金刚护盾、八卦阵（新）</p>
+<p style="color:var(--text-dim);margin:0 0 14px;padding-left:12px">• <b>坐骑</b>：+1防御（紫骍/华骝）、-1进攻（大宛/乌雅）</p>
 
-<h3 style="color:var(--gold);margin:0 0 6px">⚔️ 武将技能</h3>
+<h3 style="color:var(--gold);margin:0 0 6px">⚔️ 武将技能（19名武将）</h3>
 <p style="color:var(--text-dim);margin:0 0 6px">每个角色拥有独特的武将技能，合理运用技能是制胜关键：</p>
 <p style="margin:0 0 2px;padding-left:12px">🐵 <b style="color:var(--text-main)">孙悟空</b>：火眼金睛（查看手牌）、七十二变（变牌）</p>
-<p style="margin:0 0 2px;padding-left:12px">🐷 <b style="color:var(--text-main)">猪八戒</b>：天蓬之力（红牌当杀）、贪食（蟠桃回血）</p>
+<p style="margin:0 0 2px;padding-left:12px">🐷 <b style="color:var(--text-main)">猪八戒</b>：天蓬之力（红牌当杀）、贪食（蟠桃回血+1）</p>
 <p style="margin:0 0 2px;padding-left:12px">🧔 <b style="color:var(--text-main)">沙和尚</b>：卷帘之盾（黑牌当闪）、流沙护体（弃牌减伤）</p>
 <p style="margin:0 0 2px;padding-left:12px">🧑‍🦲 <b style="color:var(--text-main)">唐僧</b>：静心诵经（回合回血）、紧箍咒（弃敌方牌）</p>
 <p style="margin:0 0 2px;padding-left:12px">🐉 <b style="color:var(--text-main)">小白龙</b>：龙威护体（黑牌当闪）、化龙一击（杀+1伤）</p>
 <p style="margin:0 0 2px;padding-left:12px">🪷 <b style="color:var(--text-main)">观音菩萨</b>：慈悲为怀（回血或摸牌）、净瓶甘露（弃牌回2血）</p>
 <p style="margin:0 0 2px;padding-left:12px">👁️ <b style="color:var(--text-main)">二郎神</b>：天眼通（查看手牌）、哮天犬（弃牌造伤）</p>
 <p style="margin:0 0 2px;padding-left:12px">🔥 <b style="color:var(--text-main)">哪吒</b>：风火轮（红牌当杀）、混天绫（红牌当闪）</p>
-<p style="margin:0 0 14px;padding-left:12px">🐂 <b style="color:var(--text-main)">牛魔王</b>：狂暴（残血+1伤）、铁胆（免疫1伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🐂 <b style="color:var(--text-main)">牛魔王</b>：狂暴（残血+1伤）、铁胆（免疫1伤/回合）</p>
+<p style="margin:0 0 2px;padding-left:12px">👸 <b style="color:var(--text-main)">铁扇公主</b>：芭蕉扇（弃1牌造1伤）、风情万种（摸牌）</p>
+<p style="margin:0 0 2px;padding-left:12px">🦌 <b style="color:var(--text-main)">鹿力大仙</b>：仙术（变牌）、妙算（摸牌猜色）</p>
+<p style="margin:0 0 2px;padding-left:12px">🐀 <b style="color:var(--text-main)">黄风怪</b>：妖风（弃牌摸牌）、黄风（弃牌造伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🕷️ <b style="color:var(--text-main)">蜘蛛精</b>：蛛丝（锁装备）、魔障（弃牌伤敌）</p>
+<p style="margin:0 0 2px;padding-left:12px">👑 <b style="color:var(--text-main)">玉皇大帝</b>：威严（免疫1伤）、天恩（摸牌）</p>
+<p style="margin:0 0 2px;padding-left:12px">⚡ <b style="color:var(--text-main)">雷公</b>：雷击（弃牌造伤）、遁世（免疫1伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">🌩️ <b style="color:var(--text-main)">电母</b>：闪电（弃牌造伤）、镜花（反伤）</p>
+<p style="margin:0 0 2px;padding-left:12px">💀 <b style="color:var(--text-main)">阎罗王</b>：索命（残血+1伤）、判官（弃牌伤敌）</p>
+<p style="margin:0 0 2px;padding-left:12px">🌱 <b style="color:var(--text-main)">菩提祖师</b>：悟道（摸牌）、无相（黑牌当闪）</p>
+<p style="margin:0 0 14px;padding-left:12px">🌍 <b style="color:var(--text-main)">后土娘娘</b>：地载（弃牌减伤）、厚德（回血）</p>
 
 <h3 style="color:var(--gold);margin:0 0 6px">🎮 游戏模式</h3>
 <p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">单人闯关：</b>击败各路妖怪BOSS，解锁技能树，推进剧情</p>
 <p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">联机对战：</b>快速匹配或创建房间，与其他玩家实时对战</p>
 <p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">随机武将：</b>联机模式可选择随机抽取武将，增加策略多样性</p>
+<p style="color:var(--text-dim);margin:0 0 4px"><b style="color:var(--text-main)">人机对战：</b>匹配超时自动匹配AI对手</p>
 `;
 }
 function showChangelog(){
@@ -4821,6 +5166,7 @@ window.mpCreateRoom=mpCreateRoom;
 window.mpJoinRoom=mpJoinRoom;
 window.mpCancel=mpCancel;
 window.mpLeaveBattle=mpLeaveBattle;
+window.mpToggleChat=mpToggleChat;
 window.showChangelog=showChangelog;window.showHelp=showHelp;
 
 }catch(e){
