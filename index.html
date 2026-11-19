@@ -533,7 +533,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <div id="over-screen" class="screen hidden">
 <h2 class="over-title lose" id="over-title">败北</h2>
 <p class="story-text" id="over-text"></p>
-<div>
+<div id="over-buttons">
 <button class="btn" onclick="retryLevel()">重试本关</button>
 <button class="btn" onclick="showLevelSelect()">关卡选择</button>
 </div>
@@ -1283,7 +1283,7 @@ let skillsDef=bossData?null:char.skills.map(s=>({...s}));
 if(!bossData&&SKILL_TREE[charKey]){
 const unlocked=G.partyUnlocked&&G.partyUnlocked[charKey]||{};
 Object.entries(SKILL_TREE[charKey]).forEach(([key,node])=>{
-if(unlocked[key]&&!node.passive){
+if(unlocked[key]){
 const lv=typeof unlocked[key]==='number'?unlocked[key]:1;
 skills.push({key:key,name:node.name,desc:node.desc,perTurn:node.maxLv?lv:1});
 if(skillsDef)skillsDef.push({key:key,name:node.name,desc:node.desc,perTurn:node.maxLv?lv:1});
@@ -1398,7 +1398,14 @@ for(let i=0;i<e.hand.length;i++){eh.appendChild(document.createElement("div")).c
 const eb=document.getElementById("enemy-buffs");
 eb.innerHTML="";
 if(e.skills&&e.skills.length){const st=document.createElement("span");st.className="buff-list";st.textContent="["+e.skills.map(function(s){return typeof s==='string'?s:(s.name||s.key||'')}).join(" ")+"]";eb.appendChild(st)}
-document.getElementById("player-buffs").innerHTML=p._atkBuff?"<span class='buff-list'>攻+"+p._atkBuff+"</span>":"";
+if(e._chained){const ct=document.createElement("span");ct.className="buff-list";ct.style.color="#7c4dff";ct.textContent="⛓连锁";eb.appendChild(ct)}
+if(e._jiuActive){const jt=document.createElement("span");jt.className="buff-list";jt.style.color="#ff6b6b";jt.textContent="🍶仙酿";eb.appendChild(jt)}
+var pbuff=document.getElementById("player-buffs");
+var phtml="";
+if(p._atkBuff)phtml+="<span class='buff-list'>攻+"+p._atkBuff+"</span>";
+if(p._chained)phtml+="<span class='buff-list' style='color:#7c4dff'>⛓连锁</span>";
+if(p._jiuActive)phtml+="<span class='buff-list' style='color:#ff6b6b'>🍶仙酿</span>";
+pbuff.innerHTML=phtml;
 // player hand
 renderHand();
 // actions
@@ -1693,8 +1700,8 @@ function playTrick(idx){
 const p=G.player,e=G.enemy;
 const card=p.hand[idx];
 if(card.key==="shunshou"&&dist(p,e)>1){log("距离不够，无法顺手牵宝","log-system");return}
-// check wuxie from enemy
-if(e.hand.some(c=>c.key==="wuxie")){
+// check wuxie from enemy (PvE only - in MP, guest decides)
+if(!G.mpMode&&e.hand.some(c=>c.key==="wuxie")){
 const widx=findCard(e,"wuxie");
 if(Math.random()<0.4||card.key==="nanman"||card.key==="wanjian"){
 const wc=e.hand.splice(widx,1)[0];
@@ -2036,8 +2043,8 @@ log("斗法僵持不下，"+cur.name+"受1点伤害","log-damage");
 
 function resolveHuogong(source,target){
 if(target.hand.length===0){log(`${target.name}没有手牌，火攻无效`,"log-system");return}
-// AI: auto-play
-if(target===G.enemy){
+// AI/PMP enemy: auto-play (PvE enemy or MP bot)
+if(target===G.enemy&&(!G.mpMode||G.mpBot)){
 const shown=target.hand[0];
 log(`${target.name}展示${shown.name}(${shown.suit}${shown.rank})`,"log-enemy");
 const si=source.hand.findIndex(c=>c.suit===shown.suit);
@@ -2181,7 +2188,7 @@ applyBossStart(e,p);
 // draw phase
 const drawn=drawFromDeck(e.drawCount);
 e.hand.push(...drawn);
-e.shaPlayed=false;e._qinglongUsed=false;e.skillUsed={};e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
+e.shaPlayed=false;var _fs1=e.skillUsed.fusheng||0;e.skillUsed={};e.skillUsed.fusheng=_fs1;e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 SND.draw();
 log(`${e.name}摸了${e.drawCount}张牌`,"log-enemy");
 fxTurn("enemy");
@@ -2589,6 +2596,8 @@ if(e.charKey==='dianmu'&&!(e.skillUsed.dianshu>0)&&e.hand.some(c=>!c.red)){e.ski
 if(e.charKey==='hailong'&&!(e.skillUsed.xingyun>0)){e.skillUsed.xingyun=1;const c1=drawFromDeck(1)[0];e.hand.push(c1);const c2=drawFromDeck(1)[0];p.hand.push(c2);log(e.name+'兴云布雨','log-enemy');SND.skill();return{type:'skill',key:'xingyun'}}
 if(e.charKey==='niulang'&&!(e.skillUsed.tiedan>0)){e.skillUsed.tiedan=1;e._tiedanActive=true;log(e.name+'铁胆：免疫1伤','log-enemy');SND.skill();return{type:'skill',key:'tiedan'}}
 if(e.charKey==='bailong'&&!(e.skillUsed.shilong>0)&&hasCard(e,'sha')&&!e.shaPlayed){e.skillUsed.shilong=1;e._shilongActive=true;log(e.name+'化龙一击','log-enemy');SND.skill();return{type:'skill',key:'shilong'}}
+// dianmu bingdian: convert black card to sha when no sha available
+if(e.charKey==='dianmu'&&!hasCard(e,'sha')&&!e.shaPlayed&&e.hand.some(c=>!c.red&&c.key!=='sha')){const bi2=e.hand.findIndex(c=>!c.red&&c.key!=='sha');const old4=e.hand[bi2];e.hand[bi2]={id:old4.id,key:'sha',name:'冰电·降妖',type:'basic',basicSubtype:'sha',suit:old4.suit,rank:old4.rank,red:old4.red,desc:'冰电化降妖',cls:'basic-sha'};log(e.name+'冰电：将'+old4.name+'变为降妖','log-enemy');SND.skill();fxSkill('enemy');return{type:'skill',key:'bingdian'}}
 }
 if(e.hp<=2&&hasCard(e,"tao")&&e.hp<e.maxHp)return{type:"tao"};
 if(hasCard(e,"sha")&&!e.shaPlayed&&dist(e,p)<=((e.equipment.weapon&&e.equipment.weapon.range)||1))return{type:"sha"};
@@ -2728,7 +2737,7 @@ if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
 p.hand.push(...drawn);
 p._extraDraw=0;
-p.shaPlayed=false;p.skillUsed={};p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;p._tiedanActive=false;p._shilongActive=false;p._jiuActive=false;
+p.shaPlayed=false;var _fs2=p.skillUsed.fusheng||0;p.skillUsed={};p.skillUsed.fusheng=_fs2;p._qinglongUsed=false;p._shenbingActive=false;p._luohanActive=false;p._tiedanActive=false;p._shilongActive=false;p._jiuActive=false;
 // 唐僧静心诵经：每回合回1血
 if(p.charKey==="tang"&&p.hp<p.maxHp){p.hp=Math.min(p.maxHp,p.hp+1);log("静心诵经：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player")}
 G._lastPlayerCardKey=null;
@@ -3384,7 +3393,7 @@ let cls="basic-"+def.st;
 newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:cls};
 }
 p.hand[idx]=newCard;
-p.skillUsed.bian=1;
+p.skillUsed.bian=(p.skillUsed.bian||0)+1;
 log(`七十二变：将${old.name}变为${newCard.name}`,"log-player");
 renderBattle();
 }
@@ -4413,7 +4422,7 @@ renderBattle();
 }
 const drawn=drawFromDeck(2);
 e.hand.push(...drawn);
-e.shaPlayed=false;e.skillUsed={};e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
+e.shaPlayed=false;var _fs3=e.skillUsed.fusheng||0;e.skillUsed={};e.skillUsed.fusheng=_fs3;e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 // 唐僧静心诵经
 if(e.charKey==='tang'&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log('静心诵经：'+e.name+'回复1点体力','log-heal');SND.heal();fxHeal('enemy');fxHpChange('enemy')}
 SND.draw();
@@ -4438,9 +4447,9 @@ myJudge:e.judge.map(function(c){return{name:c.name,key:c.key}}),
 mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
-myChained:!!e._chained,myJiu:!!e._jiuActive,
+myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,
 myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,
-oppChained:!!p._chained,oppJiu:!!p._jiuActive,
+oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,
 oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,
 myTurn:G.turn==='enemy',
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
@@ -4485,7 +4494,7 @@ equipment:state.myEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.myJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.mySkills||[],
 skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
-_chained:state.myChained||false,_jiuActive:state.myJiu||false,
+_chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,
 _shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
 skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):null,
@@ -4497,7 +4506,7 @@ equipment:state.oppEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.oppSkills||[],
 alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,
-_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,
+_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,
 _shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,
 };
 G.turn=state.myTurn?'player':'enemy';
@@ -4509,7 +4518,7 @@ G.discard=[];
 renderBattle();
 renderLog();
 if(state.skillInfo){
-showResponse('火眼金睛',state.skillInfo,[{label:'知道了',action:function(){hideResponse()}}]);
+showResponse(state.skillTitle||'技能信息',state.skillInfo,[{label:'知道了',action:function(){hideResponse()}}]);
 }else if(state.prompt&&state.prompt.type==='dodge'){
 mpShowGuestDodge(state.prompt);
 }else if(state.discardNeed){
@@ -4779,7 +4788,7 @@ myShaPlayed:e.shaPlayed,myTurn:true,
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,
 oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用火眼金睛查看你的手牌',cls:'log-enemy'}),
-skillInfo:'对手查看你的手牌: '+cards,deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});
+skillInfo:'对手查看你的手牌: '+cards,skillTitle:'火眼金睛',deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});
 log(e.name+'使用火眼金睛','log-enemy');SND.skill();fxSkill('enemy');
 renderBattle();
 }else if(key==='dachui'){
@@ -4935,7 +4944,7 @@ myShaPlayed:e.shaPlayed,myTurn:true,
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,
 oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用天眼通查看你的手牌',cls:'log-enemy'}),
-skillInfo:'对手查看你的手牌: '+cards2,deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});
+skillInfo:'对手查看你的手牌: '+cards2,skillTitle:'天眼通',deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});
 log(e.name+'使用天眼通','log-enemy');SND.skill();fxSkill('enemy');
 renderBattle();
 }
@@ -4981,7 +4990,7 @@ renderBattle();mpSendState();
 }
 // ====== 新武将技能 MP处理 ======
 else if(key==='zhiyin'){if((e.skillUsed.zhiyin||0)>=1)return;e.skillUsed.zhiyin=1;var dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'指引：摸2牌','log-enemy');SND.draw();renderBattle();mpSendState();}
-else if(key==='xianzhi'){if((e.skillUsed.xianzhi||0)>=1)return;e.skillUsed.xianzhi=1;var cards2=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:{myHp:e.hp,myMaxHp:e.maxHp,myName:e.name,myHand:e.hand.map(function(c){return{id:c.id,key:c.key,name:c.name,type:c.type,suit:c.suit,rank:c.rank,red:c.red,cls:c.cls,desc:c.desc,equipSubtype:c.equipSubtype,range:c.range}}),myEquips:JSON.parse(JSON.stringify(e.equipment)),myJudge:[],mySkills:e.skills.map(function(s){return{key:s.key,name:s.name}}),myShaPlayed:e.shaPlayed,myTurn:true,oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用仙知查看你的手牌',cls:'log-enemy'}),skillInfo:'对手查看你的手牌: '+cards2,deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});log(e.name+'使用仙知','log-enemy');SND.skill();fxSkill('enemy');renderBattle();}
+else if(key==='xianzhi'){if((e.skillUsed.xianzhi||0)>=1)return;e.skillUsed.xianzhi=1;var cards2=G.deck.slice(-3).reverse().map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:{myHp:e.hp,myMaxHp:e.maxHp,myName:e.name,myHand:e.hand.map(function(c){return{id:c.id,key:c.key,name:c.name,type:c.type,suit:c.suit,rank:c.rank,red:c.red,cls:c.cls,desc:c.desc,equipSubtype:c.equipSubtype,range:c.range}}),myEquips:JSON.parse(JSON.stringify(e.equipment)),myJudge:[],mySkills:e.skills.map(function(s){return{key:s.key,name:s.name}}),myShaPlayed:e.shaPlayed,myTurn:true,oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,oppHandCount:p.hand.length,oppEquips:JSON.parse(JSON.stringify(p.equipment)),oppJudge:[],oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],phase:G.phase,logs:G.log.slice(-12).concat({msg:e.name+'使用仙知查看牌堆顶3张',cls:'log-enemy'}),skillInfo:'牌堆顶3张: '+cards2,skillTitle:'仙知',deckCount:G.deck.length,mpChar:MP.myChar},ts:Date.now()});log(e.name+'使用仙知','log-enemy');SND.skill();fxSkill('enemy');renderBattle();}
 else if(key==='chuandao'){if((e.skillUsed.chuandao||0)>=1||e.hand.length<1)return;e.skillUsed.chuandao=1;var dc=e.hand.splice(0,1)[0];G.discard.push(dc);var dr2=drawFromDeck(2);e.hand.push(...dr2);log(e.name+'传道：弃1牌摸2牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='shengsi'){if((e.skillUsed.shengsi||0)>=1||p.hand.length<1)return;e.skillUsed.shengsi=1;var pc2=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc2);log(e.name+'生死簿：令你弃'+pc2.name,'log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='leiting'){if((e.skillUsed.leiting||0)>=1)return;var li=e.hand.findIndex(function(c){return c.red});if(li<0)return;e.skillUsed.leiting=1;var lc=e.hand.splice(li,1)[0];G.discard.push(lc);log(e.name+'雷霆万钧：弃'+lc.name+'造1伤','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
@@ -4995,7 +5004,6 @@ else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.l
 else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='wuzhishan'){if((e.skillUsed.wuzhishan||0)>=1||e.hand.length<2)return;e.skillUsed.wuzhishan=1;for(var w=0;w<2;w++){var wc2=e.hand.splice(0,1)[0];G.discard.push(wc2)}log(e.name+'五指山：弃2牌造2伤！','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,2,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='chanti'){if((e.skillUsed.chanti||0)>=1)return;e.skillUsed.chanti=1;e._tiedanActive=true;log(e.name+'禅体：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
-else if(key==='bingdian'){var bi2=e.hand.findIndex(function(c){return !c.red&&c.key!=='sha'});if(bi2<0)return;var old4=e.hand[bi2];e.hand[bi2]={id:old4.id,key:'sha',name:'冰电·降妖',type:'basic',basicSubtype:'sha',suit:old4.suit,rank:old4.rank,red:old4.red,desc:'冰电化降妖',cls:'basic-sha'};log(e.name+'冰电：将'+old4.name+'变为降妖','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 }
 
 function mpEnemyEndTurn(){
