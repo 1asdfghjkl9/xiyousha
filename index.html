@@ -1331,7 +1331,7 @@ const pav=document.getElementById("player-avatar");
 const pSvg=getCharSvg(null,p.charKey);
 pav.innerHTML=pSvg?'<img src="'+pSvg+'" alt="'+p.name+'">':(p.charKey==="wukong"?"🐵":p.charKey==="bajie"?"🐷":"🧔");
 const eav=document.getElementById("enemy-avatar");
-const eSvg=getCharSvg(e.name,null);
+const eSvg=getCharSvg(e.name,null)||(e.charKey?getCharSvg(null,e.charKey):null);
 eav.innerHTML=eSvg?'<img src="'+eSvg+'" alt="'+e.name+'">':"👹";
 // equips
 renderEquips("enemy-equips",e);
@@ -1348,7 +1348,7 @@ for(let i=0;i<e.hand.length;i++){eh.appendChild(document.createElement("div")).c
 // buffs
 const eb=document.getElementById("enemy-buffs");
 eb.innerHTML="";
-if(e.skills&&e.skills.length){const st=document.createElement("span");st.className="buff-list";st.textContent="["+e.skills.join(" ")+"]";eb.appendChild(st)}
+if(e.skills&&e.skills.length){const st=document.createElement("span");st.className="buff-list";st.textContent="["+e.skills.map(function(s){return typeof s==='string'?s:(s.name||s.key||'')}).join(" ")+"]";eb.appendChild(st)}
 document.getElementById("player-buffs").innerHTML=p._atkBuff?"<span class='buff-list'>攻+"+p._atkBuff+"</span>":"";
 // player hand
 renderHand();
@@ -1776,10 +1776,12 @@ if(target.hp>0)onShaDamage(source,target,card);
 }else{
 // player is target - prompt
 if(G.mpMode&&G.mpIsHost&&!G.mpBot){
+G._mpHostDodging=true;
 // MP online: guest attacks host, host responds
 if(!qinggang&&hasCard(target,"shan")){
 showResponse("对手出了降妖！",`${source.name}对你出了降妖。是否出遁法抵消？`,[
 {label:"出遁法",action:()=>{
+G._mpHostDodging=false;
 const si=findCard(target,"shan");
 const sc=target.hand.splice(si,1)[0];
 G.discard.push(sc);
@@ -1789,6 +1791,7 @@ renderBattle();checkEnd();
 if(MP.connected)mpSendState();
 }},
 {label:"受到伤害",danger:true,action:()=>{
+G._mpHostDodging=false;
 let dmg=1;
 if(source.skills&&source.skills.some(s=>s.key==="manniu"))dmg=2;
 if(source.skills&&source.skills.some(s=>s.key==="sanmei"))dmg=2;
@@ -1801,9 +1804,10 @@ if(MP.connected)mpSendState();
 }},
 ]);
 }else{
+G._mpHostDodging=false;
 let dmg=1;
-if(source.skills&&source.skills.includes("manniu"))dmg=2;
-if(source.skills&&source.skills.includes("sanmei"))dmg=2;
+if(source.skills&&source.skills.some(s=>s.key==="manniu"))dmg=2;
+if(source.skills&&source.skills.some(s=>s.key==="sanmei"))dmg=2;
 damage(target,dmg,source);
 if(target.hp>0)onShaDamage(source,target,card);
 renderBattle();checkEnd();
@@ -2649,6 +2653,27 @@ if(G.tutorialStep>0&&G.tutorialStep<10){useSkillTutorial(key);return}
 // MP guest mode: send to host
 if(G.mpMode&&!G.mpIsHost){
 if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse){
+// bian: need card type selection
+if(key==='bian'){
+var maxBian=1;
+if(G.player.skills.some(s=>s.key==="bianshen"))maxBian=2;
+if((G.player.skillUsed.bian||0)>=maxBian)return;
+var opts=[{label:"降妖",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'sha',ts:Date.now()})}},
+{label:"遁法",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'shan',ts:Date.now()})}},
+{label:"蟠桃",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'tao',ts:Date.now()})}}];
+showResponse("七十二变","选择要变化的牌类型：",opts);
+return;
+}
+// sanshiliu: need card type selection
+if(key==='sanshiliu'){
+if((G.player.skillUsed.sanshiliu||0)>=1)return;
+showResponse("三十六变","选择要变化的锦囊牌类型：",[
+{label:"神通自现",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'sanshiliu',skillParam:'wuzhong',ts:Date.now()})}},
+{label:"拆桥断路",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'sanshiliu',skillParam:'guohe',ts:Date.now()})}},
+{label:"护身法",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'sanshiliu',skillParam:'wuxie',ts:Date.now()})}},
+]);
+return;
+}
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:key,ts:Date.now()});
 }
 return;
@@ -3656,12 +3681,13 @@ this.ws=new WebSocket('wss://ntfy.sh/'+topic+'/ws');
 this.ws.onopen=()=>{this.connected=true};
 this.ws.onmessage=(e)=>{
 try{const d=JSON.parse(e.data);if(d.event==='message'&&d.message){handler(JSON.parse(d.message))}}catch(err){}};
-this.ws.onclose=()=>{this.connected=false;if(G.mpMode&&!G.mpIsHost&&!this.botMode){mpGuestDisconnected()}};
+this.ws.onclose=()=>{this.connected=false;if(G.mpMode&&!this.botMode){if(!G.mpIsHost){mpGuestDisconnected()}else{showResponse('断线','与对手的连接已断开',[{label:'返回',action:function(){mpLeaveBattle()}}])}}else if(this.mmSearching){this.mmSearching=false;if(this.mmTimer){clearTimeout(this.mmTimer);this.mmTimer=null}showResponse('连接断开','匹配期间连接断开',[{label:'返回',action:function(){hideResponse();showMP()}}])}};
 this.ws.onerror=()=>{};
 }catch(e){}},
 disconnect(){
 if(this.ws){try{this.ws.close()}catch(e){}}
 this.ws=null;this.connected=false;this.roomCode=null;this.isHost=false;this.botMode=false;
+this.oppName='';this.oppChar=null;
 if(this.mmTimer){clearTimeout(this.mmTimer);this.mmTimer=null}
 this.mmSearching=false;},
 };
@@ -3784,6 +3810,12 @@ setTimeout(function(){mpStartBattle()},1000);
 
 function mpHandleRoom(msg){
 if(msg.id===MP.myId)return;
+if(msg.type==='mp_leave'){
+if(G.mpMode){
+showResponse('对手离开','对手已断开连接',[{label:'返回',action:function(){hideResponse();mpLeaveBattle()}}]);
+}
+return;
+}
 if(MP.isHost){
 if(msg.type==='room_join'&&!MP.oppName){
 MP.oppName=msg.name;MP.oppChar=msg.char;
@@ -3878,7 +3910,17 @@ oppEquips:JSON.parse(JSON.stringify(p.equipment)),
 oppJudge:p.judge.map(function(c){return{name:c.name,key:c.key}}),
 oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 phase:G.phase,
-logs:G.log.slice(-12),
+logs:G.log.slice(-12).map(function(l){
+// Convert host-perspective logs to guest perspective
+var txt=l.msg||'';
+// "你" refers to host(p); guest should see host name as "对手"
+txt=txt.replace(/你/g,'{HOST}');
+// host name -> "你" for guest
+var hostName=p.name;
+txt=txt.split(hostName).join('你');
+txt=txt.replace(/\{HOST\}/g,'对手');
+return{msg:txt,cls:l.cls};
+}),
 deckCount:G.deck.length,
 mpChar:MP.myChar,
 };
@@ -3893,6 +3935,8 @@ MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:state,
 }
 
 function mpRenderState(state){
+// Ignore stale state if player already left MP
+if(!G.mpMode&&G.screen!=='mp'&&G.screen!=='mp-wait'&&G.screen!=='battle')return;
 if(!G.player||!G.mpMode){G=newGameState();G.battleId=(G.battleId||0)+1}
 G.mpMode=true;G.mpIsHost=false;G.mpBot=false;G.level='MP';G.tutorialStep=0;
 G.player={
@@ -3917,10 +3961,13 @@ G.turn=state.myTurn?'player':'enemy';
 G.phase=state.phase||'play';
 G.log=state.logs||[];
 G.awaitingResponse=null;
-G.deck=[];
+G.deck=new Array(state.deckCount||0).fill({});
 G.discard=[];
 renderBattle();
-if(state.prompt&&state.prompt.type==='dodge'){
+renderLog();
+if(state.skillInfo){
+showResponse('火眼金睛',state.skillInfo,[{label:'知道了',action:function(){hideResponse()}}]);
+}else if(state.prompt&&state.prompt.type==='dodge'){
 mpShowGuestDodge(state.prompt);
 }else if(state.discardNeed){
 G.awaitingResponse={type:'discard',need:state.discardNeed};
@@ -3957,7 +4004,7 @@ if(!MP.isHost||MP.botMode)return;
 if(G.turn!=='enemy'&&msg.action!=='dodge')return;
 if(msg.action==='play_card')mpEnemyPlayCard(msg.cardIdx);
 else if(msg.action==='end_turn')mpEnemyEndTurn();
-else if(msg.action==='use_skill')mpEnemyUseSkill(msg.skillKey);
+else if(msg.action==='use_skill')mpEnemyUseSkill(msg.skillKey,msg.skillParam);
 else if(msg.action==='discard')mpEnemyDiscard(msg.cardIdx);
 }
 
@@ -4000,6 +4047,16 @@ dmg+=(typeof tp.perTurn==='number'?tp.perTurn:1);
 }
 }
 if(!dodge.source.isEnemy&&dodge.source._atkBuff)dmg+=dodge.source._atkBuff;
+// hanbing (寒冰剑): instead of damage, discard 2 cards
+var weapon=dodge.source.equipment&&dodge.source.equipment.weapon;
+if(weapon&&weapon.key==='hanbing'&&e.hand.length>=2){
+var d1=e.hand.splice(0,1)[0];G.discard.push(d1);
+var d2=e.hand.splice(0,1)[0];G.discard.push(d2);
+log(dodge.source.name+'寒冰剑：'+e.name+'弃2牌免伤','log-system');
+renderBattle();checkEnd();
+if(G.mpIsHost&&!G.mpBot&&MP.connected&&G.enemy.alive)mpSendState();
+return;
+}
 damage(e,dmg,dodge.source);
 if(e.hp>0)onShaDamage(dodge.source,e,dodge.card);
 renderBattle();checkEnd();
@@ -4030,7 +4087,7 @@ var fc=showFieldCard(card,'enemy');
 resolveSha(e,p,card);
 setTimeout(function(){removeFieldCard(fc)},1500);
 // if host needs to respond to this sha, state will be sent after response
-if(G.awaitingResponse){renderBattle();return}
+if(G.awaitingResponse||G._mpHostDodging){renderBattle();return}
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
 }else if(card.key==='tao'){
@@ -4051,18 +4108,29 @@ function mpEnemyPlayTrick(idx){
 var e=G.enemy,p=G.player;
 var card=e.hand[idx];
 if(!card)return;
-// player wuxie check
-var cancelled=false;
+// player wuxie choice
 if(p.hand.some(function(c){return c.key==='wuxie'})){
-var chance=card.key==='nanman'||card.key==='wanjian'?0.7:0.4;
-if(Math.random()<chance){
+showResponse('对手出了'+card.name,'是否使用护身法抵消？',[
+{label:'使用护身法',action:function(){
+hideResponse();
 var wi=findCard(p,'wuxie');
 var wc=p.hand.splice(wi,1)[0];G.discard.push(wc);
+e.hand.splice(idx,1);G.discard.push(card);
 log('你出了护身法抵消'+e.name+'的锦囊','log-player');
-cancelled=true;
+SND.trickPlay();
+renderBattle();mpSendState();
+}},
+{label:'不使用',danger:true,action:function(){
+hideResponse();
+mpEnemyPlayTrickContinue(idx,card,e,p);
+}}
+]);
+}else{
+mpEnemyPlayTrickContinue(idx,card,e,p);
 }
 }
-if(cancelled){e.hand.splice(idx,1);G.discard.push(card);renderBattle();mpSendState();return}
+
+function mpEnemyPlayTrickContinue(idx,card,e,p){
 e.hand.splice(idx,1);
 if(card.key!=='lebu'&&card.key!=='shandian')G.discard.push(card);
 log(e.name+'出了'+card.name,'log-enemy');
@@ -4081,7 +4149,7 @@ case'juedou':resolveDuel(e,p);break;
 case'wugu':var c1=drawFromDeck(1)[0];var c2=drawFromDeck(1)[0];e.hand.push(c1);p.hand.push(c2);log('仙果普降，双方各得1牌','log-heal');break;
 case'lebu':p.judge.push(card);log('你被施放迷心劫','log-enemy');break;
 case'shandian':p.judge.push(card);log('你被施放天雷劫','log-enemy');break;
-case'wuxie':e.hand.push(card);G.discard.pop();log('护身法需要响应锦囊时使用','log-system');break;
+case'wuxie':e.hand.splice(idx,0,card);G.discard.pop();log('护身法需要响应锦囊时使用','log-system');break;
 }
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
@@ -4116,7 +4184,7 @@ setTimeout(function(){removeFieldCard(fc)},1500);
 renderBattle();mpSendState();
 }
 
-function mpEnemyUseSkill(key){
+function mpEnemyUseSkill(key,param){
 var e=G.enemy,p=G.player;
 if(key==='huoyan'){
 if((e.skillUsed.huoyan||0)>=1)return;
@@ -4194,6 +4262,49 @@ e.hp=Math.min(e.maxHp,e.hp+1);
 log(e.name+'使用净坛使者回复1体力','log-enemy');
 SND.heal();fxHeal('enemy');
 renderBattle();mpSendState();
+}else if(key==='bian'){
+var maxBian=1;
+if(e.skills.some(function(s){return s.key==='bianshen'}))maxBian=2;
+if((e.skillUsed.bian||0)>=maxBian)return;
+if(e.hand.length<1)return;
+e.skillUsed.bian=(e.skillUsed.bian||0)+1;
+var bc=e.hand.splice(0,1)[0];G.discard.push(bc);
+var def=CARD_DEF[param||'sha'];
+var newCard={id:Math.random(),key:param||'sha',name:def?def.n:param,type:'basic',basicSubtype:param,suit:bc.suit,rank:bc.rank,red:bc.red,desc:def?def.d:'',cls:'basic-'+(param||'sha')};
+e.hand.push(newCard);
+log(e.name+'使用七十二变：将'+bc.name+'变为'+(def?def.n:param),'log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}else if(key==='tianpeng'){
+var ti=e.hand.findIndex(function(c){return c.red&&c.key!=='sha'});
+if(ti<0)return;
+var old=e.hand[ti];
+var def=CARD_DEF['sha'];
+e.hand[ti]={id:old.id,key:'sha',name:'天蓬·降妖',type:'basic',basicSubtype:'sha',suit:old.suit,rank:old.rank,red:old.red,desc:'天蓬之力化降妖',cls:'basic-sha'};
+log(e.name+'天蓬之力：将'+old.name+'变为降妖','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}else if(key==='zhangba_skill'){
+if(e.hand.length<2)return;
+var c1=e.hand.splice(0,1)[0];G.discard.push(c1);
+var c2=e.hand.splice(0,1)[0];G.discard.push(c2);
+var newCard={id:Math.random(),key:'sha',name:'丈八蛇矛·降妖',type:'basic',basicSubtype:'sha',suit:c1.suit,rank:c1.rank,red:c1.red,desc:'丈八蛇矛化降妖',cls:'basic-sha'};
+e.hand.push(newCard);
+log(e.name+'丈八蛇矛：将'+c1.name+'+'+c2.name+'合为降妖','log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
+}else if(key==='sanshiliu'){
+if((e.skillUsed.sanshiliu||0)>=1)return;
+var si=e.hand.findIndex(function(c){return c.type!=='trick'});
+if(si<0)return;
+e.skillUsed.sanshiliu=1;
+var sc=e.hand.splice(si,1)[0];G.discard.push(sc);
+var def=CARD_DEF[param||'wuzhong'];
+var newCard={id:Math.random(),key:param||'wuzhong',name:def?def.n:param,type:'trick',suit:sc.suit,rank:sc.rank,red:sc.red,desc:def?def.d:'',cls:'trick'};
+e.hand.push(newCard);
+log(e.name+'三十六变：将'+sc.name+'变为'+(def?def.n:param),'log-enemy');
+SND.skill();fxSkill('enemy');
+renderBattle();mpSendState();
 }
 }
 
@@ -4239,7 +4350,6 @@ var e=G.enemy,p=G.player;
 if(p._locked){p.hand.push(...p._locked);p._locked=[];log('人种袋中的牌归还','log-system')}
 log(e.name+'结束回合','log-enemy');
 G.turn='player';G.phase='play';
-renderBattle();
 playerTurnStart();
 }
 
@@ -4305,13 +4415,37 @@ btns.appendChild(b2);
 }
 
 function mpLeaveBattle(){
+if(MP.connected&&!MP.botMode&&MP.roomCode){
+MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_leave',id:MP.myId,ts:Date.now()});
+}
 MP.disconnect();
 G.mpMode=false;
+G._mpHostDodging=false;
 showMP();
 }
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.4',date:'2026-11-19',items:[
+{tag:'fix',text:'修复访客出杀时主机闪避期间访客仍可出牌的竞态条件'},
+{tag:'fix',text:'修复断线/离开时对手无通知导致无限等待的问题'},
+{tag:'fix',text:'修复主机WebSocket断开时无提示的问题'},
+{tag:'fix',text:'修复MP.disconnect不重置oppName导致无法接受新对手的问题'},
+{tag:'fix',text:'修复访客端战斗日志不渲染的问题'},
+{tag:'fix',text:'修复MP模式下对手头像显示妖怪emoji的问题'},
+{tag:'fix',text:'修复MP模式下对手技能buff显示[object Object]的问题'},
+{tag:'fix',text:'修复mpHandleGuestDodge缺少寒冰剑等伤害修正的问题'},
+{tag:'fix',text:'修复resolveSha中技能检查方式不一致的问题'},
+{tag:'fix',text:'修复访客火眼金睛技能结果不显示的问题'},
+{tag:'fix',text:'修复主机无锦囊自动使用护身法剥夺玩家选择权的问题'},
+{tag:'fix',text:'修复日志消息视角混乱（主机视角发送给访客）的问题'},
+{tag:'fix',text:'修复bian/tianpeng/sanshiliu/zhangba等技能在MP模式下无效的问题'},
+{tag:'fix',text:'修复护身法归还手牌改变顺序的问题'},
+{tag:'fix',text:'修复匹配阶段WebSocket断开无反馈的问题'},
+{tag:'fix',text:'修复访客闪避弹窗可能残留的问题'},
+{tag:'fix',text:'修复mpFinishEnemyTurn冗余渲染的问题'},
+{tag:'fix',text:'修复延迟状态消息可能覆盖单人游戏状态的问题'},
+]},
 {ver:'v1.3',date:'2026-11-19',items:[
 {tag:'new',text:'联机对战系统：快速匹配、创建房间、加入房间'},
 {tag:'new',text:'人机兜底：匹配15秒/房间30秒超时自动匹配AI对手'},
