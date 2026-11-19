@@ -369,6 +369,22 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 .card,.btn,.event-choice,.char-card{transition:none}
 .card:hover{transform:none}
 }
+
+/* Account system */
+.acct-input{width:200px;padding:8px 12px;font-size:.95em;background:rgba(28,22,18,.8);border:1px solid var(--gold-dim);border-radius:6px;color:var(--text);text-align:center;margin:6px 0;box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.acct-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 8px rgba(201,168,76,.3),inset 0 1px 3px rgba(0,0,0,.4)}
+.acct-input::placeholder{color:#666}
+.acct-card{padding:14px;border:1px solid var(--gold-dim);background:linear-gradient(180deg,rgba(28,22,18,.85),rgba(20,16,12,.8));border-radius:10px;margin:8px 0;text-align:left;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 2px 8px rgba(0,0,0,.4)}
+.acct-card.official{border-color:var(--gold);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 12px rgba(201,168,76,.2)}
+.acct-card.banned{opacity:.5;border-color:var(--red)}
+.acct-name{font-size:1em;color:var(--gold-br);font-weight:bold;margin-bottom:4px}
+.acct-badge{display:inline-block;font-size:.65em;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.acct-badge.official{background:rgba(201,168,76,.2);border:1px solid var(--gold);color:var(--gold-br)}
+.acct-badge.banned{background:rgba(200,64,64,.2);border:1px solid var(--red);color:#e07070}
+.acct-info{font-size:.8em;color:var(--text-dim);margin-top:4px}
+.acct-actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.acct-admin-panel{margin-top:15px;padding:12px;border:1px solid var(--gold-dim);border-radius:8px;background:rgba(201,168,76,.05)}
+.acct-admin-title{font-size:.9em;color:var(--gold-br);margin-bottom:8px;font-weight:bold}
 </style>
 </head>
 <body>
@@ -390,6 +406,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <div class="title-buttons">
 <button class="btn title-btn-1" onclick="startNewGame()">新的旅程</button>
 <button class="btn title-btn-2" id="continue-btn" style="display:none" onclick="continueGame()">继续游戏</button>
+<button class="btn-sm" onclick="showAccount()" style="margin-top:8px;opacity:.6">账号</button>
 </div>
 <div class="title-footer">
 <div class="footer-line"></div>
@@ -508,6 +525,12 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 <div class="skilltree-info" id="skilltree-info"></div>
 <div class="skilltree-list" id="skilltree-list"></div>
 <button class="btn" onclick="closeSkillTree()" style="margin-top:15px">返回</button>
+</div>
+
+<!-- 账号界面 -->
+<div id="account-screen" class="screen hidden">
+<h2 class="story-title">账号中心</h2>
+<div id="account-content" style="max-width:380px;margin:0 auto;text-align:center"></div>
 </div>
 
 </div>
@@ -3192,6 +3215,13 @@ partySkillPoints:G.partySkillPoints,partyUnlocked:G.partyUnlocked,
 partySkillLv:G.partySkillLv,
 };
 localStorage.setItem("xiyousha_save",JSON.stringify(data));
+// sync to account
+const acct=getCurrentAccount();
+if(acct){
+const accounts=getAccounts();
+const a=accounts.find(x=>x.id===acct.id);
+if(a){a.maxLevel=data.maxLevel||0;saveAccounts(accounts)}
+}
 }catch(e){}
 }
 
@@ -3308,6 +3338,155 @@ if(ta){const svg=getCharSvg(null,"wukong");if(svg)ta.innerHTML='<img src="'+svg+
 }
 init();
 
+// ==================== 账号系统 ====================
+const OFFICIAL_CODES=["1101"]; // 解锁官方账号的暗号
+const OFFICIAL_ACCOUNTS=[
+{id:"official_1",name:"天庭管理员",role:"official",desc:"天庭御赐管理权限"},
+{id:"official_2",name:"地府掌簿使",role:"official",desc:"地府生死簿管理权"},
+{id:"official_3",name:"灵山执法僧",role:"official",desc:"灵山戒律执行权"},
+];
+
+function getAccounts(){
+try{const s=localStorage.getItem("xiyousha_accounts");return s?JSON.parse(s):[]}catch(e){return[]}
+}
+function saveAccounts(list){try{localStorage.setItem("xiyousha_accounts",JSON.stringify(list))}catch(e){}}
+function getCurrentAccount(){try{return JSON.parse(localStorage.getItem("xiyousha_current_acct")||"null")}catch(e){return null}}
+function setCurrentAccount(acct){try{localStorage.setItem("xiyousha_current_acct",JSON.stringify(acct))}catch(e){}}
+function isOfficial(acctId){return OFFICIAL_ACCOUNTS.some(a=>a.id===acctId)}
+function getOfficialAccount(acctId){return OFFICIAL_ACCOUNTS.find(a=>a.id===acctId)}
+
+function showAccount(){
+showScreen("account-screen");
+renderAccount();
+}
+
+function renderAccount(){
+const el=document.getElementById("account-content");
+const current=getCurrentAccount();
+if(current){
+// logged in
+let html='<div class="acct-card'+(current.role==='official'?' official':'')+'">';
+html+='<div class="acct-name">'+current.name;
+if(current.role==='official')html+='<span class="acct-badge official">官方</span>';
+if(current.banned)html+='<span class="acct-badge banned">已封号</span>';
+html+='</div>';
+html+='<div class="acct-info">'+(current.desc||'')+'</div>';
+html+='<div class="acct-info">关卡进度: '+(current.maxLevel||0)+'/81</div>';
+html+='</div>';
+html+='<div style="margin-top:12px">';
+html+='<button class="btn-sm" onclick="logoutAccount()">退出登录</button>';
+html+='<button class="btn-sm" onclick="showScreen(\'title-screen\')">返回</button>';
+html+='</div>';
+// admin panel for officials
+if(current.role==='official'&&!current.banned){
+const accounts=getAccounts();
+if(accounts.length>0){
+html+='<div class="acct-admin-panel">';
+html+='<div class="acct-admin-title">⚙ 账号管理</div>';
+accounts.forEach(a=>{
+if(a.id===current.id)return;
+const banned=a.banned;
+html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,76,.1)">';
+html+='<span style="font-size:.82em">'+a.name+(a.role==='official'?'<span class="acct-badge official">官方</span>':'')+(banned?'<span class="acct-badge banned">已封</span>':'')+'</span>';
+html+='<button class="btn-sm" style="font-size:.75em;padding:3px 10px" onclick="toggleBan(\''+a.id+'\')">'+(banned?'解封':'封号')+'</button>';
+html+='</div>';
+});
+// also show official accounts that aren't in local list
+OFFICIAL_ACCOUNTS.forEach(a=>{
+if(a.id===current.id)return;
+const localAcct=accounts.find(x=>x.id===a.id);
+if(!localAcct){
+// can't ban non-local officials, skip
+}
+});
+html+='</div>';
+}
+}
+el.innerHTML=html;
+}else{
+// not logged in
+let html='<p style="color:var(--text-dim);margin-bottom:15px">登录账号以保存进度并管理游戏</p>';
+// login form
+html+='<input class="acct-input" id="acct-login-name" placeholder="账号名称" maxlength="12">';
+html+='<br><button class="btn" onclick="loginAccount()">登录</button>';
+// unlock official input (hidden, no prompt)
+html+='<input class="acct-input" id="acct-unlock-code" type="password" placeholder="兑换码" style="margin-top:20px;font-size:.8em;width:140px;opacity:.5" oninput="checkUnlockCode(this.value)">';
+el.innerHTML=html;
+}
+}
+
+function loginAccount(){
+const nameEl=document.getElementById("acct-login-name");
+const name=nameEl?nameEl.value.trim():"";
+if(!name){return}
+SND.buttonClick();
+let accounts=getAccounts();
+let acct=accounts.find(a=>a.name===name);
+if(!acct){
+acct={id:"user_"+Date.now(),name:name,role:"user",maxLevel:0,createdAt:Date.now()};
+accounts.push(acct);
+saveAccounts(accounts);
+}
+if(acct.banned){
+const el=document.getElementById("account-content");
+el.innerHTML='<p style="color:#e07070;margin-bottom:12px">该账号已被封禁</p><button class="btn-sm" onclick="renderAccount()">返回</button>';
+return;
+}
+// sync save data
+const saveData=load();
+if(saveData){acct.maxLevel=saveData.maxLevel||0;saveAccounts(accounts)}
+setCurrentAccount(acct);
+renderAccount();
+}
+
+function logoutAccount(){
+SND.buttonClick();
+setCurrentAccount(null);
+renderAccount();
+}
+
+function checkUnlockCode(code){
+if(OFFICIAL_CODES.includes(code)){
+// unlock - pick next available official account
+const current=getCurrentAccount();
+const accounts=getAccounts();
+// find official account not yet claimed
+let claimed=accounts.filter(a=>a.role==='official').map(a=>a.id);
+// also check current account
+if(current&&current.role==='official')claimed.push(current.id);
+const available=OFFICIAL_ACCOUNTS.filter(a=>!claimed.includes(a.id));
+if(available.length===0){
+// all 3 claimed, just switch to first
+const pick=OFFICIAL_ACCOUNTS[0];
+let acct=accounts.find(a=>a.id===pick.id);
+if(!acct){acct={...pick,maxLevel:0,createdAt:Date.now()};accounts.push(acct);saveAccounts(accounts)}
+setCurrentAccount(acct);
+}else{
+const pick=available[0];
+const acct={...pick,maxLevel:0,createdAt:Date.now()};
+accounts.push(acct);
+saveAccounts(accounts);
+setCurrentAccount(acct);
+}
+SND.levelup();
+renderAccount();
+}
+}
+
+function toggleBan(acctId){
+const current=getCurrentAccount();
+if(!current||current.role!=='official'||current.banned)return;
+let accounts=getAccounts();
+const acct=accounts.find(a=>a.id===acctId);
+if(!acct)return;
+// can't ban other officials
+if(acct.role==='official')return;
+acct.banned=!acct.banned;
+saveAccounts(accounts);
+SND.flip();
+renderAccount();
+}
+
 // expose for onclick
 window.SND=SND;
 window.startNewGame=startNewGame;
@@ -3325,6 +3504,12 @@ window.hideResponse=hideResponse;
 window.confirmCharSelect=confirmCharSelect;
 window.showSkillTree=showSkillTree;
 window.closeSkillTree=closeSkillTree;
+window.showAccount=showAccount;
+window.renderAccount=renderAccount;
+window.loginAccount=loginAccount;
+window.logoutAccount=logoutAccount;
+window.checkUnlockCode=checkUnlockCode;
+window.toggleBan=toggleBan;
 
 }catch(e){
 console.error("Game init error:",e);
