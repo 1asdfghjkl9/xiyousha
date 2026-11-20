@@ -2256,14 +2256,14 @@ G.enemy.skillUsed.fusheng=1;
 for(let i=0;i<3;i++){const c=G.enemy.hand.splice(0,1)[0];G.discard.push(c)}
 G.enemy.hp=1;G.enemy.alive=true;
 log("后土娘娘复生：弃3牌回1血！","log-enemy");
-SND.heal();fxHeal("enemy");renderBattle();
+SND.heal();fxHeal("enemy");fxHpChange("enemy");renderBattle();
 return;
 }
 // check huapo revive
 if(hasSk(G.enemy,"huapo")&&!G.enemy._revived){
 G.enemy._revived=true;G.enemy.hp=Math.min(G.enemy.maxHp,3);G.enemy.alive=true;
 log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
-fxHeal("enemy");renderBattle();
+SND.heal();fxHeal("enemy");fxHpChange("enemy");renderBattle();
 return;
 }
 if(G.mpMode){const bid3=G.battleId;setTimeout(()=>{if(G.battleId===bid3)mpEndBattle(true)},800);return}
@@ -2998,7 +2998,7 @@ let healAmt=1;
 if(p.skills.some(s=>s.key==="tanshi_up"))healAmt=2;
 p.hp=Math.min(p.maxHp,p.hp+healAmt);
 log(`猪八戒贪食：额外回复${healAmt}点体力`,"log-heal");
-SND.heal();fxHeal("player");
+SND.heal();fxHeal("player");fxHpChange("player");
 }
 // discard phase
 if(p.hand.length>p.hp){
@@ -5465,6 +5465,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.4.1',date:'2026-11-21',items:[
+{tag:'fix',text:'敌方白骨精(huapo)复活添加SND.heal和fxHpChange动画'},
+{tag:'fix',text:'敌方后土娘娘(fusheng)复活添加fxHpChange动画'},
+{tag:'fix',text:'PvE玩家贪食回血添加fxHpChange动画（与MP路径对齐）'},
+]},
 {ver:'v2.4.0',date:'2026-11-21',items:[
 {tag:'fix',text:'checkEnd添加玩家方白骨精(huapo)复活逻辑——此前仅检查G.enemy，玩家选白骨精死亡后完全无法复活'},
 {tag:'fix',text:'enemyRespondWanjian添加藤甲免疫检查（敌方有藤甲时万箭穿云直接无效）'},
