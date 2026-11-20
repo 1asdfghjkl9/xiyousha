@@ -2100,8 +2100,10 @@ log(`蝎子精倒马毒桩：反弹1点伤害`,"log-damage");
 
 function enemyRespondWanjian(){
 const e=G.enemy;
+if(e.equipment.armor&&e.equipment.armor.key==="tengjia"){log("藤甲免疫万箭穿云","log-system");return;}
 if(e.equipment.armor&&e.equipment.armor.key==="bagua"){
 const jc=drawFromDeck(1)[0];G.discard.push(jc);
+log(`八卦阵判定：${jc.suit}${jc.rank} ${jc.red?"红":"黑"}`,"log-system");
 if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");return;}
 }
 if(hasCard(e,"shan")){
@@ -2231,6 +2233,8 @@ damage(other,amount,source);
 function checkEnd(){
 // 结算前归还被人种袋锁走的牌，避免关卡结束时牌凭空消失
 if(G.player._locked&&G.player._locked.length){G.player.hand.push(...G.player._locked);G.player._locked=[]}
+// huapo revive for player
+if(!G.player.alive&&hasSk(G.player,"huapo")&&!G.player._revived){G.player._revived=true;G.player.hp=Math.min(G.player.maxHp,3);G.player.alive=true;log("白骨精化尸大法：复活并恢复3体力！","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();return;}
 // fusheng auto-trigger for player
 if(!G.player.alive&&G.player.charKey==="houtu"&&!(G.player.skillUsed.fusheng>0)&&G.player.hand.length>=3){
 G.player.skillUsed.fusheng=1;
@@ -5317,7 +5321,7 @@ var heal=1;
 if(e.skills.some(function(s){return s.key==='tanshi_up'}))heal=2;
 e.hp=Math.min(e.maxHp,e.hp+heal);
 log(e.name+'贪食：额外回'+heal+'血','log-heal');
-SND.heal();fxHeal('enemy');
+SND.heal();fxHeal('enemy');fxHpChange('enemy');
 }
 // discard phase
 if(e.hand.length>e.hp){
@@ -5461,6 +5465,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.4.0',date:'2026-11-21',items:[
+{tag:'fix',text:'checkEnd添加玩家方白骨精(huapo)复活逻辑——此前仅检查G.enemy，玩家选白骨精死亡后完全无法复活'},
+{tag:'fix',text:'enemyRespondWanjian添加藤甲免疫检查（敌方有藤甲时万箭穿云直接无效）'},
+{tag:'fix',text:'enemyRespondWanjian八卦阵判定添加详情日志（花色+红黑）'},
+{tag:'fix',text:'mpEnemyEndTurn贪食回血添加fxHpChange动画'},
+]},
 {ver:'v2.3.7',date:'2026-11-21',items:[
 {tag:'fix',text:'MP访客贯石斧改为AI自动决策（4+手牌必用，否则50%概率），不再由主机代为选择放弃'},
 {tag:'fix',text:'continueEnemyTurn降妖路径犀角护体抵消时添加日志'},
