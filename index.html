@@ -1824,7 +1824,7 @@ const yc=target.hand.splice(0,1)[0];G.discard.push(yc);
 damage(source,1,target);log(`银月枪：${target.name}弃1牌造成1伤`,"log-enemy");
 }
 // guanshi: discard 2 to force hit
-if(source.equipment.weapon&&source.equipment.weapon.key==="guanshi"&&source.hand.length>=2){
+if(source.equipment.weapon&&source.equipment.weapon.key==="guanshi"&&source.hand.length>=2&&source.alive){
 showResponse("贯石斧",`${target.name}出了遁法！是否弃2牌强制命中？`,[
 {label:"弃2牌强命中",action:()=>{
 for(let g=0;g<2;g++){const gc=source.hand.splice(0,1)[0];G.discard.push(gc)}
@@ -2222,7 +2222,6 @@ for(let i=0;i<3;i++){const c=G.player.hand.splice(0,1)[0];G.discard.push(c)}
 G.player.hp=1;G.player.alive=true;
 log("复生：弃3牌回复1点体力！","log-player");
 SND.heal();fxHeal("player");fxHpChange("player");renderBattle();
-return;
 }
 if(!G.player.alive){
 if(G.mpMode){const bid2=G.battleId;setTimeout(()=>{if(G.battleId===bid2)mpEndBattle(false)},800);return}
@@ -2259,6 +2258,7 @@ function aiTurn(){
 const e=G.enemy,p=G.player;
 // judge phase
 aiJudgePhase(e);
+if(!e.alive||!p.alive)return;
 // boss passive skills
 applyBossStart(e,p);
 // draw phase
@@ -2331,6 +2331,7 @@ log("通天河寒：你弃1牌抵消冰冻","log-heal");
 }else{
 damage(p,1,e);
 log("通天河寒：你受1点冰冻伤害","log-damage");
+if(!p.alive){checkEnd();return}
 }
 }
 }
@@ -2370,7 +2371,7 @@ if(e.skills.includes("yinyangping")){
 if(p.hand.length>0){
 const di=0;const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
 log("阴阳二气瓶：你须弃1牌","log-damage");
-if(p.hand.length===0)damage(p,1,e);
+if(p.hand.length===0){damage(p,1,e);if(!p.alive){checkEnd();return}}
 }
 }
 if(e.skills.includes("fanfu")&&e.hp<5&&!e._fanfuActive){
@@ -2390,6 +2391,7 @@ const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
 e.shaPlayed=true;
 log("黑风突袭：黑熊精额外出一张降妖！","log-enemy");
 damage(p,1,e);onShaDamage(e,p,sc);
+if(!p.alive){checkEnd();return}
 }
 }
 // 黄风怪·黄风: 每回合30%概率弃你一张牌
@@ -2998,7 +3000,10 @@ const eqg=enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinggang";
 // check enemy hanbing: replace damage with discard
 const ehb=enemy.equipment.weapon&&enemy.equipment.weapon.key==="hanbing";
 const noDodge=!!hasSk(enemy,"jiutou2")||(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0);
-if(noDodge)log("九灵元圣圣威：此降妖不可闪避","log-enemy");
+if(noDodge){
+var ndReason=hasSk(enemy,"jiutou2")?"九灵元圣圣威":"方天画戟";
+log(ndReason+"：此降妖不可闪避","log-enemy");
+}
 if(!eqg&&!noDodge&&(hasCard(p,"shan")||((p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan"))||((p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan")))){
 const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan");
 const canHuntian=(p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan");
@@ -3098,7 +3103,7 @@ const e=G.enemy,p=G.player;
 if(!p.alive||!e.alive)return;
 setTimeout(()=>{
 let actions=0;
-while(actions<8&&e.alive){
+while(actions<8&&e.alive&&p.alive){
 const action=aiDecide(e,p);
 if(!action)break;
 actions++;
@@ -4844,7 +4849,7 @@ if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment
 if(dodge.source._jiuActive){dmg+=1;dodge.source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}
 if(hasSk(dodge.source,"manniu"))dmg=2;
 if(hasSk(dodge.source,"sanmei"))dmg=2;if(hasSk(dodge.source,"huli"))dmg+=1;
-if(dodge.source.skills){
+if(dodge.source.skills&&(!dodge.source.isEnemy||(G.mpMode&&dodge.source===G.enemy))){
 if(dodge.source.skills.some(function(s){return s.key==='jinbao'})){
 var sk=dodge.source.skills.find(function(s){return s.key==='jinbao'});
 dmg+=(typeof sk.perTurn==='number'?sk.perTurn:1);
@@ -5248,7 +5253,7 @@ else if(key==='dianshu'){if((e.skillUsed.dianshu||0)>=1)return;var di2=e.hand.fi
 else if(key==='bingdian'){var bi2=e.hand.findIndex(function(c){return !c.red&&c.key!=='sha'});if(bi2<0)return;var old4=e.hand[bi2];e.hand[bi2]={id:old4.id,key:'sha',name:'冰电·降妖',type:'basic',basicSubtype:'sha',suit:old4.suit,rank:old4.rank,red:old4.red,desc:'冰电化降妖',cls:'basic-sha'};log(e.name+'冰电：将'+old4.name+'变为降妖','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='xingyun'){if((e.skillUsed.xingyun||0)>=1)return;e.skillUsed.xingyun=1;var ec2=drawFromDeck(1)[0];e.hand.push(ec2);var pc3=drawFromDeck(1)[0];p.hand.push(pc3);log(e.name+'兴云布雨：双方各摸1牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 else if(key==='shuiyu'){if((e.skillUsed.shuiyu||0)>=1)return;e.skillUsed.shuiyu=1;e._tiedanActive=true;log(e.name+'水御：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
-else if(key==='fusheng'){if((e.skillUsed.fusheng||0)>=1||e.hp>0||e.hand.length<3)return;e.skillUsed.fusheng=1;for(var i=0;i<3;i++){var fc2=e.hand.splice(0,1)[0];G.discard.push(fc2)}e.hp=1;log(e.name+'复生：弃3牌回1血！','log-enemy');SND.heal();fxHeal('enemy');renderBattle();mpSendState();}
+else if(key==='fusheng'){if((e.skillUsed.fusheng||0)>=1||e.hp>0||e.hand.length<3)return;e.skillUsed.fusheng=1;for(var i=0;i<3;i++){var fc2=e.hand.splice(0,1)[0];G.discard.push(fc2)}e.hp=1;e.alive=true;log(e.name+'复生：弃3牌回1血！','log-enemy');SND.heal();fxHeal('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='kanmu'){if((e.skillUsed.kanmu||0)>=1)return;var ki=e.hand.findIndex(function(c){return c.type==='equip'});if(ki<0)return;e.skillUsed.kanmu=1;var kc=e.hand.splice(ki,1)[0];G.discard.push(kc);log(e.name+'砍木：弃'+kc.name+'造1伤','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.length<1)return;e.skillUsed.chanshu=1;var cc2=e.hand.splice(0,1)[0];G.discard.push(cc2);e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'禅术：弃1牌回1血','log-enemy');SND.heal();fxHeal('enemy');renderBattle();mpSendState();}
 else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
@@ -5408,6 +5413,16 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.0',date:'2026-11-20',items:[
+{tag:'fix',text:'修复aiTurn天雷劫判定击杀后未检查存活，applyBossStart继续对玩家造成伤害的问题(M1)'},
+{tag:'fix',text:'修复continueEnemyTurn循环条件缺少p.alive检测的问题(M2)，锦囊击杀玩家后AI继续出牌'},
+{tag:'fix',text:'修复applyBossStart中3处Boss技能伤害路径(通天河寒/阴阳二气瓶/黑风突袭)未调用checkEnd()的问题(M3)'},
+{tag:'fix',text:'修复mpEnemyUseSkill中fusheng(复生)仅设hp=1未设alive=true的问题(M4)，并补充checkEnd()'},
+{tag:'fix',text:'修复promptPlayerDodge中方天画戟不可闪避时日志错误显示九灵元圣圣威的问题(L1)'},
+{tag:'fix',text:'修复mpHandleGuestDodge中jinbao/tianpeng_up缺少条件守卫的问题(L2)'},
+{tag:'fix',text:'修复checkEnd中fusheng复生后return跳过敌方死亡检查的问题(L3)'},
+{tag:'fix',text:'修复resolveSha中银月枪反击击杀玩家后仍显示贯石斧提示框的问题(L4)'},
+]},
 {ver:'v1.9.9',date:'2026-11-20',items:[
 {tag:'fix',text:'修复MP房间加入路径(room_accept)缺失技能树同步的问题(C2)，room_accept消息未包含skills字段且访客未存储oppSkills'},
 {tag:'fix',text:'修复mm_search消息中MP.oppSkills重复赋值的问题'},
