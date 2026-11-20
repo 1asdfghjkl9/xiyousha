@@ -2308,7 +2308,7 @@ log(`迷心劫判定非红桃，${e.name}跳过出牌阶段`,"log-system");
 G.discard.push(card);
 }else if(card.key==="shandian"){
 if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
-damage(e,2,e);
+damage(e,2,null);
 log(`天雷劫判定黑桃${jc.rank}，${e.name}受2点伤害`,"log-damage");
 G.discard.push(card);
 }else{
@@ -4901,12 +4901,12 @@ var d1=e.hand.splice(0,1)[0];G.discard.push(d1);
 var d2=e.hand.splice(0,1)[0];G.discard.push(d2);
 log(dodge.source.name+'寒冰剑：'+e.name+'弃2牌免伤','log-system');
 renderBattle();checkEnd();
-if(G.mpIsHost&&!G.mpBot&&MP.connected&&G.enemy.alive)mpSendState();
+if(G.mpIsHost&&!G.mpBot&&MP.connected)mpSendState();
 return;
 }
 if(dmg>0){damage(e,dmg,dodge.source);onShaDamage(dodge.source,e,dodge.card)}else{log('伤害被完全抵消','log-system')}
 renderBattle();checkEnd();
-if(G.mpIsHost&&!G.mpBot&&MP.connected&&G.enemy.alive)mpSendState();
+if(G.mpIsHost&&!G.mpBot&&MP.connected)mpSendState();
 }
 
 function mpEnemyPlayCard(idx){
@@ -5014,7 +5014,7 @@ case'lebu':p.judge.push(card);log('你被施放迷心劫','log-enemy');break;
 case'shandian':p.judge.push(card);log('你被施放天雷劫','log-enemy');break;
 case'huogong':if(p.hand.length>0){var shown=p.hand[Math.floor(Math.random()*p.hand.length)];var si5=e.hand.findIndex(function(c){return c.suit===shown.suit});if(si5>=0){var sc3=e.hand.splice(si5,1)[0];G.discard.push(sc3);var hd=1;if(p.equipment.armor&&p.equipment.armor.key==='tengjia')hd=2;damage(p,hd,e);log('火攻命中！你受'+hd+'伤','log-damage')}else{log(e.name+'火攻失败','log-system')}}else{log('你没有手牌，火攻无效','log-system')}break;
 case'tiesuo':if(!p._chained){p._chained=true;log('你被连环','log-system')}else{p._chained=false;log('你解除连环','log-system')}break;
-case'wuxie':e.hand.splice(idx,0,card);G.discard.pop();log('护身法需要响应锦囊时使用','log-system');break;
+case'wuxie':e.hand.splice(idx,0,card);var di=G.discard.lastIndexOf(card);if(di>=0)G.discard.splice(di,1);log('护身法需要响应锦囊时使用','log-system');break;
 }
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
@@ -5427,6 +5427,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.2',date:'2026-11-21',items:[
+{tag:'fix',text:'补充mpSendState/mpRenderState中opp方向的_qinglongUsed/_revived序列化(BUG-001)'},
+{tag:'fix',text:'统一PvE/MP闪电(天雷劫)伤害source为null，避免铁索连环传递行为不一致(BUG-002)'},
+{tag:'fix',text:'移除mpHandleGuestDodge中G.enemy.alive守卫，确保访客被击杀时收到最终状态(BUG-003)'},
+{tag:'fix',text:'mpEnemyPlayTrickContinue护身法改用lastIndexOf精确移除弃牌堆中的卡牌(BUG-009)'},
+]},
 {ver:'v2.1.1',date:'2026-11-21',items:[
 {tag:'fix',text:'修复onShaDamage在目标死亡后仍触发雌雄双剑/麒麟弓效果的问题(L3)'},
 {tag:'fix',text:'修复护身法(wuxie)被退回手牌时未撤销_lastPlayerCardKey的问题(L4)'},
