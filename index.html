@@ -899,6 +899,7 @@ jiedao:{n:"借宝降妖",t:"trick",d:"弃目标武器或受1伤"},
 wuxie:{n:"护身法",t:"trick",d:"抵消一张锦囊"},
 lebu:{n:"迷心劫",t:"delay",d:"判定非红桃跳过出牌"},
 shandian:{n:"天雷劫",t:"delay",d:"判定黑桃2-9受2伤"},
+jinlei:{n:"金雷劫",t:"delay",d:"判定黑桃2-9受3伤且不可减免"},
 crossbow:{n:"连环火铳",t:"equip",st:"weapon",r:1,d:"可出多张降妖"},
 cixiong:{n:"雌雄双剑",t:"equip",st:"weapon",r:2,d:"出降妖时目标须弃牌"},
 hanbing:{n:"寒冰剑",t:"equip",st:"weapon",r:2,d:"伤害改为弃两张牌"},
@@ -939,6 +940,7 @@ jiedao:[['♣','Q'],['♣','K']],
 wuxie:[['♠','J'],['♠','K'],['♥','J'],['♥','Q'],['♣','K'],['♣','A'],['♦','A']],
 lebu:[['♠','6'],['♥','6'],['♣','6']],
 shandian:[['♠','A'],['♠','5']],
+jinlei:[['♠','K'],['♣','K']],
 crossbow:[['♣','A'],['♦','A']],
 cixiong:[['♠','2'],['♣','2']],
 hanbing:[['♠','2']],
@@ -962,7 +964,7 @@ hualiu:[['♦','5']],
 dawu:[['♥','K']],
 };
 
-const CARD_COUNTS={sha:30,shan:15,tao:8,jiu:6,huogong:2,tiesuo:6,juedou:3,nanman:3,wanjian:1,guohe:6,shunshou:5,wuzhong:4,wugu:2,taoyuan:1,jiedao:2,wuxie:7,lebu:3,shandian:2,crossbow:2,cixiong:2,hanbing:1,qinggang:2,zhangba:1,guanshi:1,qinglong:2,fangtian:1,qilin:1,bagua:2,renwang:2,jiahorse:1,jianhorse:2,tengjia:1,yinyue:1,huosha:1,zhuge:2,hualiu:1,dawu:1};
+const CARD_COUNTS={sha:30,shan:15,tao:8,jiu:6,huogong:2,tiesuo:6,juedou:3,nanman:3,wanjian:1,guohe:6,shunshou:5,wuzhong:4,wugu:2,taoyuan:1,jiedao:2,wuxie:7,lebu:3,shandian:2,jinlei:2,crossbow:2,cixiong:2,hanbing:1,qinggang:2,zhangba:1,guanshi:1,qinglong:2,fangtian:1,qilin:1,bagua:2,renwang:2,jiahorse:1,jianhorse:2,tengjia:1,yinyue:1,huosha:1,zhuge:2,hualiu:1,dawu:1};
 
 // ==================== 构建牌堆 ====================
 function buildDeck(){
@@ -2320,6 +2322,16 @@ G.discard.push(card);
 G.player.judge.push(card);
 log(`天雷劫未触发，传给${G.player.name}`,"log-system");
 }
+}else if(card.key==="jinlei"){
+if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
+const _prevDef=e._defBuff||0;e._defBuff=0;
+damage(e,3,null);e._defBuff=_prevDef;
+log(`金雷劫判定黑桃${jc.rank}，${e.name}受3点不可减免伤害`,"log-damage");
+G.discard.push(card);
+}else{
+G.player.judge.push(card);
+log(`金雷劫未触发，传给${G.player.name}`,"log-system");
+}
 }
 }
 renderBattle();
@@ -2804,7 +2816,7 @@ return null;
 }
 
 function aiPlayTrick(e,p){
-const keys=["wuzhong","jiedao","guohe","huogong","tiesuo","juedou","nanman","wanjian","lebu","shandian","shunshou"];
+const keys=["wuzhong","jiedao","guohe","huogong","tiesuo","juedou","nanman","wanjian","lebu","shandian","jinlei","shunshou"];
 for(const key of keys){
 if(!hasCard(e,key))continue;
 // luohan: immune to next trick
@@ -2830,7 +2842,7 @@ cancelled=true;
 if(cancelled){const ti0=findCard(e,key);if(ti0>=0){const c0=e.hand.splice(ti0,1)[0];G.discard.push(c0)}continue;}
 const ti=findCard(e,key);
 const card=e.hand.splice(ti,1)[0];
-if(key!=="lebu"&&key!=="shandian")G.discard.push(card);
+if(key!=="lebu"&&key!=="shandian"&&key!=="jinlei")G.discard.push(card);
 log(`${e.name}出了${card.name}`,"log-enemy");
 SND.play();
 const fc=showFieldCard(card,"enemy");
@@ -2847,6 +2859,7 @@ case"huogong":if(p.hand.length>0){const shown=p.hand[Math.floor(Math.random()*p.
 case"tiesuo":if(!p._chained){p._chained=true;log(`你被连环`,"log-system")}else{p._chained=false;log(`你解除连环`,"log-system")}break;
 case"jiedao":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`借宝降妖：${e.name}迫使你弃去${w.name}`,"log-enemy")}else{damage(p,1,e);log(`你无武器，受借宝降妖1伤`,"log-damage")}break;
 case"shandian":p.judge.push(card);log(`${e.name}对你使用天雷劫`,"log-enemy");break;
+case"jinlei":p.judge.push(card);log(`${e.name}对你使用金雷劫`,"log-enemy");break;
 }
 return;
 }
@@ -2911,6 +2924,13 @@ if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
 damage(p,2,null);log(`天雷劫判定黑桃${jc.rank}，受2点伤害`,"log-damage");
 G.discard.push(card);
 }else{e.judge.push(card);log(`天雷劫未触发，传给${e.name}`,"log-system")}
+}else if(card.key==="jinlei"){
+if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
+const _prevDef=p._defBuff||0;p._defBuff=0;
+damage(p,3,null);p._defBuff=_prevDef;
+log(`金雷劫判定黑桃${jc.rank}，受3点不可减免伤害`,"log-damage");
+G.discard.push(card);
+}else{e.judge.push(card);log(`金雷劫未触发，传给${e.name}`,"log-system")}
 }
 }
 renderBattle();
@@ -4652,6 +4672,7 @@ const jc=drawFromDeck(1)[0];G.discard.push(jc);
 log('判定'+card.name+'：'+jc.suit+jc.rank,'log-system');
 if(card.key==='lebu'){if(jc.suit!=='♥'){e.skipPlay=true;log('迷心劫判定非红桃，'+e.name+'跳过出牌阶段','log-system')}G.discard.push(card)}
 else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,null);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
+else if(card.key==='jinlei'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){var _prevDef=e._defBuff||0;e._defBuff=0;damage(e,3,null);e._defBuff=_prevDef;log('金雷劫触发，'+e.name+'受3伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('金雷劫传给你','log-system')}}
 }
 renderBattle();
 }
@@ -5012,6 +5033,7 @@ case'juedou':resolveDuel(e,p);break;
 case'wugu':var c1=drawFromDeck(1)[0];var c2=drawFromDeck(1)[0];e.hand.push(c1);p.hand.push(c2);log('仙果普降，双方各得1牌','log-heal');break;
 case'lebu':p.judge.push(card);log('你被施放迷心劫','log-enemy');break;
 case'shandian':p.judge.push(card);log('你被施放天雷劫','log-enemy');break;
+case'jinlei':p.judge.push(card);log('你被施放金雷劫','log-enemy');break;
 case'huogong':if(p.hand.length>0){var shown=p.hand[Math.floor(Math.random()*p.hand.length)];var si5=e.hand.findIndex(function(c){return c.suit===shown.suit});if(si5>=0){var sc3=e.hand.splice(si5,1)[0];G.discard.push(sc3);var hd=1;if(p.equipment.armor&&p.equipment.armor.key==='tengjia')hd=2;damage(p,hd,e);log('火攻命中！你受'+hd+'伤','log-damage')}else{log(e.name+'火攻失败','log-system')}}else{log('你没有手牌，火攻无效','log-system')}break;
 case'tiesuo':if(!p._chained){p._chained=true;log('你被连环','log-system')}else{p._chained=false;log('你解除连环','log-system')}break;
 case'wuxie':e.hand.splice(idx,0,card);var di=G.discard.lastIndexOf(card);if(di>=0)G.discard.splice(di,1);log('护身法需要响应锦囊时使用','log-system');break;
@@ -5427,6 +5449,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.0',date:'2026-11-21',items:[
+{tag:'new',text:'新增金雷劫卡牌——天雷劫强化版，判定黑桃2-9造成3点不可减免伤害(无视_defBuff)，未触发传给下家，2张♠K/♣K'},
+]},
 {ver:'v2.1.9',date:'2026-11-21',items:[
 {tag:'fix',text:'修复CSS .vfx-victory-ray linear-gradient缺少右括号导致胜利特效不渲染(BUG-A)'},
 {tag:'fix',text:'cibei回调mpSendState添加标准守卫(代码风格一致性)'},
