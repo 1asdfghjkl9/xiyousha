@@ -2241,7 +2241,7 @@ SND.heal();fxHeal("enemy");renderBattle();
 return;
 }
 // check huapo revive
-if(G.enemy.skills&&G.enemy.skills.includes("huapo")&&!G.enemy._revived){
+if(hasSk(G.enemy,"huapo")&&!G.enemy._revived){
 G.enemy._revived=true;G.enemy.hp=Math.min(G.enemy.maxHp,3);G.enemy.alive=true;
 log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
 fxHeal("enemy");renderBattle();
@@ -3073,6 +3073,12 @@ if(hasSk(enemy,"manniu"))dmg=2;
 if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
 if(enemy._atkBuff)dmg+=enemy._atkBuff;
 if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){
+const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -4889,19 +4895,27 @@ var fc=showFieldCard(card,'enemy');
 resolveSha(e,p,card);
 setTimeout(function(){removeFieldCard(fc)},1500);
 // if host needs to respond to this sha, state will be sent after response
-if(G.awaitingResponse||G._mpHostDodging){renderBattle();return}
+if(G.awaitingResponse||G._mpHostDodging){renderBattle();checkEnd();return}
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
 }else if(card.key==='tao'){
 if(e.hp>=e.maxHp){mpSendState();return}
 e.hand.splice(idx,1);G.discard.push(card);
 var heal=1;
-if(e.skills.some(function(s){return s.key==='foen'})&&!(e.skillUsed.foen>0)){heal=2;e.skillUsed.foen=1}
+if(hasSk(e,'foen')&&!(e.skillUsed.foen>0)){heal=2;e.skillUsed.foen=1}
 e.hp=Math.min(e.maxHp,e.hp+heal);
 log(e.name+'使用蟠桃回复'+heal+'体力','log-heal');
 SND.heal();fxHeal('enemy');
 var fc=showFieldCard(card,'enemy');
 setTimeout(function(){removeFieldCard(fc)},1500);
+renderBattle();mpSendState();
+}else if(card.key==='jiu'){
+e.hand.splice(idx,1);G.discard.push(card);
+e._jiuActive=true;
+log(e.name+'饮下仙酿','log-enemy');
+SND.cardPlay();
+var fc2=showFieldCard(card,'enemy');
+setTimeout(function(){removeFieldCard(fc2)},1500);
 renderBattle();mpSendState();
 }
 }
@@ -5395,6 +5409,14 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.6',date:'2026-11-20',items:[
+{tag:'fix',text:'修复promptPlayerDodge最终else分支(青釭剑/方天画戟/九头狮子无法闪避)缺少jinbao/tianpeng_up伤害加成的问题'},
+{tag:'fix',text:'修复mpEnemyPlayBasic未处理jiu(仙酿)卡牌导致访客打出仙酿无效且双方手牌不同步的问题'},
+{tag:'fix',text:'修复checkEnd中huapo(花魄)复活检查使用.includes()而非hasSk()导致MP模式下不兼容的问题'},
+{tag:'fix',text:'修复mpEnemyPlayBasic中tao治疗使用.some()而非hasSk()检查foen技能的问题'},
+{tag:'fix',text:'修复mpEnemyPlayBasic中sha路径缺少checkEnd()调用的问题'},
+{tag:'fix',text:'修复mpEnemyPlayTrick函数声明被意外删除的问题'},
+]},
 {ver:'v1.9.5',date:'2026-11-20',items:[
 {tag:'fix',text:'修复铁索连环传导伤害绕过damage()函数导致防御技能不生效的问题，改用damage()调用'},
 {tag:'fix',text:'修复resolveHuogong按钮回调缺少mpSendState()导致MP状态不同步的问题'},
