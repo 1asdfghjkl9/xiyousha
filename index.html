@@ -2762,7 +2762,7 @@ setTimeout(()=>aiEndTurn(),500);
 
 function aiDecide(e,p){
 // AI skill usage for new characters
-if(e.charKey&&!e.isEnemy===false||e.charKey&&G.level!=='MP'){
+if(e.charKey&&(e.isEnemy||G.level!=='MP'||G.mpBot)){
 // heal when low
 if(e.hp<=2){
 if(e.charKey==='guanyin'&&!(e.skillUsed.cibei>0)){e.skillUsed.cibei=1;e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'慈悲为怀：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'cibei'}}
@@ -2807,6 +2807,7 @@ if(hasCard(e,"nanman")&&!hasCard(p,"sha"))return{type:"trick",key:"nanman"};
 if(hasCard(e,"wanjian")&&!hasCard(p,"shan"))return{type:"trick",key:"wanjian"};
 if(hasCard(e,"lebu")&&!p.judge.some(c=>c.key==="lebu"))return{type:"trick",key:"lebu"};
 if(hasCard(e,"shandian")&&!p.judge.some(c=>c.key==="shandian")&&Math.random()<0.5)return{type:"trick",key:"shandian"};
+if(hasCard(e,"jinlei")&&!p.judge.some(c=>c.key==="jinlei")&&Math.random()<0.6)return{type:"trick",key:"jinlei"};
 if(hasCard(e,"shunshou")&&dist(e,p)<=1&&p.hand.length>0)return{type:"trick",key:"shunshou"};
 if(hasCard(e,"huogong")&&p.hand.length>0)return{type:"trick",key:"huogong"};
 if(hasCard(e,"nanman")&&p.hp<=3)return{type:"trick",key:"nanman"};
@@ -4678,7 +4679,7 @@ else if(card.key==='jinlei'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(
 }
 renderBattle();
 }
-const drawN=2+(e.drawBonus||0)+(e._extraDraw||0);
+const drawN=(e.drawCount||2)+(e.drawBonus||0)+(e._extraDraw||0);
 let extraDrawSkill=0;
 if(e.skills.some(function(s){return s.key==='chanxin'}))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
@@ -5451,6 +5452,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.3',date:'2026-11-21',items:[
+{tag:'fix',text:'AI添加金雷劫决策路径(60%概率使用，优先于天雷劫)'},
+{tag:'fix',text:'MP人机模式AI角色技能条件修复——bot模式下角色技能(cibei/xiao/leiting等)恢复正常使用'},
+{tag:'fix',text:'mpGuestTurnStart摸牌数改用e.drawCount替代硬编码2'},
+]},
 {ver:'v2.2.2',date:'2026-11-21',items:[
 {tag:'fix',text:'修复PvE闪避前置条件用hasSk而非charKey导致白龙马/菩提/雷公被剥夺闪避机会'},
 {tag:'fix',text:'金雷劫不可减免伤害改为G._jinleiActive标志，绕过damage()中全部6种减免(_defBuff/liusha/jinshen/tiedan/dadi/zhisheng)'},
