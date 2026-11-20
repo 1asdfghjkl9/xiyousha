@@ -2160,40 +2160,40 @@ function damage(target,amount,source){
 // MP: enemy may be a player character (not isEnemy) but still needs buff checks
 const isPC=!target.isEnemy||(G.mpMode&&target===G.enemy);
 // defense buff
-if(amount>0&&isPC&&target._defBuff){
+if(amount>0&&isPC&&target._defBuff&&!G._jinleiActive){
 const reduced=Math.min(amount,target._defBuff);
 amount=Math.max(0,amount-target._defBuff);
 log(`防御增益抵消${reduced}点伤害`,"log-heal");
 }
 // liusha shield - only trigger if there's still damage to mitigate
 const liushaMax=target.skills&&target.skills.some(s=>s.key==="liusha_up")?2:1;
-if(amount>0&&isPC&&target.charKey==="shaseng"&&(target.skillUsed.liusha||0)<liushaMax&&target.hand.length>0){
+if(amount>0&&isPC&&target.charKey==="shaseng"&&!G._jinleiActive&&(target.skillUsed.liusha||0)<liushaMax&&target.hand.length>0){
 target.skillUsed.liusha=(target.skillUsed.liusha||0)+1;
 const di=0;const dc=target.hand.splice(di,1)[0];G.discard.push(dc);
 log(`沙和尚流沙护体：弃1牌抵消1伤`,"log-heal");
 amount=Math.max(0,amount-1);
 }
 // jinshen: 50% chance to reduce 1 damage
-if(amount>0&&isPC&&target.skills&&target.skills.some(s=>s.key==="jinshen")&&(target.skillUsed.jinshen||0)<1&&Math.random()<0.5){
+if(amount>0&&isPC&&target.skills&&target.skills.some(s=>s.key==="jinshen")&&!G._jinleiActive&&(target.skillUsed.jinshen||0)<1&&Math.random()<0.5){
 target.skillUsed.jinshen=1;
 amount=Math.max(0,amount-1);
 log("金身罗汉：减伤1点","log-heal");
 }
 // tiedan: niulang/chanti/shuiyu immune 1 damage
-if(amount>0&&isPC&&target._tiedanActive){
+if(amount>0&&isPC&&target._tiedanActive&&!G._jinleiActive){
 target._tiedanActive=false;
 amount=Math.max(0,amount-1);
 log("免疫1点伤害","log-heal");
 }
 // dadi: 后土娘娘弃1牌减1伤
-if(amount>0&&isPC&&target.charKey==="houtu"&&target.hand.length>0&&(target.skillUsed.dadi||0)<1){
+if(amount>0&&isPC&&target.charKey==="houtu"&&!G._jinleiActive&&target.hand.length>0&&(target.skillUsed.dadi||0)<1){
 target.skillUsed.dadi=1;
 const dc=target.hand.splice(0,1)[0];G.discard.push(dc);
 amount=Math.max(0,amount-1);
 log("大地之护：弃1牌减1伤","log-heal");
 }
 // zhisheng: 玉帝体力≤1时所有伤害-1
-if(amount>0&&isPC&&target.charKey==="yudi"&&target.hp<=1){
+if(amount>0&&isPC&&target.charKey==="yudi"&&!G._jinleiActive&&target.hp<=1){
 amount=Math.max(0,amount-1);
 log("至圣：减伤1点","log-heal");
 }
@@ -2324,8 +2324,9 @@ log(`天雷劫未触发，传给${G.player.name}`,"log-system");
 }
 }else if(card.key==="jinlei"){
 if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
-const _prevDef=e._defBuff||0;e._defBuff=0;
-damage(e,3,null);e._defBuff=_prevDef;
+G._jinleiActive=true;
+damage(e,3,null);
+G._jinleiActive=false;
 log(`金雷劫判定黑桃${jc.rank}，${e.name}受3点不可减免伤害`,"log-damage");
 G.discard.push(card);
 }else{
@@ -2683,7 +2684,7 @@ const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
 // player response
-if(hasCard(p,"shan")||p.equipment.armor||(hasSk(p,"juanlian")&&p.hand.some(c=>!c.red))||(hasSk(p,"huntian")&&p.hand.some(c=>c.red))){
+if(hasCard(p,"shan")||p.equipment.armor||((p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan"))||((p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan"))){
 setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);
 return;
 }else{
@@ -2926,8 +2927,9 @@ G.discard.push(card);
 }else{e.judge.push(card);log(`天雷劫未触发，传给${e.name}`,"log-system")}
 }else if(card.key==="jinlei"){
 if(jc.suit==="♠"&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){
-const _prevDef=p._defBuff||0;p._defBuff=0;
-damage(p,3,null);p._defBuff=_prevDef;
+G._jinleiActive=true;
+damage(p,3,null);
+G._jinleiActive=false;
 log(`金雷劫判定黑桃${jc.rank}，受3点不可减免伤害`,"log-damage");
 G.discard.push(card);
 }else{e.judge.push(card);log(`金雷劫未触发，传给${e.name}`,"log-system")}
@@ -2948,7 +2950,7 @@ p.shaPlayed=false;var _fs2=p.skillUsed.fusheng||0;p.skillUsed={};p.skillUsed.fus
 if(p.charKey==="tang"&&p.hp<p.maxHp){p.hp=Math.min(p.maxHp,p.hp+1);log("静心诵经：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player")}
 G._lastPlayerCardKey=null;
 SND.draw();
-log(`你的回合，摸了${drawN}张牌`,"log-player");
+log(`你的回合，摸了${drawN+extraDrawSkill}张牌`,"log-player");
 fxTurn("player");
 setPhase("出牌阶段","");
 clearFieldCards();
@@ -3144,7 +3146,7 @@ SND.play();
 const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
-if(hasCard(p,"shan")||p.equipment.armor||(hasSk(p,"juanlian")&&p.hand.some(c=>!c.red))||(hasSk(p,"huntian")&&p.hand.some(c=>c.red))){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
+if(hasCard(p,"shan")||p.equipment.armor||((p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="puti")&&p.hand.some(c=>!c.red&&c.key!=="shan"))||((p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan"))){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
 else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(hasSk(e,"huli"))d+=1;if(e._atkBuff)d+=e._atkBuff;if(e._shilongActive){d+=1;e._shilongActive=false}if(!e.isEnemy||(G.mpMode&&e===G.enemy)){const jinbaoSk=e.skills.find(s=>s.key==="jinbao");if(jinbaoSk)d+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=e.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)d+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(hasSk(e,"jiutou2"))d=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(e.equipment.weapon&&e.equipment.weapon.key==="hanbing"&&p.hand.length>=2){for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}log('寒冰剑：你弃2牌代替伤害','log-system')}else if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){checkEnd();if(!p.alive)return}}
 }
 break;
@@ -4672,7 +4674,7 @@ const jc=drawFromDeck(1)[0];G.discard.push(jc);
 log('判定'+card.name+'：'+jc.suit+jc.rank,'log-system');
 if(card.key==='lebu'){if(jc.suit!=='♥'){e.skipPlay=true;log('迷心劫判定非红桃，'+e.name+'跳过出牌阶段','log-system')}G.discard.push(card)}
 else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,null);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
-else if(card.key==='jinlei'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){var _prevDef=e._defBuff||0;e._defBuff=0;damage(e,3,null);e._defBuff=_prevDef;log('金雷劫触发，'+e.name+'受3伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('金雷劫传给你','log-system')}}
+else if(card.key==='jinlei'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){G._jinleiActive=true;damage(e,3,null);G._jinleiActive=false;log('金雷劫触发，'+e.name+'受3伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('金雷劫传给你','log-system')}}
 }
 renderBattle();
 }
@@ -4686,7 +4688,7 @@ e.shaPlayed=false;var _fs3=e.skillUsed.fusheng||0;e.skillUsed={};e.skillUsed.fus
 // 唐僧静心诵经
 if(e.charKey==='tang'&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log('静心诵经：'+e.name+'回复1点体力','log-heal');SND.heal();fxHeal('enemy');fxHpChange('enemy')}
 SND.draw();
-log(e.name+'摸了2张牌','log-enemy');
+log(e.name+'摸了'+(drawN+extraDrawSkill)+'张牌','log-enemy');
 fxTurn('enemy');
 setPhase(e.name+'的回合','enemy-turn');
 clearFieldCards();
@@ -5016,7 +5018,7 @@ mpEnemyPlayTrickContinue(idx,card,e,p);
 
 function mpEnemyPlayTrickContinue(idx,card,e,p){
 e.hand.splice(idx,1);
-if(card.key!=='lebu'&&card.key!=='shandian')G.discard.push(card);
+if(card.key!=='lebu'&&card.key!=='shandian'&&card.key!=='jinlei')G.discard.push(card);
 log(e.name+'出了'+card.name,'log-enemy');
 SND.trickPlay();
 var fc=showFieldCard(card,'enemy');
@@ -5449,6 +5451,13 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.2',date:'2026-11-21',items:[
+{tag:'fix',text:'修复PvE闪避前置条件用hasSk而非charKey导致白龙马/菩提/雷公被剥夺闪避机会'},
+{tag:'fix',text:'金雷劫不可减免伤害改为G._jinleiActive标志，绕过damage()中全部6种减免(_defBuff/liusha/jinshen/tiedan/dadi/zhisheng)'},
+{tag:'fix',text:'MP访客摸牌日志改为显示实际摸牌数(含禅心额外摸牌)'},
+{tag:'fix',text:'玩家摸牌日志补全禅心额外摸牌数'},
+{tag:'fix',text:'mpEnemyPlayTrickContinue弃牌检查添加jinlei排除'},
+]},
 {ver:'v2.2.1',date:'2026-11-21',items:[
 {tag:'fix',text:'修复PvE闪避前置条件遗漏变化系技能(juanlian/huntian)导致玩家被剥夺闪避机会'},
 {tag:'fix',text:'修复continueEnemyTurn装备音效SND.equip→SND.equipSound'},
