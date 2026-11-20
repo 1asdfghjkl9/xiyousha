@@ -2355,7 +2355,7 @@ log("通天河寒：你弃1牌抵消冰冻","log-heal");
 }else{
 damage(p,1,e);
 log("通天河寒：你受1点冰冻伤害","log-damage");
-if(!p.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 }
 }
@@ -2395,7 +2395,7 @@ if(e.skills.includes("yinyangping")){
 if(p.hand.length>0){
 const di=0;const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
 log("阴阳二气瓶：你须弃1牌","log-damage");
-if(p.hand.length===0){damage(p,1,e);if(!p.alive){checkEnd();return}}
+if(p.hand.length===0){damage(p,1,e);if(!p.alive||!e.alive){checkEnd();return}}
 }
 }
 if(e.skills.includes("fanfu")&&e.hp<5&&!e._fanfuActive){
@@ -2415,7 +2415,7 @@ const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
 e.shaPlayed=true;
 log("黑风突袭：黑熊精额外出一张降妖！","log-enemy");
 damage(p,1,e);onShaDamage(e,p,sc);
-if(!p.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 }
 // 黄风怪·黄风: 每回合30%概率弃你一张牌
@@ -2526,7 +2526,7 @@ const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
 e.shaPlayed=true;
 log("妖力涌动：额外出一张降妖！","log-enemy");
 damage(p,1,e);onShaDamage(e,p,sc);
-if(!p.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 }
 // 通用技能2: 15%概率弃你一张牌
@@ -2563,7 +2563,7 @@ const si=findCard(e,"sha");const sc=e.hand.splice(si,1)[0];G.discard.push(sc);
 e.shaPlayed=true;
 log("分瓣梅花计：豹子精分身出降妖！","log-enemy");
 damage(p,1,e);onShaDamage(e,p,sc);
-if(!p.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 }
 // 金毛犼·吼叫: 每回合25%概率让你弃一张牌
@@ -2654,7 +2654,7 @@ log("犀冲：三犀大王横冲直撞！","log-enemy");
 SND.skill();fxSkill("enemy");
 damage(p,1,e);
 renderBattle();
-if(!p.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 }
 // 白鹿精·二阶·兽掌: 每回合25%概率偷你一张手牌
@@ -5453,6 +5453,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.7',date:'2026-11-21',items:[
+{tag:'fix',text:'applyBossStart中6处伤害路径(heifeng/generic1/baozi/sanxi/mirror等)添加!e.alive检查，防止madu反伤击杀boss后继续执行技能'},
+]},
 {ver:'v2.2.6',date:'2026-11-21',items:[
 {tag:'fix',text:'修复useSkill函数顶部缺少e=G.enemy声明导致哮天犬技能ReferenceError(v2.1.8 BUG-003修复引入的回归)'},
 ]},
