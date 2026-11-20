@@ -1642,8 +1642,8 @@ if(!card)return;
 if(G.mpMode&&!G.mpIsHost){
 if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse&&!G._mpCardLocked){
 if(canPlayCardNow(card)){
-G._mpCardLocked=true;
-setTimeout(function(){G._mpCardLocked=false;},5000);
+G._mpCardLocked=true;G._mpCardLockId=(G._mpCardLockId||0)+1;var lockId=G._mpCardLockId;
+setTimeout(function(){if(G._mpCardLockId===lockId)G._mpCardLocked=false;},5000);
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'play_card',cardIdx:idx,ts:Date.now()});
 p.hand.splice(idx,1);
 renderHand();
@@ -5061,10 +5061,7 @@ var st=card.equipSubtype;
 if(st==='weapon'){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=card}
 else if(st==='armor'){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=card}
 else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}else{G.discard.push(card);log(e.name+'未知装备类型，丢弃','log-enemy');}
-if(st==='weapon'||st==='armor'||st==='mount'){log(e.name+'装备了'+card.name,'log-enemy');}
-SND.equipSound();
-var fc=showFieldCard(card,'enemy');
-setTimeout(function(){removeFieldCard(fc)},1500);
+if(st==='weapon'||st==='armor'||st==='mount'){log(e.name+'装备了'+card.name,'log-enemy');SND.equipSound();var fc=showFieldCard(card,'enemy');setTimeout(function(){removeFieldCard(fc)},1500);}
 renderBattle();mpSendState();
 }
 
@@ -5460,6 +5457,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.3',date:'2026-11-21',items:[
+{tag:'fix',text:'_mpCardLocked竞态修复：使用lockId计数器防止旧setTimeout过早解锁新锁'},
+{tag:'fix',text:'mpEnemyPlayEquip未知装备类型不再播放音效和展示装备特效'},
+]},
 {ver:'v2.3.2',date:'2026-11-21',items:[
 {tag:'fix',text:'_mpCardLocked添加5秒超时自动解锁，防止主机崩溃或状态同步失败导致访客永久锁定'},
 {tag:'fix',text:'MP访客使用sanshiliu/bian技能达上限时添加日志反馈，避免静默拒绝'},
