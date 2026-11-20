@@ -3108,7 +3108,7 @@ continueEnemyTurn();
 function continueEnemyTurn(){
 // continue AI play after player response
 const e=G.enemy,p=G.player;
-if(!p.alive||!e.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();if(!p.alive||!e.alive)return}
 setTimeout(()=>{
 let actions=0;
 while(actions<8&&e.alive&&p.alive){
@@ -4684,7 +4684,7 @@ myHand:e.hand.map(function(c){return{id:c.id,key:c.key,name:c.name,type:c.type,s
 myEquips:JSON.parse(JSON.stringify(e.equipment)),
 myJudge:e.judge.map(function(c){return{name:c.name,key:c.key}}),
 mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
-mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):[],
+mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
 myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,
 myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,
@@ -4740,7 +4740,7 @@ skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
 _chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,
 _shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
-skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,perTurn:s.perTurn}}):null,
+skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
 };
 G.enemy={
 hp:state.oppHp,maxHp:state.oppMaxHp,name:state.oppName,
@@ -4818,6 +4818,15 @@ var dodge=G._mpPendingDodge;
 if(!dodge)return;
 G._mpPendingDodge=null;
 var e=G.enemy,p=G.player;
+var _guanshiCheck=function(){
+if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='guanshi'&&dodge.source.hand.length>=2&&dodge.source.alive&&e.alive){
+showResponse("贯石斧",e.name+'已闪避！弃2牌强命中？',[
+{label:"弃2牌强命中",action:function(){for(var g=0;g<2;g++){var gc=dodge.source.hand.splice(0,1)[0];G.discard.push(gc)}log('贯石斧：弃2牌强制命中！','log-player');var gd=1;if(dodge.source._jiuActive){gd+=1;dodge.source._jiuActive=false}if(dodge.source._atkBuff)gd+=dodge.source._atkBuff;if(hasSk(dodge.source,'manniu'))gd=2;if(hasSk(dodge.source,'sanmei'))gd=2;if(hasSk(dodge.source,'huli'))gd+=1;if(dodge.source._shilongActive){gd+=1;dodge.source._shilongActive=false}if(hasSk(e,'xiniu')&&gd>0)gd=Math.max(0,gd-1);if(gd>0){damage(e,gd,dodge.source);onShaDamage(dodge.source,e,dodge.card)}renderBattle();checkEnd();mpSendState()}},
+{label:"放弃",action:function(){renderBattle();mpSendState()}}
+]);return true;
+}
+return false;
+};
 if(msg.useShan){
 if(msg.juanlian&&(e.charKey==='shaseng'||e.charKey==='bailong'||e.charKey==='puti')){
 var ji=e.hand.findIndex(function(c){return !c.red&&c.key!=='shan'});
@@ -4827,6 +4836,7 @@ log(e.name+(e.charKey==='shaseng'?'卷帘之盾':e.charKey==='puti'?'无相':'�
 SND.cardDodge();
 if(e.equipment.weapon&&e.equipment.weapon.key==='yinyue'&&e.hand.length>0&&p.alive){var yc=e.hand.splice(0,1)[0];G.discard.push(yc);damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy')}
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
+if(_guanshiCheck())return;
 renderBattle();checkEnd();mpSendState();
 return;
 }
@@ -4839,6 +4849,7 @@ log(e.name+(e.charKey==='leigong'?'遁世':'混天绫')+'：将'+hc.name+'当遁
 SND.cardDodge();
 if(e.equipment.weapon&&e.equipment.weapon.key==='yinyue'&&e.hand.length>0&&p.alive){var yc=e.hand.splice(0,1)[0];G.discard.push(yc);damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy')}
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
+if(_guanshiCheck())return;
 renderBattle();checkEnd();mpSendState();
 return;
 }
@@ -4855,6 +4866,7 @@ var yc=e.hand.splice(0,1)[0];G.discard.push(yc);
 damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy');
 }
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
+if(_guanshiCheck())return;
 renderBattle();checkEnd();mpSendState();
 return;
 }
@@ -5414,6 +5426,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.8',date:'2026-11-20',items:[
+{tag:'fix',text:'修复continueEnemyTurn初始检查在checkEnd()复生后不re-check导致游戏卡死的问题(C1)'},
+{tag:'fix',text:'修复mpSendState/mpRenderState中skillsDef缺少desc字段导致访客被动技能显示undefined的问题(M1)'},
+{tag:'fix',text:'修复MP模式下主机贯石斧在访客闪避后不生效的问题(M2)'},
+]},
 {ver:'v2.0.7',date:'2026-11-20',items:[
 {tag:'fix',text:'修复resolveSha MP/PvE出遁法路径缺少if(si>=0)守卫的问题(M1/M2)'},
 {tag:'fix',text:'修复aiPlayTrick中护身法取消锦囊时AI手牌未移除的问题'},
