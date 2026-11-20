@@ -1640,8 +1640,9 @@ const card=p.hand[idx];
 if(!card)return;
 // MP guest mode: send action to host
 if(G.mpMode&&!G.mpIsHost){
-if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse){
+if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse&&!G._mpCardLocked){
 if(canPlayCardNow(card)){
+G._mpCardLocked=true;
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'play_card',cardIdx:idx,ts:Date.now()});
 p.hand.splice(idx,1);
 renderHand();
@@ -3271,11 +3272,10 @@ else if(key==="sanshiliu"){
 if((p.skillUsed.sanshiliu||0)>=1)return;
 const idx=p.hand.findIndex(c=>c.type!=="trick");
 if(idx<0){log("没有可变化的牌","log-system");return}
-p.skillUsed.sanshiliu=1;
 showResponse("三十六变","选择要变化的锦囊牌类型：",[
-{label:"神通自现",action:()=>{doSanshiliu(idx,"wuzhong")}},
-{label:"拆桥断路",action:()=>{doSanshiliu(idx,"guohe")}},
-{label:"护身法",action:()=>{doSanshiliu(idx,"wuxie")}},
+{label:"神通自现",action:()=>{p.skillUsed.sanshiliu=1;doSanshiliu(idx,"wuzhong")}},
+{label:"拆桥断路",action:()=>{p.skillUsed.sanshiliu=1;doSanshiliu(idx,"guohe")}},
+{label:"护身法",action:()=>{p.skillUsed.sanshiliu=1;doSanshiliu(idx,"wuxie")}},
 ]);
 }
 else if(key==="dunqi"){
@@ -4715,9 +4715,9 @@ myJudge:e.judge.map(function(c){return{name:c.name,key:c.key}}),
 mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
-myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,myDrawCount:e.drawCount||2,
+myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,myDrawCount:e.drawCount||2,myDrawBonus:e.drawBonus||0,myExtraDraw:e._extraDraw||0,
 myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,myQinglongUsed:!!e._qinglongUsed,myRevived:!!e._revived,
-oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,oppDrawCount:p.drawCount||2,
+oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,oppDrawCount:p.drawCount||2,oppDrawBonus:p.drawBonus||0,oppExtraDraw:p._extraDraw||0,
 oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,oppQinglongUsed:!!p._qinglongUsed,oppRevived:!!p._revived,
 myTurn:G.turn==='enemy',
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
@@ -4755,6 +4755,7 @@ MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:state,
 }
 
 function mpRenderState(state){
+G._mpCardLocked=false;
 // Ignore stale state if player already left MP
 if(!G.mpMode&&G.screen!=='mp'&&G.screen!=='mp-wait'&&G.screen!=='battle')return;
 if(!G.player||!G.mpMode){G=newGameState();G.battleId=(G.battleId||0)+1}
@@ -4766,7 +4767,7 @@ equipment:state.myEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.myJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.mySkills||[],
 skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
-_chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,drawCount:state.myDrawCount||2,
+_chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,drawCount:state.myDrawCount||2,drawBonus:state.myDrawBonus||0,_extraDraw:state.myExtraDraw||0,
 _shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,_qinglongUsed:state.myQinglongUsed||false,_revived:state.myRevived||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
 skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
@@ -4778,7 +4779,7 @@ equipment:state.oppEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.oppSkills||[],
 alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},skillsDef:state.oppSkillsDef?state.oppSkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
-_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,drawCount:state.oppDrawCount||2,
+_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,drawCount:state.oppDrawCount||2,drawBonus:state.oppDrawBonus||0,_extraDraw:state.oppExtraDraw||0,
 _shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,_qinglongUsed:state.oppQinglongUsed||false,_revived:state.oppRevived||false,
 };
 G.turn=state.myTurn?'player':'enemy';
@@ -5058,7 +5059,7 @@ e.hand.splice(idx,1);
 var st=card.equipSubtype;
 if(st==='weapon'){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=card}
 else if(st==='armor'){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=card}
-else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}
+else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}else{G.discard.push(card);log('未知装备类型，丢弃','log-system')}
 log(e.name+'装备了'+card.name,'log-enemy');
 SND.equipSound();
 var fc=showFieldCard(card,'enemy');
