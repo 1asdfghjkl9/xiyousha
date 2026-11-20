@@ -2313,6 +2313,7 @@ log(`天雷劫未触发，传给${G.player.name}`,"log-system");
 }
 }
 renderBattle();
+if(!e.alive||!G.player.alive){checkEnd()}
 }
 
 function applyBossStart(e,p){
@@ -2644,7 +2645,7 @@ SND.skill();fxSkill("enemy");renderBattle();
 
 function aiPlayPhase(e,p){
 let actions=0;
-while(actions<8&&e.alive){
+while(actions<8&&e.alive&&p.alive){
 const action=aiDecide(e,p);
 if(!action)break;
 actions++;
@@ -2731,7 +2732,7 @@ renderBattle();
 break;
 }
 }
-if(!e.alive){checkEnd();return}
+if(!e.alive||!p.alive){checkEnd();return}
 setTimeout(()=>aiEndTurn(),500);
 }
 
@@ -2903,7 +2904,7 @@ G.discard.push(card);
 }
 }
 renderBattle();
-if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid){if(G.mpMode)mpEndBattle(false);else onLevelFail()}},800);return}
+if(!p.alive||!e.alive){checkEnd();return}
 }
 // draw phase
 const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
@@ -3528,9 +3529,9 @@ if(p.hp>0)return;
 if(p.hand.length<3){log("手牌不足3张","log-system");return}
 p.skillUsed.fusheng=1;
 for(let i=0;i<3;i++){const c=p.hand.splice(0,1)[0];G.discard.push(c)}
-p.hp=1;
+p.hp=1;p.alive=true;
 log("复生：弃3牌回复1点体力！","log-player");
-SND.heal();fxHeal("player");fxHpChange("player");renderBattle();
+SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();
 }
 // ====== 樵夫 ======
 else if(key==="kanmu"){
@@ -4489,7 +4490,7 @@ if(msg.type==='mm_search'&&msg.id!==MP.myId){
 // use ID comparison to determine host - smaller ID becomes host
 if(MP.myId<msg.id){
 // I am host
-MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};MP.oppSkills=msg.skills||{};MP.roomCode=MP.genCode();MP.isHost=true;
+MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};MP.roomCode=MP.genCode();MP.isHost=true;
 MP.mmSearching=false;
 if(MP.mmTimer){clearTimeout(MP.mmTimer);MP.mmTimer=null}
 MP.publish('xiyousha_mm',{type:'mm_match',id:MP.myId,targetId:msg.id,name:MP.myName,char:MP.myChar,skills:(G.partyUnlocked&&G.partyUnlocked[MP.myChar])||{},room:MP.roomCode,ts:Date.now()});
@@ -4572,16 +4573,16 @@ return;
 }
 if(MP.isHost){
 if(msg.type==='room_join'&&!MP.oppName){
-MP.oppName=msg.name;MP.oppChar=msg.char;
+MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};
 if(MP.mmTimer){clearTimeout(MP.mmTimer);MP.mmTimer=null}
-MP.publish('xiyousha_room_'+MP.roomCode,{type:'room_accept',id:MP.myId,name:MP.myName,char:MP.myChar,ts:Date.now()});
+MP.publish('xiyousha_room_'+MP.roomCode,{type:'room_accept',id:MP.myId,name:MP.myName,char:MP.myChar,skills:(G.partyUnlocked&&G.partyUnlocked[MP.myChar])||{},ts:Date.now()});
 setTimeout(function(){mpStartBattle()},500);
 }
 if(msg.type==='mp_action')mpHandleGuestAction(msg);
 if(msg.type==='mp_dodge')mpHandleGuestDodge(msg);
 }else{
 if(msg.type==='room_accept'){
-MP.oppName=msg.name;MP.oppChar=msg.char;
+MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};
 if(MP.mmTimer){clearTimeout(MP.mmTimer);MP.mmTimer=null}
 }
 if(msg.type==='mp_state')mpRenderState(msg.state);
@@ -4634,7 +4635,7 @@ for(const card of toResolve){
 const jc=drawFromDeck(1)[0];G.discard.push(jc);
 log('判定'+card.name+'：'+jc.suit+jc.rank,'log-system');
 if(card.key==='lebu'){if(jc.suit!=='♥'){e.skipPlay=true;log('迷心劫判定非红桃，'+e.name+'跳过出牌阶段','log-system')}G.discard.push(card)}
-else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,e);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive){renderBattle();checkEnd();return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
+else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,e);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
 }
 renderBattle();
 }
@@ -5407,6 +5408,15 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.9',date:'2026-11-20',items:[
+{tag:'fix',text:'修复MP房间加入路径(room_accept)缺失技能树同步的问题(C2)，room_accept消息未包含skills字段且访客未存储oppSkills'},
+{tag:'fix',text:'修复mm_search消息中MP.oppSkills重复赋值的问题'},
+{tag:'fix',text:'修复aiPlayPhase循环条件和循环后检查缺少p.alive检测的问题(M5/M6)，AI技能/锦囊杀死玩家后会继续出牌'},
+{tag:'fix',text:'修复aiJudgePhase天雷劫后未调用checkEnd()的问题(M7)，链式连环伤害杀死另一方时不触发游戏结束'},
+{tag:'fix',text:'修复mpGuestTurnStart天雷劫后仅检查单方存活的问题(M8)'},
+{tag:'fix',text:'修复playerTurnStart天雷劫后仅检查玩家存活的问题(M9)，链式伤害杀死敌方时不触发胜利'},
+{tag:'fix',text:'修复手动fusheng(复生)设置hp=1但未设置alive=true的问题(M10)，并补充checkEnd()调用'},
+]},
 {ver:'v1.9.8',date:'2026-11-20',items:[
 {tag:'fix',text:'修复MP联机模式访客加入时未发送技能树解锁数据(C1)，主机无法获取访客的被动技能(jinbao/tianpeng_up/chanxin等)，同时修复主机自身partyUnlocked被newGameState()重置的问题'},
 {tag:'fix',text:'修复mpEnemyUseSkill中jinta(降妖宝杖)处理器缺少checkEnd()调用的问题(M4)'},
