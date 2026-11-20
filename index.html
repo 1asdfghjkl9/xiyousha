@@ -5235,6 +5235,12 @@ else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.l
 else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='wuzhishan'){if((e.skillUsed.wuzhishan||0)>=1||e.hand.length<2)return;e.skillUsed.wuzhishan=1;for(var w=0;w<2;w++){var wc2=e.hand.splice(0,1)[0];G.discard.push(wc2)}log(e.name+'五指山：弃2牌造2伤！','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,2,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='chanti'){if((e.skillUsed.chanti||0)>=1)return;e.skillUsed.chanti=1;e._tiedanActive=true;log(e.name+'禅体：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+// ====== 技能树解锁技能 MP处理 ======
+else if(key==='dunqi'){if((e.skillUsed.dunqi||0)>=1)return;var dqi=e.hand.findIndex(function(c){return c.red});if(dqi<0)return;e.skillUsed.dunqi=1;var dc3=e.hand.splice(dqi,1)[0];G.discard.push(dc3);e.hand.push({id:Math.random(),key:'shan',name:'遁法',type:'basic',basicSubtype:'shan',suit:dc3.suit,rank:dc3.rank,red:dc3.red,desc:'遁气化遁法',cls:'basic-shan'});log(e.name+'遁气护身：将'+dc3.name+'当遁法','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='shenbing'){if((e.skillUsed.shenbing||0)>=1||e.shaPlayed)return;e.skillUsed.shenbing=1;e._shenbingActive=true;log(e.name+'定海神针：下张降妖无视防具','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
+else if(key==='dachui'){if((e.skillUsed.dachui||0)>=1||e.hand.length<2)return;e.skillUsed.dachui=1;var dc4=e.hand.splice(0,1)[0];G.discard.push(dc4);var dc5=e.hand.splice(0,1)[0];G.discard.push(dc5);log(e.name+'九齿钉耙：弃'+dc4.name+'+'+dc5.name+'造1伤','log-enemy');SND.skill();fxSkillBurst('player','#ff8844');fxSlash();damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
+else if(key==='jinta'){if((e.skillUsed.jinta||0)>=1||e.hand.length<1||p.hand.length<1)return;e.skillUsed.jinta=1;var jc3=e.hand.splice(0,1)[0];G.discard.push(jc3);var jc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(jc4);log(e.name+'降妖宝杖：弃'+jc3.name+'，你弃'+jc4.name,'log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
+else if(key==='luohan'){if((e.skillUsed.luohan||0)>=1)return;e.skillUsed.luohan=1;e._luohanActive=true;log(e.name+'罗汉金身：本回合免疫下一张锦囊','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 }
 
 function mpEnemyEndTurn(){
@@ -5405,6 +5411,7 @@ const CHANGELOG=[
 {tag:'fix',text:'修复huoyan(火眼金睛)在useSkill和mpEnemyUseSkill中未检查huoyan_up(火眼精进)额外使用次数的问题'},
 {tag:'fix',text:'修复3条敌方攻击路径中方天画戟伤害日志颜色错误(log-player应为log-enemy)的问题'},
 {tag:'fix',text:'修复菩提祖师无相技能在4处闪避路径中标签显示为龙威护体的问题'},
+{tag:'fix',text:'修复mpEnemyUseSkill缺少dunqi(遁气护身)/shenbing(定海神针)/dachui(九齿钉耙)/jinta(降妖宝杖)/luohan(罗汉金身)5个技能树解锁技能处理的问题'},
 ]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
