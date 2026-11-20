@@ -1836,7 +1836,7 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
-if(!source.isEnemy){
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
 const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
 if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
 const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
@@ -1871,7 +1871,7 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 // unlocked attack skills: jinbao (wukong) +1 damage per level, tianpeng_up (bajie) +1 per level
-if(!source.isEnemy){
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
 const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
 if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
 const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
@@ -1948,6 +1948,12 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
+if(!source.isEnemy){
+const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -1969,6 +1975,12 @@ if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖�
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
+if(!source.isEnemy){
+const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
@@ -2006,6 +2018,12 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
+const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2026,6 +2044,12 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
+const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(source.charKey==="yanwang"&&source.hp<=2)dmg+=1;
 if(source.charKey==="niulang"&&source.hp<=2)dmg+=1;
 if(source.equipment.weapon&&source.equipment.weapon.key==="huosha"&&target.equipment.armor&&target.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2114,8 +2138,9 @@ const si=source.hand.findIndex(c=>c.suit===shown.suit);
 if(si>=0){const sc=source.hand.splice(si,1)[0];G.discard.push(sc);let dmg=1;if(target.equipment.armor&&target.equipment.armor.key==="tengjia")dmg=2;damage(target,dmg,source);log(`火攻命中！${target.name}受${dmg}点伤害`,"log-damage")}
 else{log("没有同花色手牌，火攻失败","log-system")}
 renderBattle();checkEnd();
+if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 }},
-{label:"放弃",action:()=>{log("火攻失败","log-system");renderBattle()}}
+{label:"放弃",action:()=>{log("火攻失败","log-system");renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState()}}
 ]);
 }
 
@@ -2182,10 +2207,7 @@ const other=target===G.player?G.enemy:G.player;
 if(other&&other.alive&&other._chained){
 log('铁索连环传导伤害！','log-damage');
 other._chained=false;target._chained=false;
-other.hp=Math.max(0,other.hp-amount);
-const oside=(other.isEnemy||(G.mpMode&&other===G.enemy))?"enemy":"player";
-fxDamage(oside);fxDmgFloat(oside,amount);
-if(other.hp<=0){other.hp=0;other.alive=false;SND.death()}
+damage(other,amount,source);
 }
 }
 }
@@ -2642,6 +2664,12 @@ if(hasSk(e,"manniu"))dmg=2;
 if(hasSk(e,"sanmei"))dmg=2;if(hasSk(e,"huli"))dmg+=1;
 if(e._atkBuff)dmg+=e._atkBuff;
 if(e._shilongActive){dmg+=1;e._shilongActive=false}
+if(!e.isEnemy||(G.mpMode&&e===G.enemy)){
+const jinbaoSk=e.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=e.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(e.charKey==="yanwang"&&e.hp<=2)dmg+=1;
 if(e.charKey==="niulang"&&e.hp<=2)dmg+=1;
 if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2971,6 +2999,12 @@ if(hasSk(enemy,"manniu"))dmg=2;
 if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
 if(enemy._atkBuff)dmg+=enemy._atkBuff;
 if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){
+const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -2996,6 +3030,12 @@ if(hasSk(enemy,"manniu"))dmg=2;
 if(hasSk(enemy,"sanmei"))dmg=2;if(hasSk(enemy,"huli"))dmg+=1;
 if(enemy._atkBuff)dmg+=enemy._atkBuff;
 if(enemy._shilongActive){dmg+=1;enemy._shilongActive=false}
+if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){
+const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");
+if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
+const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");
+if(tpSk&&card&&card.red)dmg+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);
+}
 if(enemy.charKey==="yanwang"&&enemy.hp<=2)dmg+=1;
 if(enemy.charKey==="niulang"&&enemy.hp<=2)dmg+=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){dmg+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}
@@ -3049,7 +3089,7 @@ const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
 if(hasCard(p,"shan")||p.equipment.armor){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
-else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(hasSk(e,"huli"))d+=1;if(e._atkBuff)d+=e._atkBuff;if(e._shilongActive){d+=1;e._shilongActive=false}if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(hasSk(e,"jiutou2"))d=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(e.equipment.weapon&&e.equipment.weapon.key==="hanbing"&&p.hand.length>=2){for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}log('寒冰剑：你弃2牌代替伤害','log-system')}else if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid){if(G.mpMode)mpEndBattle(false);else onLevelFail()}},800);return}}
+else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(hasSk(e,"huli"))d+=1;if(e._atkBuff)d+=e._atkBuff;if(e._shilongActive){d+=1;e._shilongActive=false}if(!e.isEnemy||(G.mpMode&&e===G.enemy)){const jinbaoSk=e.skills.find(s=>s.key==="jinbao");if(jinbaoSk)d+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=e.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)d+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(hasSk(e,"jiutou2"))d=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(e.equipment.weapon&&e.equipment.weapon.key==="hanbing"&&p.hand.length>=2){for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}log('寒冰剑：你弃2牌代替伤害','log-system')}else if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){setTimeout(()=>{const bid=G.battleId;if(G.player&&!G.player.alive&&G.battleId===bid){if(G.mpMode)mpEndBattle(false);else onLevelFail()}},800);return}}
 }
 break;
 case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
@@ -5306,6 +5346,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.5',date:'2026-11-20',items:[
+{tag:'fix',text:'修复铁索连环传导伤害绕过damage()函数导致防御技能不生效的问题，改用damage()调用'},
+{tag:'fix',text:'修复resolveHuogong按钮回调缺少mpSendState()导致MP状态不同步的问题'},
+{tag:'fix',text:'修复8条伤害路径缺少jinbao(筋斗雷霆)和tianpeng_up(天蓬精进)伤害加成检查的问题，涉及MP人机模式和MP联机模式'},
+{tag:'fix',text:'修复MP主机闪避路径(受到伤害按钮和无闪避)缺少jinbao/tianpeng_up伤害加成的问题'},
+]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
 {tag:'fix',text:'修复贯石斧强制命中路径缺少jinbao(筋斗雷霆)和tianpeng_up(天蓬精进)伤害加成的问题'},
