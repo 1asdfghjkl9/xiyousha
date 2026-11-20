@@ -1773,10 +1773,12 @@ else if(st==="mount"){
 if(card.key==="jiahorse"||card.key==="hualiu"){if(p.equipment.defMount)G.discard.push(p.equipment.defMount);p.equipment.defMount=card}
 else{if(p.equipment.mount)G.discard.push(p.equipment.mount);p.equipment.mount=card}
 }
+else{G.discard.push(card);log("未知装备类型，丢弃","log-system");}
+if(st==="weapon"||st==="armor"||st==="mount"){
 log(`${p.name}装备了${card.name}`,"log-player");
 SND.equipSound();
 const fc=showFieldCard(card,"player");
-setTimeout(()=>removeFieldCard(fc),1500);
+setTimeout(()=>removeFieldCard(fc),1500);}
 renderBattle();
 if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 }
@@ -5457,6 +5459,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.4',date:'2026-11-21',items:[
+{tag:'fix',text:'playEquipment添加未知装备子类型回退分支（与mpEnemyPlayEquip对齐），音效/特效仅对有效装备类型触发'},
+]},
 {ver:'v2.3.3',date:'2026-11-21',items:[
 {tag:'fix',text:'_mpCardLocked竞态修复：使用lockId计数器防止旧setTimeout过早解锁新锁'},
 {tag:'fix',text:'mpEnemyPlayEquip未知装备类型不再播放音效和展示装备特效'},
