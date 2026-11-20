@@ -1643,6 +1643,7 @@ if(G.mpMode&&!G.mpIsHost){
 if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse&&!G._mpCardLocked){
 if(canPlayCardNow(card)){
 G._mpCardLocked=true;
+setTimeout(function(){G._mpCardLocked=false;},5000);
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'play_card',cardIdx:idx,ts:Date.now()});
 p.hand.splice(idx,1);
 renderHand();
@@ -3190,7 +3191,7 @@ var maxBian=1;
 var hasBianshen=G.player.skills.some(s=>s.key==="bianshen");
 if(hasBianshen)maxBian=2;
 if(G.player.skills.some(s=>s.key==="bian_up"))maxBian+=1;
-if((G.player.skillUsed.bian||0)>=maxBian)return;
+if((G.player.skillUsed.bian||0)>=maxBian){log('七十二变已达上限','log-system');return}
 var opts=[{label:"降妖",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'sha',ts:Date.now()})}},
 {label:"遁法",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'shan',ts:Date.now()})}},
 {label:"蟠桃",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'tao',ts:Date.now()})}}];
@@ -3204,7 +3205,7 @@ return;
 }
 // sanshiliu: need card type selection
 if(key==='sanshiliu'){
-if((G.player.skillUsed.sanshiliu||0)>=1)return;
+if((G.player.skillUsed.sanshiliu||0)>=1){log('三十六变本回合已使用','log-system');return}
 showResponse("三十六变","选择要变化的锦囊牌类型：",[
 {label:"神通自现",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'sanshiliu',skillParam:'wuzhong',ts:Date.now()})}},
 {label:"拆桥断路",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'sanshiliu',skillParam:'guohe',ts:Date.now()})}},
@@ -5059,8 +5060,8 @@ e.hand.splice(idx,1);
 var st=card.equipSubtype;
 if(st==='weapon'){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=card}
 else if(st==='armor'){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=card}
-else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}else{G.discard.push(card);log('未知装备类型，丢弃','log-system')}
-log(e.name+'装备了'+card.name,'log-enemy');
+else if(st==='mount'){if(card.key==='jiahorse'||card.key==='hualiu'){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}}else{G.discard.push(card);log(e.name+'未知装备类型，丢弃','log-enemy');}
+if(st==='weapon'||st==='armor'||st==='mount'){log(e.name+'装备了'+card.name,'log-enemy');}
 SND.equipSound();
 var fc=showFieldCard(card,'enemy');
 setTimeout(function(){removeFieldCard(fc)},1500);
