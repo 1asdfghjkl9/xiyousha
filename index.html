@@ -2157,6 +2157,7 @@ if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 
 // ==================== 伤害与死亡 ====================
 function damage(target,amount,source){
+if(!target.alive)return;
 // MP: enemy may be a player character (not isEnemy) but still needs buff checks
 const isPC=!target.isEnemy||(G.mpMode&&target===G.enemy);
 // defense buff
@@ -2336,7 +2337,7 @@ log(`金雷劫未触发，传给${G.player.name}`,"log-system");
 }
 }
 renderBattle();
-if(!e.alive||!G.player.alive){checkEnd()}
+if(!e.alive||!G.player.alive){checkEnd();return}
 }
 
 function applyBossStart(e,p){
@@ -2806,8 +2807,8 @@ if(hasCard(e,"juedou")&&e.hand.filter(c=>c.key==="sha").length>=2&&p.hand.filter
 if(hasCard(e,"nanman")&&!hasCard(p,"sha"))return{type:"trick",key:"nanman"};
 if(hasCard(e,"wanjian")&&!hasCard(p,"shan"))return{type:"trick",key:"wanjian"};
 if(hasCard(e,"lebu")&&!p.judge.some(c=>c.key==="lebu"))return{type:"trick",key:"lebu"};
-if(hasCard(e,"shandian")&&!p.judge.some(c=>c.key==="shandian")&&Math.random()<0.5)return{type:"trick",key:"shandian"};
 if(hasCard(e,"jinlei")&&!p.judge.some(c=>c.key==="jinlei")&&Math.random()<0.6)return{type:"trick",key:"jinlei"};
+if(hasCard(e,"shandian")&&!p.judge.some(c=>c.key==="shandian")&&Math.random()<0.5)return{type:"trick",key:"shandian"};
 if(hasCard(e,"shunshou")&&dist(e,p)<=1&&p.hand.length>0)return{type:"trick",key:"shunshou"};
 if(hasCard(e,"huogong")&&p.hand.length>0)return{type:"trick",key:"huogong"};
 if(hasCard(e,"nanman")&&p.hp<=3)return{type:"trick",key:"nanman"};
@@ -4710,9 +4711,9 @@ myJudge:e.judge.map(function(c){return{name:c.name,key:c.key}}),
 mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
-myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,
+myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,myDrawCount:e.drawCount||2,
 myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,myQinglongUsed:!!e._qinglongUsed,myRevived:!!e._revived,
-oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,
+oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,oppDrawCount:p.drawCount||2,
 oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,oppQinglongUsed:!!p._qinglongUsed,oppRevived:!!p._revived,
 myTurn:G.turn==='enemy',
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
@@ -4761,7 +4762,7 @@ equipment:state.myEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.myJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.mySkills||[],
 skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
-_chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,
+_chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,drawCount:state.myDrawCount||2,
 _shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,_qinglongUsed:state.myQinglongUsed||false,_revived:state.myRevived||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
 skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
@@ -4773,7 +4774,7 @@ equipment:state.oppEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.oppSkills||[],
 alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},skillsDef:state.oppSkillsDef?state.oppSkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
-_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,
+_chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,drawCount:state.oppDrawCount||2,
 _shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,_qinglongUsed:state.oppQinglongUsed||false,_revived:state.oppRevived||false,
 };
 G.turn=state.myTurn?'player':'enemy';
@@ -5452,6 +5453,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.4',date:'2026-11-21',items:[
+{tag:'fix',text:'damage()函数入口添加target.alive守卫，防止死亡角色连锁伤害错误传播'},
+{tag:'fix',text:'AI金雷劫决策优先于天雷劫(更优先使用强化版)'},
+{tag:'fix',text:'MP序列化添加drawCount(myDrawCount/oppDrawCount)'},
+{tag:'fix',text:'aiJudgePhase判定后死亡时添加return防止双重mpEndBattle'},
+]},
 {ver:'v2.2.3',date:'2026-11-21',items:[
 {tag:'fix',text:'AI添加金雷劫决策路径(60%概率使用，优先于天雷劫)'},
 {tag:'fix',text:'MP人机模式AI角色技能条件修复——bot模式下角色技能(cibei/xiao/leiting等)恢复正常使用'},
