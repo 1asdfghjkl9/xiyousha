@@ -3382,8 +3382,8 @@ const p=G.player;
 if((p.skillUsed.cibei||0)>=1)return;
 p.skillUsed.cibei=1;
 showResponse("慈悲为怀","选择效果：",[
-{label:"回复1点体力",action:function(){p.hp=Math.min(p.maxHp,p.hp+1);log("慈悲为怀：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();mpSendState();}},
-{label:"摸1张牌",action:function(){const c=drawFromDeck(1);p.hand.push(...c);log("慈悲为怀：摸1张牌","log-player");renderBattle();checkEnd();mpSendState();}},
+{label:"回复1点体力",action:function(){p.hp=Math.min(p.maxHp,p.hp+1);log("慈悲为怀：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();}},
+{label:"摸1张牌",action:function(){const c=drawFromDeck(1);p.hand.push(...c);log("慈悲为怀：摸1张牌","log-player");renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();}},
 ]);
 }
 else if(key==="jingping"){
@@ -5427,6 +5427,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.9',date:'2026-11-21',items:[
+{tag:'fix',text:'修复CSS .vfx-victory-ray linear-gradient缺少右括号导致胜利特效不渲染(BUG-A)'},
+{tag:'fix',text:'cibei回调mpSendState添加标准守卫(代码风格一致性)'},
+]},
 {ver:'v2.1.8',date:'2026-11-21',items:[
 {tag:'fix',text:'统一5处mpSendState调用的标准守卫写法(BUG-001/002/005)'},
 {tag:'fix',text:'移除useSkill xiao case中冗余的const p=G.player,e=G.enemy声明(BUG-003)'},
