@@ -1802,7 +1802,7 @@ const qinggang=source.equipment.weapon&&source.equipment.weapon.key==="qinggang"
 const fangtian=source.equipment.weapon&&source.equipment.weapon.key==="fangtian"&&source.hand.length===0;
 // enemy respond (if target is enemy, AI; if target is player, prompt)
 // MP online: host attacks guest → prompt guest via network
-if(G.mpMode&&G.mpIsHost&&!G.mpBot&&!target.isEnemy&&target===G.enemy){
+if(G.mpMode&&G.mpIsHost&&!G.mpBot&&target===G.enemy){
 G._mpPendingDodge={source:source,card:card,qinggang:qinggang,fangtian:fangtian,jiutou2:hasSk(source,"jiutou2")};
 mpSendState();
 return;
@@ -5453,6 +5453,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.8',date:'2026-11-21',items:[
+{tag:'fix',text:'修复resolveSha行1805条件矛盾——MP主机攻击访客时!target.isEnemy使_mpPendingDodge永远不触发，AI替访客自动闪避。移除!target.isEnemy后访客恢复闪避自主权'},
+]},
 {ver:'v2.2.7',date:'2026-11-21',items:[
 {tag:'fix',text:'applyBossStart中6处伤害路径(heifeng/generic1/baozi/sanxi/mirror等)添加!e.alive检查，防止madu反伤击杀boss后继续执行技能'},
 ]},
