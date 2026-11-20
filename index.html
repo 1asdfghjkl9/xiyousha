@@ -2284,7 +2284,8 @@ setPhase("敌方回合","enemy-turn");
 clearFieldCards();
 renderBattle();
 // play phase
-if(!e.skipPlay){
+if(G._mirrorShaPending){G._mirrorShaPending=false}
+else if(!e.skipPlay){
 setTimeout(()=>aiPlayPhase(e,p),500);
 }else{
 e.skipPlay=false;
@@ -2438,7 +2439,7 @@ const ci=findCard(e,G._lastPlayerCardKey);
 const mc=e.hand.splice(ci,1)[0];G.discard.push(mc);
 log(`六耳猕猴镜像：模仿使用${mc.name}！`,"log-enemy");
 if(mc.key==="sha"&&!e.shaPlayed){
-e.shaPlayed=true;resolveSha(e,p,mc);return;
+e.shaPlayed=true;G._mirrorShaPending=true;setTimeout(function(){promptPlayerDodge(e,mc)},300);return;
 }else if(mc.key==="tao"&&e.hp<e.maxHp){
 e.hp=Math.min(e.maxHp,e.hp+1);log(`${e.name}回复1点体力`,"log-enemy");SND.heal();
 }else if(mc.key==="jiu"){
@@ -4652,7 +4653,7 @@ for(const card of toResolve){
 const jc=drawFromDeck(1)[0];G.discard.push(jc);
 log('判定'+card.name+'：'+jc.suit+jc.rank,'log-system');
 if(card.key==='lebu'){if(jc.suit!=='♥'){e.skipPlay=true;log('迷心劫判定非红桃，'+e.name+'跳过出牌阶段','log-system')}G.discard.push(card)}
-else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,e);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
+else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,null);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
 }
 renderBattle();
 }
@@ -4690,7 +4691,7 @@ myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
 myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,
 myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,myQinglongUsed:!!e._qinglongUsed,myRevived:!!e._revived,
 oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,
-oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,
+oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,oppQinglongUsed:!!p._qinglongUsed,oppRevived:!!p._revived,
 myTurn:G.turn==='enemy',
 oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
 oppHandCount:p.hand.length,
@@ -4751,7 +4752,7 @@ judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?'
 skills:state.oppSkills||[],
 alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},
 _chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,
-_shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,
+_shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,_qinglongUsed:state.oppQinglongUsed||false,_revived:state.oppRevived||false,
 };
 G.turn=state.myTurn?'player':'enemy';
 G.phase=state.phase||'play';
@@ -5427,6 +5428,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.3',date:'2026-11-21',items:[
+{tag:'fix',text:'补充mpSendState/mpRenderState中opp方向_qinglongUsed/_revived序列化(BUG-A)'},
+{tag:'fix',text:'修复mpGuestTurnStart闪电伤害source仍为e的问题，统一为null(BUG-B)'},
+{tag:'fix',text:'六耳猕猴镜像降妖改用promptPlayerDodge替代resolveSha，修复回调缺少continueEnemyTurn和青龙偃月刀检查(BUG-C1/C2)'},
+{tag:'fix',text:'六耳猕猴镜像降妖添加_mirrorShaPending标志，防止aiTurn在玩家响应前继续执行aiPlayPhase(BUG-C3)'},
+]},
 {ver:'v2.1.2',date:'2026-11-21',items:[
 {tag:'fix',text:'补充mpSendState/mpRenderState中opp方向的_qinglongUsed/_revived序列化(BUG-001)'},
 {tag:'fix',text:'统一PvE/MP闪电(天雷劫)伤害source为null，避免铁索连环传递行为不一致(BUG-002)'},
