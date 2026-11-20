@@ -1912,6 +1912,7 @@ showResponse("对手出了降妖！",`${source.name}对你出了降妖。是否�
 ...(mpHasShan?[{label:"出遁法",action:()=>{
 G._mpHostDodging=false;
 const si=findCard(target,"shan");
+if(si<0){renderBattle();if(MP.connected)mpSendState();return}
 const sc=target.hand.splice(si,1)[0];
 G.discard.push(sc);
 log(`${target.name}出了遁法`,"log-player");
@@ -2002,6 +2003,7 @@ if(!qinggang&&!fangtian&&hasCard(target,"shan")){
 showResponse("敌人出了降妖！",`${source.name}对你出了降妖。是否出遁法抵消？`,[
 {label:"出遁法",action:()=>{
 const si=findCard(target,"shan");
+if(si<0)return;
 const sc=target.hand.splice(si,1)[0];
 G.discard.push(sc);
 log(`${target.name}出了遁法`,"log-player");
@@ -2824,7 +2826,7 @@ log(`你出了护身法抵消${e.name}的锦囊`,"log-player");
 cancelled=true;
 }
 }
-if(cancelled)continue;
+if(cancelled){const ti0=findCard(e,key);if(ti0>=0){const c0=e.hand.splice(ti0,1)[0];G.discard.push(c0)}continue;}
 const ti=findCard(e,key);
 const card=e.hand.splice(ti,1)[0];
 if(key!=="lebu"&&key!=="shandian")G.discard.push(card);
@@ -5412,6 +5414,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.7',date:'2026-11-20',items:[
+{tag:'fix',text:'修复resolveSha MP/PvE出遁法路径缺少if(si>=0)守卫的问题(M1/M2)'},
+{tag:'fix',text:'修复aiPlayTrick中护身法取消锦囊时AI手牌未移除的问题'},
+]},
 {ver:'v2.0.6',date:'2026-11-20',items:[
 {tag:'fix',text:'修复sanshiliu(三十六变)技能在无可变化牌时仍消耗技能使用权的问题(BUG-1)'},
 {tag:'fix',text:'修复MP主机使用火眼金睛/天眼通/仙知时访客未收到弹窗通知的问题(BUG-2)'},
