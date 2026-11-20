@@ -2133,7 +2133,7 @@ function resolveHuogong(source,target){
 if(target.hand.length===0){log(`${target.name}没有手牌，火攻无效`,"log-system");return}
 // AI/PMP enemy: auto-play (PvE enemy or MP bot)
 if(target===G.enemy&&(!G.mpMode||G.mpBot)){
-const shown=target.hand[0];
+const shown=target.hand[Math.floor(Math.random()*target.hand.length)];
 log(`${target.name}展示${shown.name}(${shown.suit}${shown.rank})`,"log-enemy");
 const si=source.hand.findIndex(c=>c.suit===shown.suit);
 if(si>=0){const sc=source.hand.splice(si,1)[0];G.discard.push(sc);let dmg=1;if(target.equipment.armor&&target.equipment.armor.key==="tengjia")dmg=2;damage(target,dmg,source);log(`火攻命中！${target.name}受${dmg}点伤害`,"log-damage")}
@@ -2413,11 +2413,7 @@ const dc=p.hand.splice(di,1)[0];G.discard.push(dc);
 log("三昧神风：黄风怪刮走你一张牌！","log-enemy");
 }
 }
-// 白骨精·化尸: death revive handled in checkEnd
-if(e.skills.includes("huapo")&&e.hp<=0&&!e._revived){
-e._revived=true;e.hp=Math.min(e.maxHp,3);e.alive=true;
-log("白骨精化尸大法：复活并恢复3体力！","log-enemy");
-}
+// 白骨精·化尸: death revive handled in checkEnd (dead code removed v2.1.7)
 // 金角大王·紫金葫芦: 每回合30%概率偷你一张牌
 if(e.skills.includes("zijin")){
 if(p.hand.length>0&&Math.random()<0.3){
@@ -3023,9 +3019,9 @@ const canJuanlian=(p.charKey==="shaseng"||p.charKey==="bailong"||p.charKey==="pu
 const canHuntian=(p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.red&&c.key!=="shan");
 const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
-...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
-...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":p.charKey==="puti"?"无相(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":p.charKey==="puti"?"无相":"龙威护体"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
-...(canHuntian?[{label:p.charKey==="leigong"?"遁世(红牌当遁法)":"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="leigong"?"遁世":"混天绫"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
+...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="guanshi"&&enemy.hand.length>=2&&enemy.alive&&p.alive&&(enemy.hand.length>=4||Math.random()<0.5)){for(let g=0;g<2;g++){const gc=enemy.hand.splice(0,1)[0];G.discard.push(gc)}log("贯石斧：弃2牌强制命中！","log-enemy");let gd=1;if(enemy._jiuActive){gd+=1;enemy._jiuActive=false;log("仙酿效果：降妖伤害+1","log-enemy")}if(hasSk(enemy,"manniu"))gd=2;if(hasSk(enemy,"sanmei"))gd=2;if(hasSk(enemy,"huli"))gd+=1;if(enemy._atkBuff)gd+=enemy._atkBuff;if(enemy._shilongActive){gd+=1;enemy._shilongActive=false}if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1)}if(enemy.charKey==="yanwang"&&enemy.hp<=2)gd+=1;if(enemy.charKey==="niulang"&&enemy.hp<=2)gd+=1;if(hasSk(enemy,"jiutou2"))gd=1;if(hasSk(p,"xiniu")&&gd>0){gd=Math.max(0,gd-1);if(gd===0)log("犀角护体抵消","log-system")}if(gd>0){damage(p,gd,enemy);onShaDamage(enemy,p,card)}else{log("伤害被完全抵消","log-system")}renderBattle();if(!p.alive){checkEnd();if(!p.alive)return}continueEnemyTurn();return}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
+...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":p.charKey==="puti"?"无相(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":p.charKey==="puti"?"无相":"龙威护体"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="guanshi"&&enemy.hand.length>=2&&enemy.alive&&p.alive&&(enemy.hand.length>=4||Math.random()<0.5)){for(let g=0;g<2;g++){const gc=enemy.hand.splice(0,1)[0];G.discard.push(gc)}log("贯石斧：弃2牌强制命中！","log-enemy");let gd=1;if(enemy._jiuActive){gd+=1;enemy._jiuActive=false;log("仙酿效果：降妖伤害+1","log-enemy")}if(hasSk(enemy,"manniu"))gd=2;if(hasSk(enemy,"sanmei"))gd=2;if(hasSk(enemy,"huli"))gd+=1;if(enemy._atkBuff)gd+=enemy._atkBuff;if(enemy._shilongActive){gd+=1;enemy._shilongActive=false}if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1)}if(enemy.charKey==="yanwang"&&enemy.hp<=2)gd+=1;if(enemy.charKey==="niulang"&&enemy.hp<=2)gd+=1;if(hasSk(enemy,"jiutou2"))gd=1;if(hasSk(p,"xiniu")&&gd>0){gd=Math.max(0,gd-1);if(gd===0)log("犀角护体抵消","log-system")}if(gd>0){damage(p,gd,enemy);onShaDamage(enemy,p,card)}else{log("伤害被完全抵消","log-system")}renderBattle();if(!p.alive){checkEnd();if(!p.alive)return}continueEnemyTurn();return}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
+...(canHuntian?[{label:p.charKey==="leigong"?"遁世(红牌当遁法)":"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="leigong"?"遁世":"混天绫"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="guanshi"&&enemy.hand.length>=2&&enemy.alive&&p.alive&&(enemy.hand.length>=4||Math.random()<0.5)){for(let g=0;g<2;g++){const gc=enemy.hand.splice(0,1)[0];G.discard.push(gc)}log("贯石斧：弃2牌强制命中！","log-enemy");let gd=1;if(enemy._jiuActive){gd+=1;enemy._jiuActive=false;log("仙酿效果：降妖伤害+1","log-enemy")}if(hasSk(enemy,"manniu"))gd=2;if(hasSk(enemy,"sanmei"))gd=2;if(hasSk(enemy,"huli"))gd+=1;if(enemy._atkBuff)gd+=enemy._atkBuff;if(enemy._shilongActive){gd+=1;enemy._shilongActive=false}if(!enemy.isEnemy||(G.mpMode&&enemy===G.enemy)){const jinbaoSk=enemy.skills.find(s=>s.key==="jinbao");if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=enemy.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1)}if(enemy.charKey==="yanwang"&&enemy.hp<=2)gd+=1;if(enemy.charKey==="niulang"&&enemy.hp<=2)gd+=1;if(hasSk(enemy,"jiutou2"))gd=1;if(hasSk(p,"xiniu")&&gd>0){gd=Math.max(0,gd-1);if(gd===0)log("犀角护体抵消","log-system")}if(gd>0){damage(p,gd,enemy);onShaDamage(enemy,p,card)}else{log("伤害被完全抵消","log-system")}renderBattle();if(!p.alive){checkEnd();if(!p.alive)return}continueEnemyTurn();return}renderBattle();if(!enemy.alive){checkEnd();if(!enemy.alive)return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
 if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="fangtian"&&enemy.hand.length===0){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
@@ -4701,7 +4697,7 @@ oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
 oppHandCount:p.hand.length,
 oppEquips:JSON.parse(JSON.stringify(p.equipment)),
 oppJudge:p.judge.map(function(c){return{name:c.name,key:c.key}}),
-oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],oppShaPlayed:p.shaPlayed,oppSkillUsed:p.skillUsed||{},
+oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],oppSkillsDef:p.skillsDef?p.skillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,oppShaPlayed:p.shaPlayed,oppSkillUsed:p.skillUsed||{},
 phase:G.phase,
 logs:G.log.slice(-12).map(function(l){
 // Convert host-perspective logs to guest perspective
@@ -4750,11 +4746,11 @@ skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,n
 };
 G.enemy={
 hp:state.oppHp,maxHp:state.oppMaxHp,name:state.oppName,
-hand:new Array(state.oppHandCount||0).fill({key:'unknown',name:'?',suit:'?',rank:'?',red:false,cls:'',type:'unknown',desc:''}),
+hand:Array.from({length:state.oppHandCount||0},function(){return{key:'unknown',name:'?',suit:'?',rank:'?',red:false,cls:'',type:'unknown',desc:''}}),
 equipment:state.oppEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.oppSkills||[],
-alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},
+alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},skillsDef:state.oppSkillsDef?state.oppSkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
 _chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,
 _shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,_qinglongUsed:state.oppQinglongUsed||false,_revived:state.oppRevived||false,
 };
@@ -4762,7 +4758,7 @@ G.turn=state.myTurn?'player':'enemy';
 G.phase=state.phase||'play';
 G.log=state.logs||[];
 G.awaitingResponse=null;
-G.deck=new Array(state.deckCount||0).fill({});
+G.deck=Array.from({length:state.deckCount||0},function(){return{}});
 G.discard=[];
 renderBattle();
 renderLog();
@@ -4828,7 +4824,7 @@ var e=G.enemy,p=G.player;
 var _guanshiCheck=function(){
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='guanshi'&&dodge.source.hand.length>=2&&dodge.source.alive&&e.alive){
 showResponse("贯石斧",e.name+'已闪避！弃2牌强命中？',[
-{label:"弃2牌强命中",action:function(){for(var g=0;g<2;g++){var gc=dodge.source.hand.splice(0,1)[0];G.discard.push(gc)}log('贯石斧：弃2牌强制命中！','log-player');var gd=1;if(dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='fangtian'&&dodge.source.hand.length===0){gd+=1;log('方天画戟：最后一击伤害+1','log-player')}if(dodge.source._jiuActive){gd+=1;dodge.source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}if(hasSk(dodge.source,'manniu'))gd=2;if(hasSk(dodge.source,'sanmei'))gd=2;if(hasSk(dodge.source,'huli'))gd+=1;if(dodge.source.skills&&(!dodge.source.isEnemy||(G.mpMode&&dodge.source===G.enemy))){var jinbaoSk=dodge.source.skills.find(function(s){return s.key==='jinbao'});if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);var tpSk=dodge.source.skills.find(function(s){return s.key==='tianpeng_up'});if(tpSk&&dodge.card&&dodge.card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(dodge.source._atkBuff)gd+=dodge.source._atkBuff;if(dodge.source._shilongActive){gd+=1;dodge.source._shilongActive=false}if(dodge.source.charKey==='yanwang'&&dodge.source.hp<=2)gd+=1;if(dodge.source.charKey==='niulang'&&dodge.source.hp<=2)gd+=1;if(hasSk(dodge.source,'jiutou2'))gd=1;if(hasSk(e,'xiniu')&&gd>0){gd=Math.max(0,gd-1);if(gd===0)log('犀角护体抵消','log-system')}if(gd>0){damage(e,gd,dodge.source);onShaDamage(dodge.source,e,dodge.card)}else{log('伤害被完全抵消','log-system')}renderBattle();checkEnd();mpSendState()}},
+{label:"弃2牌强命中",action:function(){for(var g=0;g<2;g++){var gc=dodge.source.hand.splice(0,1)[0];G.discard.push(gc)}log('贯石斧：弃2牌强制命中！','log-player');var gd=1;if(dodge.source._jiuActive){gd+=1;dodge.source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}if(hasSk(dodge.source,'manniu'))gd=2;if(hasSk(dodge.source,'sanmei'))gd=2;if(hasSk(dodge.source,'huli'))gd+=1;if(dodge.source.skills&&(!dodge.source.isEnemy||(G.mpMode&&dodge.source===G.enemy))){var jinbaoSk=dodge.source.skills.find(function(s){return s.key==='jinbao'});if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);var tpSk=dodge.source.skills.find(function(s){return s.key==='tianpeng_up'});if(tpSk&&dodge.card&&dodge.card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(dodge.source._atkBuff)gd+=dodge.source._atkBuff;if(dodge.source._shilongActive){gd+=1;dodge.source._shilongActive=false}if(dodge.source.charKey==='yanwang'&&dodge.source.hp<=2)gd+=1;if(dodge.source.charKey==='niulang'&&dodge.source.hp<=2)gd+=1;if(hasSk(dodge.source,'jiutou2'))gd=1;if(hasSk(e,'xiniu')&&gd>0){gd=Math.max(0,gd-1);if(gd===0)log('犀角护体抵消','log-system')}if(gd>0){damage(e,gd,dodge.source);onShaDamage(dodge.source,e,dodge.card)}else{log('伤害被完全抵消','log-system')}renderBattle();checkEnd();mpSendState()}},
 {label:"放弃",action:function(){renderBattle();mpSendState()}}
 ]);return true;
 }
@@ -5433,6 +5429,14 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.7',date:'2026-11-21',items:[
+{tag:'fix',text:'修复PvE/MP-bot中敌方贯石斧在玩家闪避后不触发——添加AI决策逻辑(手牌≥4必用,≥2时50%概率)(NEW-001)'},
+{tag:'fix',text:'修复火攻PvE展示敌方第一张手牌而非随机牌(NEW-002)'},
+{tag:'fix',text:'mpSendState添加oppSkillsDef序列化,mpRenderState G.enemy添加skillsDef(NEW-003)'},
+{tag:'fix',text:'移除applyBossStart中huapo复活死代码(NEW-004)'},
+{tag:'fix',text:'mpRenderState使用Array.from替代Array.fill({})消除共享引用(NEW-005)'},
+{tag:'fix',text:'移除mpHandleGuestDodge _guanshiCheck中不可达的fangtian检查(NEW-006)'},
+]},
 {ver:'v2.1.6',date:'2026-11-21',items:[
 {tag:'fix',text:'修复MP在线模式访客贯石斧无法触发"弃2牌强命中"效果——在主机闪避路径3个回调中添加_mpGuanshi检查(BUG-001)'},
 {tag:'fix',text:'continueEnemyTurn添加case"skill"的renderBattle调用，修复AI技能步骤视觉不同步(BUG-002)'},
