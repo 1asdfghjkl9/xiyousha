@@ -1722,7 +1722,7 @@ if(e._luohanActive){
 e._luohanActive=false;
 log(`罗汉金身抵消了${card.name}！`,"log-enemy");
 SND.skill();
-renderBattle();mpSendState();
+renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 return;
 }
 log(`${p.name}出了${card.name}`,"log-player");
@@ -1950,7 +1950,6 @@ else{G._mpHostDodging=false;renderBattle();if(MP.connected)mpSendState();}
 {label:"受到伤害",danger:true,action:()=>{
 G._mpHostDodging=false;
 let dmg=1;
-if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
@@ -3408,7 +3407,6 @@ log("二郎神使用天眼通查看敌方手牌","log-player");
 if(G.mpMode){G._mpSkillInfo='对手查看你的手牌: '+cards;G._mpSkillTitle='天眼通'}
 }
 else if(key==="xiao"){
-const p=G.player,e=G.enemy;
 if((p.skillUsed.xiao||0)>=1)return;
 if(p.hand.length<1){log("手牌不足","log-system");return}
 p.skillUsed.xiao=1;
@@ -3609,7 +3607,7 @@ const def=CARD_DEF[targetKey];
 const newCard={id:old.id,key:targetKey,name:def.n,type:"trick",suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:"trick"};
 p.hand[idx]=newCard;
 log(`三十六变：将${old.name}变为${newCard.name}`,"log-player");
-renderBattle();mpSendState();
+renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 }
 function doBian(targetKey){
 const p=G.player;
@@ -3628,7 +3626,7 @@ newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,sui
 p.hand[idx]=newCard;
 p.skillUsed.bian=(p.skillUsed.bian||0)+1;
 log(`七十二变：将${old.name}变为${newCard.name}`,"log-player");
-renderBattle();mpSendState();
+renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 }
 
 // ==================== 关卡流程 ====================
@@ -4939,7 +4937,7 @@ if(G.awaitingResponse||G._mpHostDodging){renderBattle();checkEnd();if(G.mpMode&&
 renderBattle();checkEnd();
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
 }else if(card.key==='tao'){
-if(e.hp>=e.maxHp){mpSendState();return}
+if(e.hp>=e.maxHp){checkEnd();mpSendState();return}
 e.hand.splice(idx,1);G.discard.push(card);
 var heal=1;
 if(hasSk(e,'foen')&&!(e.skillUsed.foen>0)){heal=2;e.skillUsed.foen=1}
@@ -4970,7 +4968,7 @@ p._luohanActive=false;
 e.hand.splice(idx,1);G.discard.push(card);
 log('罗汉金身抵消了'+card.name+'！','log-player');
 SND.skill();
-renderBattle();mpSendState();
+renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 return;
 }
 // player wuxie choice
@@ -5292,7 +5290,7 @@ SND.heal();fxHeal('enemy');
 if(e.hand.length>e.hp){
 G._mpDiscardNeed=e.hand.length-e.hp;
 setPhase(e.name+'弃牌阶段','discard');
-renderBattle();mpSendState();
+renderBattle();if(G.mpMode&&G.mpIsHost&&MP.connected&&!G.mpBot)mpSendState();
 return;
 }
 mpFinishEnemyTurn();
@@ -5429,6 +5427,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.8',date:'2026-11-21',items:[
+{tag:'fix',text:'统一5处mpSendState调用的标准守卫写法(BUG-001/002/005)'},
+{tag:'fix',text:'移除useSkill xiao case中冗余的const p=G.player,e=G.enemy声明(BUG-003)'},
+{tag:'fix',text:'mpEnemyPlayBasic tao满血拒绝时添加checkEnd调用保持一致性(BUG-004)'},
+{tag:'fix',text:'移除resolveSha MP主机闪避路径"受到伤害"回调中不可达的fangtian检查(BUG-006)'},
+]},
 {ver:'v2.1.7',date:'2026-11-21',items:[
 {tag:'fix',text:'修复PvE/MP-bot中敌方贯石斧在玩家闪避后不触发——添加AI决策逻辑(手牌≥4必用,≥2时50%概率)(NEW-001)'},
 {tag:'fix',text:'修复火攻PvE展示敌方第一张手牌而非随机牌(NEW-002)'},
