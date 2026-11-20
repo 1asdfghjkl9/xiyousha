@@ -1800,7 +1800,7 @@ const fangtian=source.equipment.weapon&&source.equipment.weapon.key==="fangtian"
 // enemy respond (if target is enemy, AI; if target is player, prompt)
 // MP online: host attacks guest → prompt guest via network
 if(G.mpMode&&G.mpIsHost&&!G.mpBot&&!target.isEnemy&&target===G.enemy){
-G._mpPendingDodge={source:source,card:card,qinggang:qinggang,fangtian:fangtian};
+G._mpPendingDodge={source:source,card:card,qinggang:qinggang,fangtian:fangtian,jiutou2:hasSk(source,"jiutou2")};
 mpSendState();
 return;
 }
@@ -4691,7 +4691,7 @@ deckCount:G.deck.length,
 mpChar:MP.myChar,
 };
 if(G._mpPendingDodge){
-state.prompt={type:'dodge',sourceName:p.name,hasShan:hasCard(e,'shan'),qinggang:G._mpPendingDodge.qinggang,fangtian:G._mpPendingDodge.fangtian};
+state.prompt={type:'dodge',sourceName:p.name,hasShan:hasCard(e,'shan'),qinggang:G._mpPendingDodge.qinggang,fangtian:G._mpPendingDodge.fangtian,jiutou2:G._mpPendingDodge.jiutou2};
 }
 if(G._mpDiscardNeed){
 state.discardNeed=G._mpDiscardNeed;
@@ -4747,7 +4747,7 @@ renderHand();
 
 function mpShowGuestDodge(prompt){
 hideResponse();
-var noDodge=prompt.qinggang||prompt.fangtian;
+var noDodge=prompt.qinggang||prompt.fangtian||prompt.jiutou2;
 var hasShan=!noDodge&&G.player.hand.some(function(c){return c.key==='shan'});
 var canJuanlian=!noDodge&&(G.player.charKey==='shaseng'||G.player.charKey==='bailong'||G.player.charKey==='puti')&&G.player.hand.some(function(c){return !c.red&&c.key!=='shan'});
 var canHuntian=!noDodge&&(G.player.charKey==='nezha'||G.player.charKey==='leigong')&&G.player.hand.some(function(c){return c.red&&c.key!=='shan'});
@@ -4774,7 +4774,7 @@ btns.push({label:'受到伤害',danger:true,action:function(){
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_dodge',id:MP.myId,useShan:false,ts:Date.now()});
 hideResponse();
 }});
-var dodgeDesc=noDodge?(prompt.qinggang?'青釭剑：遁法无效！':'方天画戟：遁法无效！'):'';
+var dodgeDesc=noDodge?(prompt.qinggang?'青釭剑：遁法无效！':prompt.fangtian?'方天画戟：遁法无效！':'圣威：遁法无效！'):'';
 showResponse('防御',prompt.sourceName+'对你出了降妖！'+(noDodge?' '+dodgeDesc:'')+' 是否出遁法？',btns);
 }
 
@@ -5409,6 +5409,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.7',date:'2026-11-20',items:[
+{tag:'fix',text:'修复MP联机模式下九头狮子圣威(jiutou2)不可闪避效果未传递给访客端的问题，访客会看到闪避选项但实际无效'},
+]},
 {ver:'v1.9.6',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge最终else分支(青釭剑/方天画戟/九头狮子无法闪避)缺少jinbao/tianpeng_up伤害加成的问题'},
 {tag:'fix',text:'修复mpEnemyPlayBasic未处理jiu(仙酿)卡牌导致访客打出仙酿无效且双方手牌不同步的问题'},
