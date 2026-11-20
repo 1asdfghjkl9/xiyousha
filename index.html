@@ -1923,10 +1923,10 @@ if(source.equipment.weapon&&source.equipment.weapon.key==="qinglong"&&!source._q
 renderBattle();checkEnd();
 if(MP.connected)mpSendState();
 }}]:[]),
-...(mpCanJuanlian?[{label:target.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{
+...(mpCanJuanlian?[{label:target.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":target.charKey==="puti"?"无相(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{
 G._mpHostDodging=false;
 const ji=target.hand.findIndex(c=>!c.red&&c.key!=="shan");
-if(ji>=0){const jc=target.hand.splice(ji,1)[0];G.discard.push(jc);log(`${target.charKey==="shaseng"?"卷帘之盾":"龙威护体"}：将${jc.name}当遁法`,"log-player");SND.cardDodge();
+if(ji>=0){const jc=target.hand.splice(ji,1)[0];G.discard.push(jc);log(`${target.charKey==="shaseng"?"卷帘之盾":target.charKey==="puti"?"无相":"龙威护体"}：将${jc.name}当遁法`,"log-player");SND.cardDodge();
 if(target.equipment.weapon&&target.equipment.weapon.key==="yinyue"&&target.hand.length>0&&source.alive){const yc=target.hand.splice(0,1)[0];G.discard.push(yc);damage(source,1,target);log(`银月枪：弃1牌对${source.name}造成1伤`,"log-player")}
 if(source.equipment.weapon&&source.equipment.weapon.key==="qinglong"&&!source._qinglongUsed){source._qinglongUsed=true;source.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}
 renderBattle();checkEnd();if(MP.connected)mpSendState();}
@@ -1942,7 +1942,7 @@ renderBattle();checkEnd();if(MP.connected)mpSendState();}
 {label:"受到伤害",danger:true,action:()=>{
 G._mpHostDodging=false;
 let dmg=1;
-if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
+if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
@@ -2012,7 +2012,7 @@ renderBattle();checkEnd();
 }},
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
-if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
+if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
@@ -2038,7 +2038,7 @@ renderBattle();checkEnd();
 ]);
 }else{
 let dmg=1;
-if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-player')}
+if(fangtian){dmg+=1;log('方天画戟：最后一击伤害+1','log-enemy')}
 if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
@@ -3004,7 +3004,7 @@ const canHuntian=(p.charKey==="nezha"||p.charKey==="leigong")&&p.hand.some(c=>c.
 const hasShan=hasCard(p,"shan");
 showResponse("防御",`${enemy.name}对你出了降妖！是否出遁法？`,[
 ...(hasShan?[{label:"出遁法",action:()=>{const si=findCard(p,"shan");if(si>=0){const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log("你出了遁法","log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();return}continueEnemyTurn()}else{continueEnemyTurn()}}}]:[]),
-...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":"龙威护体"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();return}continueEnemyTurn()}}}]:[]),
+...(canJuanlian?[{label:p.charKey==="shaseng"?"卷帘之盾(黑牌当遁法)":p.charKey==="puti"?"无相(黑牌当遁法)":"龙威护体(黑牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>!c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="shaseng"?"卷帘之盾":p.charKey==="puti"?"无相":"龙威护体"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();return}continueEnemyTurn()}}}]:[]),
 ...(canHuntian?[{label:p.charKey==="leigong"?"遁世(红牌当遁法)":"混天绫(红牌当遁法)",action:()=>{const ji=p.hand.findIndex(c=>c.red&&c.key!=="shan");if(ji>=0){const jc=p.hand.splice(ji,1)[0];G.discard.push(jc);log(`${p.charKey==="leigong"?"遁世":"混天绫"}：将${jc.name}当遁法`,"log-player");if(p.equipment.weapon&&p.equipment.weapon.key==="yinyue"&&p.hand.length>0&&enemy.alive){const yc=p.hand.splice(0,1)[0];G.discard.push(yc);damage(enemy,1,p);log(`银月枪：弃1牌对${enemy.name}造成1伤`,"log-player")}if(enemy.equipment.weapon&&enemy.equipment.weapon.key==="qinglong"&&!enemy._qinglongUsed){enemy._qinglongUsed=true;enemy.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}renderBattle();if(!enemy.alive){checkEnd();return}continueEnemyTurn()}}}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 let dmg=1;
@@ -4753,7 +4753,7 @@ hideResponse();
 }});
 }
 if(canJuanlian){
-btns.push({label:G.player.charKey==='shaseng'?'卷帘之盾(黑牌当遁法)':'龙威护体(黑牌当遁法)',action:function(){
+btns.push({label:G.player.charKey==='shaseng'?'卷帘之盾(黑牌当遁法)':G.player.charKey==='puti'?'无相(黑牌当遁法)':'龙威护体(黑牌当遁法)',action:function(){
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_dodge',id:MP.myId,useShan:true,juanlian:true,ts:Date.now()});
 hideResponse();
 }});
@@ -4792,7 +4792,7 @@ if(msg.juanlian&&(e.charKey==='shaseng'||e.charKey==='bailong'||e.charKey==='put
 var ji=e.hand.findIndex(function(c){return !c.red&&c.key!=='shan'});
 if(ji>=0){
 var jc=e.hand.splice(ji,1)[0];G.discard.push(jc);
-log(e.name+(e.charKey==='shaseng'?'卷帘之盾':'龙威护体')+'：将'+jc.name+'当遁法','log-enemy');
+log(e.name+(e.charKey==='shaseng'?'卷帘之盾':e.charKey==='puti'?'无相':'龙威护体')+'：将'+jc.name+'当遁法','log-enemy');
 SND.cardDodge();
 if(e.equipment.weapon&&e.equipment.weapon.key==='yinyue'&&e.hand.length>0&&p.alive){var yc=e.hand.splice(0,1)[0];G.discard.push(yc);damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy')}
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
@@ -5403,6 +5403,8 @@ const CHANGELOG=[
 {tag:'fix',text:'修复aiEndTurn在MP人机模式下缺少猪八戒贪食(tanshi)被动技能的问题'},
 {tag:'fix',text:'修复MP访客点击被动技能时无响应的问题，改为本地显示描述'},
 {tag:'fix',text:'修复huoyan(火眼金睛)在useSkill和mpEnemyUseSkill中未检查huoyan_up(火眼精进)额外使用次数的问题'},
+{tag:'fix',text:'修复3条敌方攻击路径中方天画戟伤害日志颜色错误(log-player应为log-enemy)的问题'},
+{tag:'fix',text:'修复菩提祖师无相技能在4处闪避路径中标签显示为龙威护体的问题'},
 ]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
