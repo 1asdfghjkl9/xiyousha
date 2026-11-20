@@ -1721,7 +1721,7 @@ if(e._luohanActive){
 e._luohanActive=false;
 log(`罗汉金身抵消了${card.name}！`,"log-enemy");
 SND.skill();
-renderBattle();
+renderBattle();mpSendState();
 return;
 }
 log(`${p.name}出了${card.name}`,"log-player");
@@ -1930,6 +1930,7 @@ if(ji>=0){const jc=target.hand.splice(ji,1)[0];G.discard.push(jc);log(`${target.
 if(target.equipment.weapon&&target.equipment.weapon.key==="yinyue"&&target.hand.length>0&&source.alive){const yc=target.hand.splice(0,1)[0];G.discard.push(yc);damage(source,1,target);log(`银月枪：弃1牌对${source.name}造成1伤`,"log-player")}
 if(source.equipment.weapon&&source.equipment.weapon.key==="qinglong"&&!source._qinglongUsed){source._qinglongUsed=true;source.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}
 renderBattle();checkEnd();if(MP.connected)mpSendState();}
+else{G._mpHostDodging=false;renderBattle();if(MP.connected)mpSendState();}
 }}]:[]),
 ...(mpCanHuntian?[{label:target.charKey==="leigong"?"遁世(红牌当遁法)":"混天绫(红牌当遁法)",action:()=>{
 G._mpHostDodging=false;
@@ -1938,6 +1939,7 @@ if(hi>=0){const hc=target.hand.splice(hi,1)[0];G.discard.push(hc);log(`${target.
 if(target.equipment.weapon&&target.equipment.weapon.key==="yinyue"&&target.hand.length>0&&source.alive){const yc=target.hand.splice(0,1)[0];G.discard.push(yc);damage(source,1,target);log(`银月枪：弃1牌对${source.name}造成1伤`,"log-player")}
 if(source.equipment.weapon&&source.equipment.weapon.key==="qinglong"&&!source._qinglongUsed){source._qinglongUsed=true;source.shaPlayed=false;log("青龙偃月刀：可再出一张降妖","log-enemy")}
 renderBattle();checkEnd();if(MP.connected)mpSendState();}
+else{G._mpHostDodging=false;renderBattle();if(MP.connected)mpSendState();}
 }}]:[]),
 {label:"受到伤害",danger:true,action:()=>{
 G._mpHostDodging=false;
@@ -2261,7 +2263,7 @@ aiJudgePhase(e);
 if(!e.alive||!p.alive)return;
 // boss passive skills
 applyBossStart(e,p);
-if(!e.alive||!p.alive){checkEnd();return}
+if(!e.alive||!p.alive){checkEnd();if(!e.alive||!p.alive)return}
 const drawN=e.drawCount+(e.drawBonus||0)+(e._extraDraw||0);
 let extraDrawSkill=0;
 if(e.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
@@ -2737,14 +2739,13 @@ renderBattle();
 break;
 }
 }
-if(!e.alive||!p.alive){checkEnd();return}
+if(!e.alive||!p.alive){checkEnd();if(!e.alive||!p.alive)return}
 setTimeout(()=>aiEndTurn(),500);
 }
 
 function aiDecide(e,p){
 // AI skill usage for new characters
 if(e.charKey&&!e.isEnemy===false||e.charKey&&G.level!=='MP'){
-const sk=e.skills||[];
 // heal when low
 if(e.hp<=2){
 if(e.charKey==='guanyin'&&!(e.skillUsed.cibei>0)){e.skillUsed.cibei=1;e.hp=Math.min(e.maxHp,e.hp+1);log(e.name+'慈悲为怀：回1血','log-heal');SND.heal();fxHeal('enemy');return{type:'skill',key:'cibei'}}
@@ -2909,7 +2910,7 @@ G.discard.push(card);
 }
 }
 renderBattle();
-if(!p.alive||!e.alive){checkEnd();return}
+if(!p.alive||!e.alive){checkEnd();if(!p.alive||!e.alive)return}
 }
 // draw phase
 const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
@@ -4643,7 +4644,7 @@ for(const card of toResolve){
 const jc=drawFromDeck(1)[0];G.discard.push(jc);
 log('判定'+card.name+'：'+jc.suit+jc.rank,'log-system');
 if(card.key==='lebu'){if(jc.suit!=='♥'){e.skipPlay=true;log('迷心劫判定非红桃，'+e.name+'跳过出牌阶段','log-system')}G.discard.push(card)}
-else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,e);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
+else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseInt(jc.rank)<=9){damage(e,2,e);log('天雷劫触发，'+e.name+'受2伤','log-damage');G.discard.push(card);if(!e.alive||!p.alive){renderBattle();checkEnd();if(!e.alive||!p.alive)return}}else{p.judge.push(card);log('天雷劫传给你','log-system')}}
 }
 renderBattle();
 }
@@ -5406,6 +5407,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.3',date:'2026-11-20',items:[
+{tag:'fix',text:'修复playerTurnStart/mpGuestTurnStart/aiTurn/aiPlayPhase中天雷劫后checkEnd()触发fusheng复生但仍return跳过后续阶段导致游戏卡死的问题(M1/M2)'},
+{tag:'fix',text:'修复resolveSha MP主机防御路径中卷帘/混天绫回调缺少else fallback的问题(M3)'},
+{tag:'fix',text:'修复playTrick中罗汉金身抵消锦囊后未调用mpSendState()的问题(L5)'},
+{tag:'fix',text:'清理aiDecide中未使用的变量sk(L1)'},
+]},
 {ver:'v2.0.2',date:'2026-11-20',items:[
 {tag:'fix',text:'修复mpHandleGuestDodge中卷帘(juanlian)成功路径缺少return导致可能错误消耗额外闪牌的问题(M1)'},
 {tag:'fix',text:'修复mpEnemyUseSkill中火眼/天眼/先知三个技能自定义MP.publish缺少16个状态字段的问题(M2)，改为通过mpSendState()统一发送完整状态'},
