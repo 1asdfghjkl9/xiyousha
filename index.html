@@ -5037,10 +5037,8 @@ case'guohe':if(p.equipment.weapon){var w=p.equipment.weapon;p.equipment.weapon=n
 case'shunshou':if(dist(e,p)<=1&&p.hand.length>0){var si2=Math.floor(Math.random()*p.hand.length);var stolen=p.hand.splice(si2,1)[0];e.hand.push(stolen);log(e.name+'顺手牵走你一张牌','log-enemy')}break;
 case'nanman':if(hasCard(p,'sha')){var si3=findCard(p,'sha');var sc=p.hand.splice(si3,1)[0];G.discard.push(sc);log('你出了降妖抵挡群妖来袭','log-player')}else if(p.equipment.armor&&p.equipment.armor.key==='tengjia'){log('藤甲免疫群妖来袭','log-system')}else{damage(p,1,e);log('你受群妖来袭1伤','log-damage')}break;
 case'wanjian':var dodged=false;if(p.equipment.armor&&p.equipment.armor.key==='tengjia'){log('藤甲免疫万箭穿云','log-system');dodged=true}else if(p.equipment.armor&&p.equipment.armor.key==='bagua'){var jc=drawFromDeck(1)[0];G.discard.push(jc);if(jc.red){dodged=true}}if(!dodged&&hasCard(p,'shan')){var si4=findCard(p,'shan');var sc2=p.hand.splice(si4,1)[0];G.discard.push(sc2);log('你出了遁法抵挡万箭穿云','log-player');dodged=true}if(!dodged){damage(p,1,e);log('你受万箭穿云1伤','log-damage')}break;
-case'taoyuan':p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log('结义同行，双方各回1体力','log-heal');break;
 case'jiedao':if(p.equipment.weapon){var w2=p.equipment.weapon;G.discard.push(w2);p.equipment.weapon=null;log('你的武器被借刀杀人之计拆除','log-enemy')}else{damage(p,1,e);log('你无武器，受1伤','log-damage')}break;
 case'juedou':resolveDuel(e,p);break;
-case'wugu':var c1=drawFromDeck(1)[0];var c2=drawFromDeck(1)[0];e.hand.push(c1);p.hand.push(c2);log('仙果普降，双方各得1牌','log-heal');break;
 case'lebu':p.judge.push(card);log('你被施放迷心劫','log-enemy');break;
 case'shandian':p.judge.push(card);log('你被施放天雷劫','log-enemy');break;
 case'jinlei':p.judge.push(card);log('你被施放金雷劫','log-enemy');break;
@@ -5339,6 +5337,7 @@ G._mpDiscardNeed--;
 if(G._mpDiscardNeed<=0){
 G._mpDiscardNeed=null;
 mpFinishEnemyTurn();
+return;
 }
 }
 renderBattle();mpSendState();
@@ -5459,6 +5458,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.0',date:'2026-11-21',items:[
+{tag:'fix',text:'移除mpEnemyPlayTrickContinue中taoyuan/wugu重复case(死代码)'},
+{tag:'fix',text:'mpEnemyDiscard弃牌完成调用mpFinishEnemyTurn后添加return，消除冗余mpSendState双发'},
+]},
 {ver:'v2.2.9',date:'2026-11-21',items:[
 {tag:'fix',text:'AI添加taoyuan(结义同行)和wugu(仙果普降)锦囊决策路径和执行case'},
 {tag:'fix',text:'aiPlayTrick和mpEnemyPlayTrickContinue添加taoyuan/wugu case处理'},
