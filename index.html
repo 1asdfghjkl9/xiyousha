@@ -1741,7 +1741,7 @@ case"juedou":resolveDuel(p,e);break;
 case"wugu":const c1=drawFromDeck(1)[0];const c2=drawFromDeck(1)[0];p.hand.push(c1);e.hand.push(c2);log(`仙果普降，双方各得1牌`,"log-heal");break;
 case"huogong":resolveHuogong(p,e);break;
 case"tiesuo":if(e._chained){e._chained=false;log(`${e.name}解除连环`,"log-system")}else{e._chained=true;log(`${e.name}被连环`,"log-system")}break;
-case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.splice(idx,0,card);G.discard.pop();break;
+case"wuxie":log("护身法需要响应锦囊时使用","log-system");p.hand.splice(idx,0,card);G.discard.pop();G._lastPlayerCardKey=null;break;
 }
 renderBattle();
 checkEnd();
@@ -2070,6 +2070,7 @@ log(`寒冰剑：${target.name}弃2牌代替伤害`,"log-system");
 }
 
 function onShaDamage(source,target,card){
+if(!target.alive)return;
 // cixiong: target discards
 if(source.equipment.weapon&&source.equipment.weapon.key==="cixiong"&&target.hand.length>0){
 const di=Math.floor(Math.random()*target.hand.length);
@@ -4687,7 +4688,7 @@ mySkills:e.skills?e.skills.map(function(s){return{key:s.key,name:s.name}}):[],
 mySkillsDef:e.skillsDef?e.skillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):[],
 myShaPlayed:e.shaPlayed,mySkillUsed:e.skillUsed||{},
 myChained:!!e._chained,myJiu:!!e._jiuActive,myAtkBuff:e._atkBuff||0,myDefBuff:e._defBuff||0,
-myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,
+myShilong:!!e._shilongActive,myShenbing:!!e._shenbingActive,myLuohan:!!e._luohanActive,myTiedan:!!e._tiedanActive,myQinglongUsed:!!e._qinglongUsed,myRevived:!!e._revived,
 oppChained:!!p._chained,oppJiu:!!p._jiuActive,oppAtkBuff:p._atkBuff||0,oppDefBuff:p._defBuff||0,
 oppShilong:!!p._shilongActive,oppShenbing:!!p._shenbingActive,oppLuohan:!!p._luohanActive,oppTiedan:!!p._tiedanActive,
 myTurn:G.turn==='enemy',
@@ -4695,7 +4696,7 @@ oppHp:p.hp,oppMaxHp:p.maxHp,oppName:p.name,
 oppHandCount:p.hand.length,
 oppEquips:JSON.parse(JSON.stringify(p.equipment)),
 oppJudge:p.judge.map(function(c){return{name:c.name,key:c.key}}),
-oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],
+oppSkills:p.skills?p.skills.map(function(s){return{key:s.key,name:s.name}}):[],oppShaPlayed:p.shaPlayed,oppSkillUsed:p.skillUsed||{},
 phase:G.phase,
 logs:G.log.slice(-12).map(function(l){
 // Convert host-perspective logs to guest perspective
@@ -4738,7 +4739,7 @@ judge:(state.myJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',
 skills:state.mySkills||[],
 skillUsed:state.mySkillUsed||{},shaPlayed:state.myShaPlayed||false,
 _chained:state.myChained||false,_jiuActive:state.myJiu||false,_atkBuff:state.myAtkBuff||0,_defBuff:state.myDefBuff||0,
-_shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,
+_shilongActive:state.myShilong||false,_shenbingActive:state.myShenbing||false,_luohanActive:state.myLuohan||false,_tiedanActive:state.myTiedan||false,_qinglongUsed:state.myQinglongUsed||false,_revived:state.myRevived||false,
 alive:state.myHp>0,charKey:MP.myChar||state.mpChar,isEnemy:false,
 skillsDef:state.mySkillsDef?state.mySkillsDef.map(function(s){return{key:s.key,name:s.name,desc:s.desc||'',perTurn:s.perTurn}}):null,
 };
@@ -4748,7 +4749,7 @@ hand:new Array(state.oppHandCount||0).fill({key:'unknown',name:'?',suit:'?',rank
 equipment:state.oppEquips||{weapon:null,armor:null,mount:null,defMount:null},
 judge:(state.oppJudge||[]).map(function(c){return{name:c.name,key:c.key,suit:'?',rank:'?',red:false,cls:'',desc:''}}),
 skills:state.oppSkills||[],
-alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,
+alive:state.oppHp>0,isEnemy:true,charKey:MP.oppChar,shaPlayed:state.oppShaPlayed||false,skillUsed:state.oppSkillUsed||{},
 _chained:state.oppChained||false,_jiuActive:state.oppJiu||false,_atkBuff:state.oppAtkBuff||0,_defBuff:state.oppDefBuff||0,
 _shilongActive:state.oppShilong||false,_shenbingActive:state.oppShenbing||false,_luohanActive:state.oppLuohan||false,_tiedanActive:state.oppTiedan||false,
 };
@@ -5426,6 +5427,13 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.1',date:'2026-11-21',items:[
+{tag:'fix',text:'修复onShaDamage在目标死亡后仍触发雌雄双剑/麒麟弓效果的问题(L3)'},
+{tag:'fix',text:'修复护身法(wuxie)被退回手牌时未撤销_lastPlayerCardKey的问题(L4)'},
+{tag:'fix',text:'补充mpSendState序列化_qinglongUsed和_revived标志(L1/L2)'},
+{tag:'fix',text:'补充mpRenderState中G.enemy的skillUsed/shaPlayed字段(L5)'},
+{tag:'note',text:'确认M1(canPlayBasic距离校验)为误报——MP人类模式下G.enemy.isEnemy始终为true'},
+]},
 {ver:'v2.1.0',date:'2026-11-20',items:[
 {tag:'fix',text:'统一所有伤害路径中犀角护体(xiniu)减免伤害时的日志输出，玩家在所有路径都能看到抵消提示(L1)'},
 ]},
