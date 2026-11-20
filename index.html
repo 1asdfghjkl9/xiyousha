@@ -3115,12 +3115,19 @@ if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse){
 // bian: need card type selection
 if(key==='bian'){
 var maxBian=1;
-if(G.player.skills.some(s=>s.key==="bianshen"))maxBian=2;
+var hasBianshen=G.player.skills.some(s=>s.key==="bianshen");
+if(hasBianshen)maxBian=2;
+if(G.player.skills.some(s=>s.key==="bian_up"))maxBian+=1;
 if((G.player.skillUsed.bian||0)>=maxBian)return;
 var opts=[{label:"降妖",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'sha',ts:Date.now()})}},
 {label:"遁法",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'shan',ts:Date.now()})}},
 {label:"蟠桃",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'tao',ts:Date.now()})}}];
-showResponse("七十二变","选择要变化的牌类型：",opts);
+if(hasBianshen){
+opts.push({label:"神通自现",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'wuzhong',ts:Date.now()})}});
+opts.push({label:"护身法",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'wuxie',ts:Date.now()})}});
+opts.push({label:"拆桥断路",action:function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_action',id:MP.myId,action:'use_skill',skillKey:'bian',skillParam:'guohe',ts:Date.now()})}});
+}
+showResponse(hasBianshen?"七十二变·大圣化身":"七十二变","选择要变化的牌类型：",opts);
 return;
 }
 // sanshiliu: need card type selection
@@ -5043,12 +5050,18 @@ renderBattle();mpSendState();
 }else if(key==='bian'){
 var maxBian=1;
 if(e.skills.some(function(s){return s.key==='bianshen'}))maxBian=2;
+if(e.skills.some(function(s){return s.key==='bian_up'}))maxBian+=1;
 if((e.skillUsed.bian||0)>=maxBian)return;
 if(e.hand.length<1)return;
 e.skillUsed.bian=(e.skillUsed.bian||0)+1;
 var bc=e.hand.splice(0,1)[0];G.discard.push(bc);
 var def=CARD_DEF[param||'sha'];
-var newCard={id:Math.random(),key:param||'sha',name:def?def.n:param,type:'basic',basicSubtype:param,suit:bc.suit,rank:bc.rank,red:bc.red,desc:def?def.d:'',cls:'basic-'+(param||'sha')};
+var newCard;
+if(def&&def.t==='trick'){
+newCard={id:Math.random(),key:param||'sha',name:def.n,type:'trick',suit:bc.suit,rank:bc.rank,red:bc.red,desc:def.d,cls:'trick'};
+}else{
+newCard={id:Math.random(),key:param||'sha',name:def?def.n:(param||'sha'),type:'basic',basicSubtype:def?def.st:(param||'sha'),suit:bc.suit,rank:bc.rank,red:bc.red,desc:def?def.d:'',cls:'basic-'+(param||'sha')};
+}
 e.hand.push(newCard);
 log(e.name+'使用七十二变：将'+bc.name+'变为'+(def?def.n:param),'log-enemy');
 SND.skill();fxSkill('enemy');
@@ -5351,6 +5364,9 @@ const CHANGELOG=[
 {tag:'fix',text:'修复resolveHuogong按钮回调缺少mpSendState()导致MP状态不同步的问题'},
 {tag:'fix',text:'修复8条伤害路径缺少jinbao(筋斗雷霆)和tianpeng_up(天蓬精进)伤害加成检查的问题，涉及MP人机模式和MP联机模式'},
 {tag:'fix',text:'修复MP主机闪避路径(受到伤害按钮和无闪避)缺少jinbao/tianpeng_up伤害加成的问题'},
+{tag:'fix',text:'修复MP访客bian(七十二变)技能缺少bianshen(大圣化身)和bian_up(变身精通)支持的问题'},
+{tag:'fix',text:'修复mpEnemyUseSkill中bian创建锦囊牌时类型错误(标记为basic而非trick)的问题'},
+{tag:'fix',text:'修复mpEnemyUseSkill中bian缺少bian_up额外使用次数检查的问题'},
 ]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
