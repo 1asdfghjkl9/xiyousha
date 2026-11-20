@@ -4147,7 +4147,7 @@ try{
 const data={
 level:G.level,maxLevel:G.maxLevel,
 party:G.party,partyHp:G.partyHp,partyMaxHp:G.partyMaxHp,
-buffs:G.buffs,
+buffs:G.buffs,selectedChar:G.selectedChar,
 partyExp:G.partyExp,partyLevel:G.partyLevel,
 partySkillPoints:G.partySkillPoints,partyUnlocked:G.partyUnlocked,
 partySkillLv:G.partySkillLv,
@@ -4821,7 +4821,7 @@ var e=G.enemy,p=G.player;
 var _guanshiCheck=function(){
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='guanshi'&&dodge.source.hand.length>=2&&dodge.source.alive&&e.alive){
 showResponse("贯石斧",e.name+'已闪避！弃2牌强命中？',[
-{label:"弃2牌强命中",action:function(){for(var g=0;g<2;g++){var gc=dodge.source.hand.splice(0,1)[0];G.discard.push(gc)}log('贯石斧：弃2牌强制命中！','log-player');var gd=1;if(dodge.source._jiuActive){gd+=1;dodge.source._jiuActive=false}if(dodge.source._atkBuff)gd+=dodge.source._atkBuff;if(hasSk(dodge.source,'manniu'))gd=2;if(hasSk(dodge.source,'sanmei'))gd=2;if(hasSk(dodge.source,'huli'))gd+=1;if(dodge.source._shilongActive){gd+=1;dodge.source._shilongActive=false}if(hasSk(e,'xiniu')&&gd>0)gd=Math.max(0,gd-1);if(gd>0){damage(e,gd,dodge.source);onShaDamage(dodge.source,e,dodge.card)}renderBattle();checkEnd();mpSendState()}},
+{label:"弃2牌强命中",action:function(){for(var g=0;g<2;g++){var gc=dodge.source.hand.splice(0,1)[0];G.discard.push(gc)}log('贯石斧：弃2牌强制命中！','log-player');var gd=1;if(dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='fangtian'&&dodge.source.hand.length===0){gd+=1;log('方天画戟：最后一击伤害+1','log-player')}if(dodge.source._jiuActive){gd+=1;dodge.source._jiuActive=false;log('仙酿效果：降妖伤害+1','log-player')}if(hasSk(dodge.source,'manniu'))gd=2;if(hasSk(dodge.source,'sanmei'))gd=2;if(hasSk(dodge.source,'huli'))gd+=1;if(dodge.source.skills&&(!dodge.source.isEnemy||(G.mpMode&&dodge.source===G.enemy))){var jinbaoSk=dodge.source.skills.find(function(s){return s.key==='jinbao'});if(jinbaoSk)gd+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);var tpSk=dodge.source.skills.find(function(s){return s.key==='tianpeng_up'});if(tpSk&&dodge.card&&dodge.card.red)gd+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(dodge.source._atkBuff)gd+=dodge.source._atkBuff;if(dodge.source._shilongActive){gd+=1;dodge.source._shilongActive=false}if(dodge.source.charKey==='yanwang'&&dodge.source.hp<=2)gd+=1;if(dodge.source.charKey==='niulang'&&dodge.source.hp<=2)gd+=1;if(hasSk(dodge.source,'jiutou2'))gd=1;if(hasSk(e,'xiniu')&&gd>0)gd=Math.max(0,gd-1);if(gd>0){damage(e,gd,dodge.source);onShaDamage(dodge.source,e,dodge.card)}else{log('伤害被完全抵消','log-system')}renderBattle();checkEnd();mpSendState()}},
 {label:"放弃",action:function(){renderBattle();mpSendState()}}
 ]);return true;
 }
@@ -5426,6 +5426,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.9',date:'2026-11-20',items:[
+{tag:'fix',text:'修复MP模式贯石斧强命中路径缺少jinbao/tianpeng_up/yanwang/niulang/jiutou2等伤害修饰符的问题(M1)'},
+{tag:'fix',text:'修复save()未保存selectedChar导致继续游戏时角色选择丢失的问题(L3)'},
+]},
 {ver:'v2.0.8',date:'2026-11-20',items:[
 {tag:'fix',text:'修复continueEnemyTurn初始检查在checkEnd()复生后不re-check导致游戏卡死的问题(C1)'},
 {tag:'fix',text:'修复mpSendState/mpRenderState中skillsDef缺少desc字段导致访客被动技能显示undefined的问题(M1)'},
