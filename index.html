@@ -3197,7 +3197,7 @@ p.skillUsed.huoyan=(p.skillUsed.huoyan||0)+1;
 const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("火眼金睛",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
 log("孙悟空使用火眼金睛查看敌方手牌","log-player");
-if(G.mpMode){G._mpSkillInfo='你查看对手手牌: '+cards;G._mpSkillTitle='火眼金睛'}
+if(G.mpMode){G._mpSkillInfo='对手查看你的手牌: '+cards;G._mpSkillTitle='火眼金睛'}
 }
 else if(key==="bian"){
 let maxBian=1;
@@ -3405,7 +3405,7 @@ p.skillUsed.tianyan=1;
 const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("天眼通",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
 log("二郎神使用天眼通查看敌方手牌","log-player");
-if(G.mpMode){G._mpSkillInfo='你查看对手手牌: '+cards;G._mpSkillTitle='天眼通'}
+if(G.mpMode){G._mpSkillInfo='对手查看你的手牌: '+cards;G._mpSkillTitle='天眼通'}
 }
 else if(key==="xiao"){
 const p=G.player,e=G.enemy;
@@ -4714,8 +4714,7 @@ deckCount:G.deck.length,
 mpChar:MP.myChar,
 };
 if(G._mpSkillInfo){
-var siTxt=G._mpSkillInfo;siTxt=siTxt.replace(/你/g,'{HOST}');siTxt=siTxt.split(p.name).join('你');siTxt=siTxt.replace(/\{HOST\}/g,'对手');
-state.skillInfo=siTxt;state.skillTitle=G._mpSkillTitle||'技能信息';
+state.skillInfo=G._mpSkillInfo;state.skillTitle=G._mpSkillTitle||'技能信息';
 G._mpSkillInfo=null;G._mpSkillTitle=null;
 }
 if(G._mpPendingDodge){
@@ -5061,7 +5060,7 @@ e.skillUsed.huoyan=(e.skillUsed.huoyan||0)+1;
 var cards=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');
 log(e.name+'使用火眼金睛','log-enemy');SND.skill();fxSkill('enemy');
 renderBattle();
-G._mpSkillInfo='对手查看你的手牌: '+cards;G._mpSkillTitle='火眼金睛';
+G._mpSkillInfo='你查看对手手牌: '+cards;G._mpSkillTitle='火眼金睛';
 mpSendState();
 }else if(key==='dachui'){
 if((e.skillUsed.dachui||0)>=1||e.hand.length<2)return;
@@ -5216,7 +5215,7 @@ e.skillUsed.tianyan=1;
 var cards2=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');
 log(e.name+'使用天眼通','log-enemy');SND.skill();fxSkill('enemy');
 renderBattle();
-G._mpSkillInfo='对手查看你的手牌: '+cards2;G._mpSkillTitle='天眼通';
+G._mpSkillInfo='你查看对手手牌: '+cards2;G._mpSkillTitle='天眼通';
 mpSendState();
 }
 else if(key==='xiao'){
@@ -5429,6 +5428,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.5',date:'2026-11-21',items:[
+{tag:'fix',text:'修复v2.1.4中_mpSkillInfo视角文本修复失败的问题——直接使用访客视角文本，移除有缺陷的mpSendState视角转换'},
+]},
 {ver:'v2.1.4',date:'2026-11-21',items:[
 {tag:'fix',text:'修复MP技能信息弹窗(huoyan/tianyan)视角文本错位——主机查看访客手牌时访客应看到"对手查看你的手牌"而非"你查看对手手牌"(BUG-001)'},
 {tag:'fix',text:'mpSendState中对_mpSkillInfo添加视角转换，与logs字段保持一致(BUG-004)'},
