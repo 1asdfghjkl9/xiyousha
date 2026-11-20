@@ -2439,7 +2439,7 @@ const ci=findCard(e,G._lastPlayerCardKey);
 const mc=e.hand.splice(ci,1)[0];G.discard.push(mc);
 log(`六耳猕猴镜像：模仿使用${mc.name}！`,"log-enemy");
 if(mc.key==="sha"&&!e.shaPlayed){
-e.shaPlayed=true;G._mirrorShaPending=true;setTimeout(function(){promptPlayerDodge(e,mc)},300);return;
+e.shaPlayed=true;G._mirrorShaPending=true;setTimeout(function(){promptPlayerDodge(e,mc)},300);return; // design: skip subsequent boss skills to avoid async state race
 }else if(mc.key==="tao"&&e.hp<e.maxHp){
 e.hp=Math.min(e.maxHp,e.hp+1);log(`${e.name}回复1点体力`,"log-enemy");SND.heal();
 }else if(mc.key==="jiu"){
@@ -4714,7 +4714,8 @@ deckCount:G.deck.length,
 mpChar:MP.myChar,
 };
 if(G._mpSkillInfo){
-state.skillInfo=G._mpSkillInfo;state.skillTitle=G._mpSkillTitle||'技能信息';
+var siTxt=G._mpSkillInfo;siTxt=siTxt.replace(/你/g,'{HOST}');siTxt=siTxt.split(p.name).join('你');siTxt=siTxt.replace(/\{HOST\}/g,'对手');
+state.skillInfo=siTxt;state.skillTitle=G._mpSkillTitle||'技能信息';
 G._mpSkillInfo=null;G._mpSkillTitle=null;
 }
 if(G._mpPendingDodge){
@@ -5428,6 +5429,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.1.4',date:'2026-11-21',items:[
+{tag:'fix',text:'修复MP技能信息弹窗(huoyan/tianyan)视角文本错位——主机查看访客手牌时访客应看到"对手查看你的手牌"而非"你查看对手手牌"(BUG-001)'},
+{tag:'fix',text:'mpSendState中对_mpSkillInfo添加视角转换，与logs字段保持一致(BUG-004)'},
+{tag:'note',text:'标记resolveSha PvE玩家路径(行2001-2069)为死代码，v2.1.3后无活跃调用路径(BUG-002)'},
+{tag:'note',text:'标注mirror技能return为设计选择，避免异步玩家响应期间的状态竞争(BUG-003)'},
+]},
 {ver:'v2.1.3',date:'2026-11-21',items:[
 {tag:'fix',text:'补充mpSendState/mpRenderState中opp方向_qinglongUsed/_revived序列化(BUG-A)'},
 {tag:'fix',text:'修复mpGuestTurnStart闪电伤害source仍为e的问题，统一为null(BUG-B)'},
