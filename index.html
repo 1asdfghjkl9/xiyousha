@@ -2262,11 +2262,17 @@ aiJudgePhase(e);
 // boss passive skills
 applyBossStart(e,p);
 // draw phase
-const drawn=drawFromDeck(e.drawCount);
+const drawN=e.drawCount+(e.drawBonus||0)+(e._extraDraw||0);
+let extraDrawSkill=0;
+if(e.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
+const drawn=drawFromDeck(drawN+extraDrawSkill);
 e.hand.push(...drawn);
+e._extraDraw=0;
 e.shaPlayed=false;var _fs1=e.skillUsed.fusheng||0;e.skillUsed={};e.skillUsed.fusheng=_fs1;e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 SND.draw();
-log(`${e.name}摸了${e.drawCount}张牌`,"log-enemy");
+log(`${e.name}摸了${drawN+extraDrawSkill}张牌`,"log-enemy");
+// 唐僧静心诵经 (MP bot mode: enemy could be tang)
+if(e.charKey==="tang"&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log(`静心诵经：${e.name}回复1点体力`,"log-heal");SND.heal();fxHeal("enemy");fxHpChange("enemy")}
 fxTurn("enemy");
 setPhase("敌方回合","enemy-turn");
 clearFieldCards();
@@ -2844,6 +2850,15 @@ else log(`${e.name}无牌可弃`,"log-system");
 
 function aiEndTurn(){
 const e=G.enemy,p=G.player;
+// tanshi (MP bot mode: enemy could be bajie)
+if(e.charKey==="bajie"&&!(e.skillUsed.tanshi>0)&&hasCard(e,"tao")&&e.hp<e.maxHp){
+e.skillUsed.tanshi=1;
+let healAmt=1;
+if(e.skills.some(s=>s.key==="tanshi_up"))healAmt=2;
+e.hp=Math.min(e.maxHp,e.hp+healAmt);
+log(`${e.name}贪食：额外回复${healAmt}点体力`,"log-heal");
+SND.heal();fxHeal("enemy");fxHpChange("enemy");
+}
 // unlock player locked cards
 if(p._locked){p.hand.push(...p._locked);p._locked=[];log("人种袋中的牌归还","log-system")}
 // discard phase
@@ -4604,8 +4619,12 @@ else if(card.key==='shandian'){if(jc.suit==='♠'&&parseInt(jc.rank)>=2&&parseIn
 }
 renderBattle();
 }
-const drawn=drawFromDeck(2);
+const drawN=2+(e.drawBonus||0)+(e._extraDraw||0);
+let extraDrawSkill=0;
+if(e.skills.some(function(s){return s.key==='chanxin'}))extraDrawSkill++;
+const drawn=drawFromDeck(drawN+extraDrawSkill);
 e.hand.push(...drawn);
+e._extraDraw=0;
 e.shaPlayed=false;var _fs3=e.skillUsed.fusheng||0;e.skillUsed={};e.skillUsed.fusheng=_fs3;e._qinglongUsed=false;e._shenbingActive=false;e._luohanActive=false;e._tiedanActive=false;e._shilongActive=false;e._jiuActive=false;
 // 唐僧静心诵经
 if(e.charKey==='tang'&&e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+1);log('静心诵经：'+e.name+'回复1点体力','log-heal');SND.heal();fxHeal('enemy');fxHpChange('enemy')}
@@ -5367,6 +5386,10 @@ const CHANGELOG=[
 {tag:'fix',text:'修复MP访客bian(七十二变)技能缺少bianshen(大圣化身)和bian_up(变身精通)支持的问题'},
 {tag:'fix',text:'修复mpEnemyUseSkill中bian创建锦囊牌时类型错误(标记为basic而非trick)的问题'},
 {tag:'fix',text:'修复mpEnemyUseSkill中bian缺少bian_up额外使用次数检查的问题'},
+{tag:'fix',text:'修复MP访客回合开始摸牌缺少drawBonus/_extraDraw/chanxin(禅心)技能检查的问题'},
+{tag:'fix',text:'修复aiTurn在MP人机模式下缺少chanxin(禅心)/drawBonus/_extraDraw摸牌加成的问题'},
+{tag:'fix',text:'修复aiTurn在MP人机模式下缺少唐僧静心诵经被动技能的问题'},
+{tag:'fix',text:'修复aiEndTurn在MP人机模式下缺少猪八戒贪食(tanshi)被动技能的问题'},
 ]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
