@@ -1482,6 +1482,7 @@ else{setTimeout(()=>aiTurn(),500)}
 return;
 }
 renderHand();
+if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected)mpSendState();
 }
 function canPlayCardNow(card){
 if(card.key==="shan")return false;
@@ -2981,6 +2982,7 @@ log(`弃牌阶段：须弃${need}张牌，点击手牌弃置`,"log-system");
 G.awaitingResponse={type:"discard",need:need};
 setPhase("弃牌阶段","discard");
 renderHand();
+if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected)mpSendState();
 }
 
 function promptPlayerDodge(enemy,card){
@@ -4820,7 +4822,7 @@ log(e.name+(e.charKey==='shaseng'?'卷帘之盾':e.charKey==='puti'?'无相':'�
 SND.cardDodge();
 if(e.equipment.weapon&&e.equipment.weapon.key==='yinyue'&&e.hand.length>0&&p.alive){var yc=e.hand.splice(0,1)[0];G.discard.push(yc);damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy')}
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
-renderBattle();checkEnd();if(G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
+renderBattle();checkEnd();mpSendState();
 return;
 }
 }
@@ -4832,7 +4834,7 @@ log(e.name+(e.charKey==='leigong'?'遁世':'混天绫')+'：将'+hc.name+'当遁
 SND.cardDodge();
 if(e.equipment.weapon&&e.equipment.weapon.key==='yinyue'&&e.hand.length>0&&p.alive){var yc=e.hand.splice(0,1)[0];G.discard.push(yc);damage(p,1,e);log('银月枪：'+e.name+'弃1牌造成1伤','log-enemy')}
 if(dodge.source.equipment&&dodge.source.equipment.weapon&&dodge.source.equipment.weapon.key==='qinglong'&&!dodge.source._qinglongUsed){dodge.source._qinglongUsed=true;dodge.source.shaPlayed=false;log('青龙偃月刀：'+dodge.source.name+'可再出一张降妖','log-player')}
-renderBattle();checkEnd();if(G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();
+renderBattle();checkEnd();mpSendState();
 return;
 }
 }
@@ -5407,6 +5409,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.5',date:'2026-11-20',items:[
+{tag:'fix',text:'修复mpHandleGuestDodge中卷帘/混天绫闪避路径银月枪反击致死时mpSendState条件与常规遁法路径不一致的问题(L1)'},
+{tag:'fix',text:'修复MP主机弃牌阶段中间弃牌和promptDiscard未同步给访客的问题(L2/L3)'},
+]},
 {ver:'v2.0.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge中10处if(!alive){checkEnd();return}缺少复生后re-check导致fusheng/huapo复活后游戏软锁的问题(C1)'},
 ]},
