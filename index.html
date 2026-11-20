@@ -3167,7 +3167,7 @@ aiEndTurn();
 
 // ==================== 技能 ====================
 function useSkill(key){
-const p=G.player;
+const p=G.player,e=G.enemy;
 if(G.tutorialStep>0&&G.tutorialStep<10){useSkillTutorial(key);return}
 // MP guest mode: send to host
 if(G.mpMode&&!G.mpIsHost){
@@ -5453,6 +5453,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.6',date:'2026-11-21',items:[
+{tag:'fix',text:'修复useSkill函数顶部缺少e=G.enemy声明导致哮天犬技能ReferenceError(v2.1.8 BUG-003修复引入的回归)'},
+]},
 {ver:'v2.2.5',date:'2026-11-21',items:[
 {tag:'fix',text:'修复CSS .vfx-victory-ray linear-gradient缺少右括号(v2.1.9修复丢失，此次彻底修复)'},
 {tag:'fix',text:'mpHandleGuestAction添加_mpHostDodging竞态守卫，防止主机闪避期间访客发送操作'},
