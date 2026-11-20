@@ -5459,6 +5459,12 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.1',date:'2026-11-21',items:[
+{tag:'fix',text:'MP访客onCardClick添加_mpCardLocked锁防止快速连续点击导致卡牌索引偏移，mpRenderState收到状态后解锁'},
+{tag:'fix',text:'MP序列化补充drawBonus/_extraDraw字段，mpSendState和mpRenderState双向同步'},
+{tag:'fix',text:'sanshiliu(三十六变)技能使用次数移入showResponse回调，避免用户取消后次数被预消耗'},
+{tag:'fix',text:'mpEnemyPlayEquip添加未知装备子类型回退分支（discard+log）'},
+]},
 {ver:'v2.3.0',date:'2026-11-21',items:[
 {tag:'fix',text:'移除mpEnemyPlayTrickContinue中taoyuan/wugu重复case(死代码)'},
 {tag:'fix',text:'mpEnemyDiscard弃牌完成调用mpFinishEnemyTurn后添加return，消除冗余mpSendState双发'},
