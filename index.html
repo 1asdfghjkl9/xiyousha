@@ -3126,6 +3126,13 @@ const p=G.player;
 if(G.tutorialStep>0&&G.tutorialStep<10){useSkillTutorial(key);return}
 // MP guest mode: send to host
 if(G.mpMode&&!G.mpIsHost){
+// passive skills: show description locally, don't send to host
+var passiveSkills=['jinbao','tanshi_up','chanxin','liusha_up','juanlian_up','jinshen','foen','huoyan_up','bian_up','tianpeng_up','dadi','dunshi','jingxin','kuangbao','longwei','suoming','wuxiang','zhisheng','bianshen'];
+if(passiveSkills.indexOf(key)>=0){
+var skDef=p.skills.find(s=>s.key===key);
+if(skDef)log(skDef.name+"："+skDef.desc,"log-player");
+return;
+}
 if(G.turn==='player'&&G.phase==='play'&&!G.awaitingResponse){
 // bian: need card type selection
 if(key==='bian'){
@@ -3161,8 +3168,10 @@ return;
 }
 SND.skill();fxSkill("player");fxSkillBurst("player","#aa66dd");
 if(key==="huoyan"){
-if((p.skillUsed.huoyan||0)>=1)return;
-p.skillUsed.huoyan=1;
+let maxHuoyan=1;
+if(p.skills.some(s=>s.key==="huoyan_up"))maxHuoyan=2;
+if((p.skillUsed.huoyan||0)>=maxHuoyan)return;
+p.skillUsed.huoyan=(p.skillUsed.huoyan||0)+1;
 const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("火眼金睛",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
 log("孙悟空使用火眼金睛查看敌方手牌","log-player");
@@ -4991,8 +5000,10 @@ renderBattle();mpSendState();
 function mpEnemyUseSkill(key,param){
 var e=G.enemy,p=G.player;
 if(key==='huoyan'){
-if((e.skillUsed.huoyan||0)>=1)return;
-e.skillUsed.huoyan=1;
+var maxHuoyan=1;
+if(e.skills.some(function(s){return s.key==='huoyan_up'}))maxHuoyan=2;
+if((e.skillUsed.huoyan||0)>=maxHuoyan)return;
+e.skillUsed.huoyan=(e.skillUsed.huoyan||0)+1;
 var cards=p.hand.map(function(c){return c.name+'('+c.suit+c.rank+')'}).join('、');
 MP.publish('xiyousha_room_'+MP.roomCode,{type:'mp_state',id:MP.myId,state:{
 myHp:e.hp,myMaxHp:e.maxHp,myName:e.name,
@@ -5390,6 +5401,8 @@ const CHANGELOG=[
 {tag:'fix',text:'修复aiTurn在MP人机模式下缺少chanxin(禅心)/drawBonus/_extraDraw摸牌加成的问题'},
 {tag:'fix',text:'修复aiTurn在MP人机模式下缺少唐僧静心诵经被动技能的问题'},
 {tag:'fix',text:'修复aiEndTurn在MP人机模式下缺少猪八戒贪食(tanshi)被动技能的问题'},
+{tag:'fix',text:'修复MP访客点击被动技能时无响应的问题，改为本地显示描述'},
+{tag:'fix',text:'修复huoyan(火眼金睛)在useSkill和mpEnemyUseSkill中未检查huoyan_up(火眼精进)额外使用次数的问题'},
 ]},
 {ver:'v1.9.4',date:'2026-11-20',items:[
 {tag:'fix',text:'修复promptPlayerDodge无闪避路径中jiutou2使用未定义变量e而非enemy导致九灵元圣圣威失效的问题'},
