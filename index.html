@@ -5460,6 +5460,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.2',date:'2026-11-21',items:[
+{tag:'fix',text:'_mpCardLocked添加5秒超时自动解锁，防止主机崩溃或状态同步失败导致访客永久锁定'},
+{tag:'fix',text:'MP访客使用sanshiliu/bian技能达上限时添加日志反馈，避免静默拒绝'},
+{tag:'fix',text:'mpEnemyPlayEquip未知装备类型分支不再错误打印"装备了"日志'},
+]},
 {ver:'v2.3.1',date:'2026-11-21',items:[
 {tag:'fix',text:'MP访客onCardClick添加_mpCardLocked锁防止快速连续点击导致卡牌索引偏移，mpRenderState收到状态后解锁'},
 {tag:'fix',text:'MP序列化补充drawBonus/_extraDraw字段，mpSendState和mpRenderState双向同步'},
