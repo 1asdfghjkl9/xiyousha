@@ -3193,6 +3193,7 @@ p.skillUsed.huoyan=(p.skillUsed.huoyan||0)+1;
 const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("火眼金睛",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
 log("孙悟空使用火眼金睛查看敌方手牌","log-player");
+if(G.mpMode){G._mpSkillInfo='你查看对手手牌: '+cards;G._mpSkillTitle='火眼金睛'}
 }
 else if(key==="bian"){
 let maxBian=1;
@@ -3237,9 +3238,9 @@ log("筋斗雷霆：造成伤害+1（被动）","log-player");
 // bianshen is now merged into bian handler
 else if(key==="sanshiliu"){
 if((p.skillUsed.sanshiliu||0)>=1)return;
-p.skillUsed.sanshiliu=1;
 const idx=p.hand.findIndex(c=>c.type!=="trick");
 if(idx<0){log("没有可变化的牌","log-system");return}
+p.skillUsed.sanshiliu=1;
 showResponse("三十六变","选择要变化的锦囊牌类型：",[
 {label:"神通自现",action:()=>{doSanshiliu(idx,"wuzhong")}},
 {label:"拆桥断路",action:()=>{doSanshiliu(idx,"guohe")}},
@@ -3400,6 +3401,7 @@ p.skillUsed.tianyan=1;
 const cards=G.enemy.hand.map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("天眼通",`${G.enemy.name}的手牌：${cards}`,[{label:"知道了",action:()=>{}}]);
 log("二郎神使用天眼通查看敌方手牌","log-player");
+if(G.mpMode){G._mpSkillInfo='你查看对手手牌: '+cards;G._mpSkillTitle='天眼通'}
 }
 else if(key==="xiao"){
 const p=G.player,e=G.enemy;
@@ -3455,6 +3457,7 @@ p.skillUsed.xianzhi=1;
 const top3=G.deck.slice(-3).reverse().map(c=>`${c.name}(${c.suit}${c.rank})`).join("、");
 showResponse("仙知","牌堆顶3张："+top3,[{label:"知道了",action:()=>{}}]);
 log("太白金星使用仙知查看牌堆顶","log-player");
+if(G.mpMode){G._mpSkillInfo='对手查看牌堆顶3张';G._mpSkillTitle='仙知'}
 }
 // ====== 菩提祖师 ======
 else if(key==="chuandao"){
@@ -5409,6 +5412,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.0.6',date:'2026-11-20',items:[
+{tag:'fix',text:'修复sanshiliu(三十六变)技能在无可变化牌时仍消耗技能使用权的问题(BUG-1)'},
+{tag:'fix',text:'修复MP主机使用火眼金睛/天眼通/仙知时访客未收到弹窗通知的问题(BUG-2)'},
+]},
 {ver:'v2.0.5',date:'2026-11-20',items:[
 {tag:'fix',text:'修复mpHandleGuestDodge中卷帘/混天绫闪避路径银月枪反击致死时mpSendState条件与常规遁法路径不一致的问题(L1)'},
 {tag:'fix',text:'修复MP主机弃牌阶段中间弃牌和promptDiscard未同步给访客的问题(L2/L3)'},
