@@ -5276,6 +5276,16 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.3',date:'2026-11-20',items:[
+{tag:'fix',text:'修复防御增益_defBuff被重复扣减导致玩家多受伤害的严重bug'},
+{tag:'fix',text:'统一所有12条伤害路径的修饰符集合：fangtian/jiutou2/_jiuActive/manniu/sanmei/huli/_atkBuff/_shilongActive/yanwang/niulang/xiniu/hanbing'},
+{tag:'fix',text:'修复jiutou2(圣威)伤害上限应用顺序不一致的问题'},
+{tag:'fix',text:'修复寒冰剑效果在4条直接伤害路径中缺失的问题'},
+{tag:'fix',text:'修复化龙一击_shilongActive在resolveSha中被isEnemy检查错误排除的问题'},
+{tag:'fix',text:'修复aiPlayPhase和continueEnemyTurn伤害路径缺少_atkBuff和_shilongActive的问题'},
+{tag:'fix',text:'修复mpHandleGuestDodge伤害路径缺少fangtian/jiutou2/manniu/sanmei/huli/xiniu等修饰符的问题'},
+{tag:'fix',text:'修复护身法wuxie中cardIdx未定义变量的问题'},
+]},
 {ver:'v1.9.2',date:'2026-11-20',items:[
 {tag:'new',text:'实现9个Boss技能（狮子吼/幻化/水淹/虎威/鹿角/飞翔/三魔/犀冲/兽掌）'},
 {tag:'fix',text:'修复化龙一击和攻击增益在MP机器人模式下因isEnemy检查不生效的问题'},
