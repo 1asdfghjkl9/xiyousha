@@ -2801,6 +2801,8 @@ if((st==="weapon"&&!e.equipment.weapon)||(st==="armor"&&!e.equipment.armor)||(st
 }
 // tricks - priority order
 if(hasCard(e,"wuzhong"))return{type:"trick",key:"wuzhong"};
+if(hasCard(e,"taoyuan")&&e.hp<e.maxHp)return{type:"trick",key:"taoyuan"};
+if(hasCard(e,"wugu")&&e.hand.length<4)return{type:"trick",key:"wugu"};
 if(hasCard(e,"jiedao")&&p.equipment.weapon)return{type:"trick",key:"jiedao"};
 if(hasCard(e,"guohe")&&(p.equipment.weapon||p.hand.length>3))return{type:"trick",key:"guohe"};
 if(hasCard(e,"juedou")&&e.hand.filter(c=>c.key==="sha").length>=2&&p.hand.filter(c=>c.key==="sha").length<=1)return{type:"trick",key:"juedou"};
@@ -2819,7 +2821,7 @@ return null;
 }
 
 function aiPlayTrick(e,p){
-const keys=["wuzhong","jiedao","guohe","huogong","tiesuo","juedou","nanman","wanjian","lebu","shandian","jinlei","shunshou"];
+const keys=["wuzhong","taoyuan","wugu","jiedao","guohe","huogong","tiesuo","juedou","nanman","wanjian","lebu","shandian","jinlei","shunshou"];
 for(const key of keys){
 if(!hasCard(e,key))continue;
 // luohan: immune to next trick
@@ -2852,6 +2854,8 @@ const fc=showFieldCard(card,"enemy");
 setTimeout(()=>removeFieldCard(fc),1500);
 switch(key){
 case"wuzhong":const dr=drawFromDeck(2);e.hand.push(...dr);log(`${e.name}摸了2牌`,"log-enemy");break;
+case"taoyuan":p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log("结义同行，双方各回1点体力","log-heal");break;
+case"wugu":const wg1=drawFromDeck(1)[0];const wg2=drawFromDeck(1)[0];e.hand.push(wg1);p.hand.push(wg2);log("仙果普降，双方各得1牌","log-heal");break;
 case"nanman":if(hasCard(p,"sha")){const si=findCard(p,"sha");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了降妖抵挡群妖来袭`,"log-player")}else if(p.equipment.armor&&p.equipment.armor.key==="tengjia"){log(`藤甲免疫群妖来袭`,"log-system")}else{damage(p,1,e);log("你受群妖来袭1伤","log-damage")}break;
 case"wanjian":{let dodged=false;if(p.equipment.armor&&(p.equipment.armor.key==="tengjia")){log("藤甲免疫万箭穿云","log-system");dodged=true}else if(p.equipment.armor&&p.equipment.armor.key==="bagua"){const jc=drawFromDeck(1)[0];G.discard.push(jc);log(`八卦阵判定：${jc.suit}${jc.rank}`,"log-system");if(jc.red){log("八卦阵判定红色，万箭穿云被抵消","log-system");dodged=true}}if(!dodged&&hasCard(p,"shan")){const si=findCard(p,"shan");const sc=p.hand.splice(si,1)[0];G.discard.push(sc);log(`你出了遁法抵挡万箭穿云`,"log-player");dodged=true}if(!dodged){damage(p,1,e);log("你受万箭穿云1伤","log-damage")}break;}
 case"guohe":if(p.equipment.weapon){const w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(`${e.name}拆掉了你的${w.name}`,"log-enemy")}else if(p.hand.length>0){const di=Math.floor(Math.random()*p.hand.length);const dc=p.hand.splice(di,1)[0];G.discard.push(dc);log(`${e.name}拆掉你一张手牌`,"log-enemy")}break;
@@ -5027,6 +5031,8 @@ var fc=showFieldCard(card,'enemy');
 setTimeout(function(){removeFieldCard(fc)},1500);
 switch(card.key){
 case'wuzhong':var dr=drawFromDeck(2);e.hand.push(...dr);log(e.name+'摸了2牌','log-enemy');break;
+case'taoyuan':p.hp=Math.min(p.maxHp,p.hp+1);e.hp=Math.min(e.maxHp,e.hp+1);log('结义同行，双方各回1体力','log-heal');break;
+case'wugu':var wg1=drawFromDeck(1)[0];var wg2=drawFromDeck(1)[0];e.hand.push(wg1);p.hand.push(wg2);log('仙果普降，双方各得1牌','log-heal');break;
 case'guohe':if(p.equipment.weapon){var w=p.equipment.weapon;p.equipment.weapon=null;G.discard.push(w);log(e.name+'拆掉你的'+w.name,'log-enemy')}else if(p.hand.length>0){var di=Math.floor(Math.random()*p.hand.length);var dc=p.hand.splice(di,1)[0];G.discard.push(dc);log(e.name+'拆掉你一张手牌','log-enemy')}break;
 case'shunshou':if(dist(e,p)<=1&&p.hand.length>0){var si2=Math.floor(Math.random()*p.hand.length);var stolen=p.hand.splice(si2,1)[0];e.hand.push(stolen);log(e.name+'顺手牵走你一张牌','log-enemy')}break;
 case'nanman':if(hasCard(p,'sha')){var si3=findCard(p,'sha');var sc=p.hand.splice(si3,1)[0];G.discard.push(sc);log('你出了降妖抵挡群妖来袭','log-player')}else if(p.equipment.armor&&p.equipment.armor.key==='tengjia'){log('藤甲免疫群妖来袭','log-system')}else{damage(p,1,e);log('你受群妖来袭1伤','log-damage')}break;
@@ -5453,6 +5459,10 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.9',date:'2026-11-21',items:[
+{tag:'fix',text:'AI添加taoyuan(结义同行)和wugu(仙果普降)锦囊决策路径和执行case'},
+{tag:'fix',text:'aiPlayTrick和mpEnemyPlayTrickContinue添加taoyuan/wugu case处理'},
+]},
 {ver:'v2.2.8',date:'2026-11-21',items:[
 {tag:'fix',text:'修复resolveSha行1805条件矛盾——MP主机攻击访客时!target.isEnemy使_mpPendingDodge永远不触发，AI替访客自动闪避。移除!target.isEnemy后访客恢复闪避自主权'},
 ]},
