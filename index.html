@@ -2743,11 +2743,12 @@ else if(st==="mount"){
 if(card.key==="jiahorse"||card.key==="hualiu"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=card}
 else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=card}
 }
-else{G.discard.push(card);log("未知装备类型，丢弃","log-system");break}
+else{G.discard.push(card);log("未知装备类型，丢弃","log-system")}
+if(st==="weapon"||st==="armor"||st==="mount"){
 log(`${e.name}装备了${card.name}`,"log-enemy");
 SND.equipSound();
 const fc=showFieldCard(card,"enemy");
-setTimeout(()=>removeFieldCard(fc),1500);
+setTimeout(()=>removeFieldCard(fc),1500);}
 renderBattle();
 }
 break;
@@ -5460,6 +5461,9 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.3.6',date:'2026-11-21',items:[
+{tag:'fix',text:'aiPlayPhase装备分支重构：renderBattle始终调用，音效/特效仅对有效装备类型触发（与其他4条路径完全统一）'},
+]},
 {ver:'v2.3.5',date:'2026-11-21',items:[
 {tag:'fix',text:'continueEnemyTurn装备分支添加未知装备子类型回退（第三处路径，防止卡片永久丢失）'},
 {tag:'fix',text:'aiPlayPhase未知装备类型改为discard丢弃（与其他路径统一）'},
