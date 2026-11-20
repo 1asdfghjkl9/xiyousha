@@ -258,7 +258,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 @keyframes vfxDust{0%{transform:translate(0,0) scale(1);opacity:.6}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
 .vfx-dust{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--gold-dim);animation:vfxDust .8s ease-out forwards;pointer-events:none;z-index:53}
 @keyframes vfxVictoryRay{0%{transform:rotate(0) scaleY(0);opacity:0}50%{opacity:.3}100%{transform:rotate(360deg) scaleY(1);opacity:0}}
-.vfx-victory-ray{position:fixed;top:50%;left:50%;width:2px;height:100vh;transform-origin:top center;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.4),transparent;pointer-events:none;z-index:48;animation:vfxVictoryRay 1.5s ease-out forwards}
+.vfx-victory-ray{position:fixed;top:50%;left:50%;width:2px;height:100vh;transform-origin:top center;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.4),transparent);pointer-events:none;z-index:48;animation:vfxVictoryRay 1.5s ease-out forwards}
 @keyframes vfxLevelUpRing{0%{transform:translate(-50%,-50%) scale(0);opacity:1;border-width:6px}50%{opacity:.6;border-width:3px}100%{transform:translate(-50%,-50%) scale(3);opacity:0;border-width:1px}}
 .vfx-levelup-ring{position:fixed;top:40%;left:50%;width:100px;height:100px;border-radius:50%;border:6px solid #ffd700;box-shadow:0 0 30px #ffd700;animation:vfxLevelUpRing 1s ease-out forwards;pointer-events:none;z-index:70}
 .turn-tag{font-size:.65em;padding:1px 5px;border-radius:3px;background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold-br)}
@@ -1306,7 +1306,7 @@ bossData:bossData,
 
 // ==================== 工具函数 ====================
 function log(msg,cls=""){G.log.push({msg,cls});renderLog()}
-function drawFromDeck(n=1){const cards=[];for(let i=0;i<n;i++){if(G.deck.length===0){G.deck=shuffle(G.discard);G.discard=[];log("牌堆重洗","log-system")}if(G.deck.length>0)cards.push(G.deck.pop())}return cards}
+function drawFromDeck(n=1){const cards=[];for(let i=0;i<n;i++){if(G.deck.length===0){G.deck=shuffle(G.discard);G.discard=[];log("牌堆重洗","log-system")}if(G.deck.length>0)cards.push(G.deck.pop());else cards.push({key:"unknown",name:"?",suit:"?",rank:"?",red:false,cls:"",type:"unknown",desc:""})}return cards}
 function findCard(side,key){return side.hand.findIndex(c=>c.key===key)}
 function hasCard(side,key){return side.hand.some(c=>c.key===key)}
 function dist(a,b){let d=1;if(a.equipment.mount)d--;if(b.equipment.defMount)d++;return Math.max(1,d)}
@@ -4831,7 +4831,7 @@ showResponse('防御',prompt.sourceName+'对你出了降妖！'+(noDodge?' '+dod
 function mpHandleGuestAction(msg){
 if(!MP.isHost||MP.botMode)return;
 if(!G.enemy||!G.enemy.alive||!G.player||!G.player.alive)return;
-if(G.turn!=='enemy'&&msg.action!=='dodge')return;
+if(G._mpHostDodging)return;if(G.turn!=='enemy'&&msg.action!=='dodge')return;
 if(msg.action==='play_card')mpEnemyPlayCard(msg.cardIdx);
 else if(msg.action==='end_turn')mpEnemyEndTurn();
 else if(msg.action==='use_skill')mpEnemyUseSkill(msg.skillKey,msg.skillParam);
@@ -5453,6 +5453,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.5',date:'2026-11-21',items:[
+{tag:'fix',text:'修复CSS .vfx-victory-ray linear-gradient缺少右括号(v2.1.9修复丢失，此次彻底修复)'},
+{tag:'fix',text:'mpHandleGuestAction添加_mpHostDodging竞态守卫，防止主机闪避期间访客发送操作'},
+{tag:'fix',text:'drawFromDeck牌堆耗尽时返回占位卡防止undefined崩溃'},
+]},
 {ver:'v2.2.4',date:'2026-11-21',items:[
 {tag:'fix',text:'damage()函数入口添加target.alive守卫，防止死亡角色连锁伤害错误传播'},
 {tag:'fix',text:'AI金雷劫决策优先于天雷劫(更优先使用强化版)'},
