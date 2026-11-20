@@ -2683,7 +2683,7 @@ const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
 // player response
-if(hasCard(p,"shan")||p.equipment.armor){
+if(hasCard(p,"shan")||p.equipment.armor||(hasSk(p,"juanlian")&&p.hand.some(c=>!c.red))||(hasSk(p,"huntian")&&p.hand.some(c=>c.red))){
 setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);
 return;
 }else{
@@ -2937,7 +2937,7 @@ renderBattle();
 if(!p.alive||!e.alive){checkEnd();if(!p.alive||!e.alive)return}
 }
 // draw phase
-const drawN=2+(p.drawBonus||0)+(p._extraDraw||0);
+const drawN=(p.drawCount||2)+(p.drawBonus||0)+(p._extraDraw||0);
 let extraDrawSkill=0;
 if(p.skills.some(s=>s.key==="chanxin"))extraDrawSkill++;
 const drawn=drawFromDeck(drawN+extraDrawSkill);
@@ -3144,13 +3144,13 @@ SND.play();
 const fc=showFieldCard(card,"enemy");
 log(`${e.name}出了降妖！`,"log-enemy");
 renderBattle();
-if(hasCard(p,"shan")||p.equipment.armor){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
+if(hasCard(p,"shan")||p.equipment.armor||(hasSk(p,"juanlian")&&p.hand.some(c=>!c.red))||(hasSk(p,"huntian")&&p.hand.some(c=>c.red))){setTimeout(()=>{removeFieldCard(fc);promptPlayerDodge(e,card)},300);return}
 else{let d=1;if(e.equipment.weapon&&e.equipment.weapon.key==="fangtian"&&e.hand.length===0){d+=1;log('方天画戟：最后一击伤害+1','log-enemy')}if(e._jiuActive){d+=1;e._jiuActive=false;log('仙酿效果：降妖伤害+1','log-enemy')}if(hasSk(e,"manniu"))d=2;if(hasSk(e,"sanmei"))d=2;if(hasSk(e,"huli"))d+=1;if(e._atkBuff)d+=e._atkBuff;if(e._shilongActive){d+=1;e._shilongActive=false}if(!e.isEnemy||(G.mpMode&&e===G.enemy)){const jinbaoSk=e.skills.find(s=>s.key==="jinbao");if(jinbaoSk)d+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);const tpSk=e.skills.find(s=>s.key==="tianpeng_up");if(tpSk&&card&&card.red)d+=(typeof tpSk.perTurn==='number'?tpSk.perTurn:1);}if(e.charKey==="yanwang"&&e.hp<=2)d+=1;if(e.charKey==="niulang"&&e.hp<=2)d+=1;if(e.equipment.weapon&&e.equipment.weapon.key==="huosha"&&p.equipment.armor&&p.equipment.armor.key==="tengjia"){d+=1;log('火灵珠灼烧藤甲+1伤','log-damage')}if(hasSk(e,"jiutou2"))d=1;if(hasSk(p,"xiniu")&&d>0)d=Math.max(0,d-1);if(e.equipment.weapon&&e.equipment.weapon.key==="hanbing"&&p.hand.length>=2){for(let h=0;h<2;h++){const dc=p.hand.splice(0,1)[0];G.discard.push(dc)}log('寒冰剑：你弃2牌代替伤害','log-system')}else if(d>0){damage(p,d,e);onShaDamage(e,p,card)}else{log('伤害被完全抵消','log-system')}renderBattle();setTimeout(()=>removeFieldCard(fc),1500);if(!p.alive){checkEnd();if(!p.alive)return}}
 }
 break;
 case"tao":if(e.hp<e.maxHp){const ti=findCard(e,"tao");if(ti>=0){const c=e.hand.splice(ti,1)[0];G.discard.push(c);e.hp++;log(`${e.name}用蟠桃回1血`,"log-heal");renderBattle()}}
 break;
-case"equip":{const ei=e.hand.findIndex(c=>c.type==="equip");if(ei>=0){const c=e.hand.splice(ei,1)[0];const st=c.equipSubtype;if(st==="weapon"){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=c}else if(st==="armor"){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=c}else if(st==="mount"){if(c.key==="jiahorse"||c.key==="hualiu"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=c}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=c}}log(`${e.name}装备${c.name}`,"log-enemy");SND.equip();const fc=showFieldCard(c,"enemy");setTimeout(()=>removeFieldCard(fc),1500);renderBattle()}}
+case"equip":{const ei=e.hand.findIndex(c=>c.type==="equip");if(ei>=0){const c=e.hand.splice(ei,1)[0];const st=c.equipSubtype;if(st==="weapon"){if(e.equipment.weapon)G.discard.push(e.equipment.weapon);e.equipment.weapon=c}else if(st==="armor"){if(e.equipment.armor)G.discard.push(e.equipment.armor);e.equipment.armor=c}else if(st==="mount"){if(c.key==="jiahorse"||c.key==="hualiu"){if(e.equipment.defMount)G.discard.push(e.equipment.defMount);e.equipment.defMount=c}else{if(e.equipment.mount)G.discard.push(e.equipment.mount);e.equipment.mount=c}}log(`${e.name}装备${c.name}`,"log-enemy");SND.equipSound();const fc=showFieldCard(c,"enemy");setTimeout(()=>removeFieldCard(fc),1500);renderBattle()}}
 break;
 case"skill":renderBattle();break;case"trick":aiPlayTrick(e,p);renderBattle();break;
 }
@@ -5449,6 +5449,11 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v2.2.1',date:'2026-11-21',items:[
+{tag:'fix',text:'修复PvE闪避前置条件遗漏变化系技能(juanlian/huntian)导致玩家被剥夺闪避机会'},
+{tag:'fix',text:'修复continueEnemyTurn装备音效SND.equip→SND.equipSound'},
+{tag:'fix',text:'playerTurnStart摸牌数改用p.drawCount替代硬编码2'},
+]},
 {ver:'v2.2.0',date:'2026-11-21',items:[
 {tag:'new',text:'新增金雷劫卡牌——天雷劫强化版，判定黑桃2-9造成3点不可减免伤害(无视_defBuff)，未触发传给下家，2张♠K/♣K'},
 ]},
