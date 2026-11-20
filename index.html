@@ -1948,7 +1948,7 @@ if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._atkBuff)dmg+=source._atkBuff;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
-if(!source.isEnemy){
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
 const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
 if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
 const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
@@ -1975,7 +1975,7 @@ if(source._jiuActive){dmg+=1;source._jiuActive=false;log('仙酿效果：降妖�
 if(hasSk(source,"manniu"))dmg=2;
 if(hasSk(source,"sanmei"))dmg=2;if(hasSk(source,"huli"))dmg+=1;
 if(source._shilongActive){dmg+=1;source._shilongActive=false}
-if(!source.isEnemy){
+if(!source.isEnemy||(G.mpMode&&source===G.enemy)){
 const jinbaoSk=source.skills.find(s=>s.key==="jinbao");
 if(jinbaoSk)dmg+=(typeof jinbaoSk.perTurn==='number'?jinbaoSk.perTurn:1);
 const tpSk=source.skills.find(s=>s.key==="tianpeng_up");
@@ -3366,8 +3366,8 @@ const p=G.player;
 if((p.skillUsed.cibei||0)>=1)return;
 p.skillUsed.cibei=1;
 showResponse("慈悲为怀","选择效果：",[
-{label:"回复1点体力",action:function(){p.hp=Math.min(p.maxHp,p.hp+1);log("慈悲为怀：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();}},
-{label:"摸1张牌",action:function(){const c=drawFromDeck(1);p.hand.push(...c);log("慈悲为怀：摸1张牌","log-player");renderBattle();}},
+{label:"回复1点体力",action:function(){p.hp=Math.min(p.maxHp,p.hp+1);log("慈悲为怀：回复1点体力","log-player");SND.heal();fxHeal("player");fxHpChange("player");renderBattle();checkEnd();mpSendState();}},
+{label:"摸1张牌",action:function(){const c=drawFromDeck(1);p.hand.push(...c);log("慈悲为怀：摸1张牌","log-player");renderBattle();checkEnd();mpSendState();}},
 ]);
 }
 else if(key==="jingping"){
@@ -3590,7 +3590,7 @@ const def=CARD_DEF[targetKey];
 const newCard={id:old.id,key:targetKey,name:def.n,type:"trick",suit:old.suit,rank:old.rank,red:old.red,desc:def.d,cls:"trick"};
 p.hand[idx]=newCard;
 log(`三十六变：将${old.name}变为${newCard.name}`,"log-player");
-renderBattle();
+renderBattle();mpSendState();
 }
 function doBian(targetKey){
 const p=G.player;
@@ -3609,7 +3609,7 @@ newCard={id:old.id,key:targetKey,name:def.n,type:"basic",basicSubtype:def.st,sui
 p.hand[idx]=newCard;
 p.skillUsed.bian=(p.skillUsed.bian||0)+1;
 log(`七十二变：将${old.name}变为${newCard.name}`,"log-player");
-renderBattle();
+renderBattle();mpSendState();
 }
 
 // ==================== 关卡流程 ====================
@@ -4411,7 +4411,7 @@ renderAccount();
 // ==================== 联机对战系统 ====================
 const MP={
 ws:null,roomCode:null,isHost:false,myId:null,myName:'',myChar:null,
-oppName:'',oppChar:null,botMode:false,connected:false,mmTimer:null,mmSearching:false,
+oppName:'',oppChar:null,oppSkills:null,botMode:false,connected:false,mmTimer:null,mmSearching:false,
 mpSelectedChar:'wukong',
 genId(){return 'p'+Math.random().toString(36).substr(2,8)},
 genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r},
@@ -4472,7 +4472,7 @@ MP.mode='match';
 MP.isHost=false;
 MP.botMode=false;
 MP.subscribe('xiyousha_mm',function(msg){mpHandleMM(msg)});
-setTimeout(function(){MP.publish('xiyousha_mm',{type:'mm_search',id:MP.myId,name:MP.myName,char:MP.myChar,ts:Date.now()})},500);
+setTimeout(function(){MP.publish('xiyousha_mm',{type:'mm_search',id:MP.myId,name:MP.myName,char:MP.myChar,skills:(G.partyUnlocked&&G.partyUnlocked[MP.myChar])||{},ts:Date.now()})},500);
 MP.mmTimer=setTimeout(function(){if(MP.mmSearching)mpStartBot()},15000);
 document.getElementById('mp-wait-title').textContent='搜索对手中...';
 document.getElementById('mp-wait-sub').textContent='15秒后自动匹配人机';
@@ -4489,15 +4489,15 @@ if(msg.type==='mm_search'&&msg.id!==MP.myId){
 // use ID comparison to determine host - smaller ID becomes host
 if(MP.myId<msg.id){
 // I am host
-MP.oppName=msg.name;MP.oppChar=msg.char;MP.roomCode=MP.genCode();MP.isHost=true;
+MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};MP.oppSkills=msg.skills||{};MP.roomCode=MP.genCode();MP.isHost=true;
 MP.mmSearching=false;
 if(MP.mmTimer){clearTimeout(MP.mmTimer);MP.mmTimer=null}
-MP.publish('xiyousha_mm',{type:'mm_match',id:MP.myId,targetId:msg.id,name:MP.myName,char:MP.myChar,room:MP.roomCode,ts:Date.now()});
+MP.publish('xiyousha_mm',{type:'mm_match',id:MP.myId,targetId:msg.id,name:MP.myName,char:MP.myChar,skills:(G.partyUnlocked&&G.partyUnlocked[MP.myChar])||{},room:MP.roomCode,ts:Date.now()});
 setTimeout(function(){MP.subscribe('xiyousha_room_'+MP.roomCode,function(m){mpHandleRoom(m)});setTimeout(function(){mpStartBattle()},500)},300);
 }
 // if my ID is larger, I wait for the other player's mm_match
 }else if(msg.type==='mm_match'&&msg.targetId===MP.myId){
-MP.oppName=msg.name;MP.oppChar=msg.char;MP.roomCode=msg.room;MP.isHost=false;
+MP.oppName=msg.name;MP.oppChar=msg.char;MP.oppSkills=msg.skills||{};MP.roomCode=msg.room;MP.isHost=false;
 MP.mmSearching=false;
 if(MP.mmTimer){clearTimeout(MP.mmTimer);MP.mmTimer=null}
 setTimeout(function(){MP.subscribe('xiyousha_room_'+MP.roomCode,function(m){mpHandleRoom(m)})},300);
@@ -4531,7 +4531,7 @@ MP.myName=acct?acct.name:'玩家'+Math.floor(Math.random()*1000);
 MP.myChar=MP.mpSelectedChar;
 MP.roomCode=code;MP.isHost=false;MP.mode='room';MP.botMode=false;
 MP.subscribe('xiyousha_room_'+MP.roomCode,function(m){mpHandleRoom(m)});
-setTimeout(function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'room_join',id:MP.myId,name:MP.myName,char:MP.myChar,ts:Date.now()})},500);
+setTimeout(function(){MP.publish('xiyousha_room_'+MP.roomCode,{type:'room_join',id:MP.myId,name:MP.myName,char:MP.myChar,skills:(G.partyUnlocked&&G.partyUnlocked[MP.myChar])||{},ts:Date.now()})},500);
 MP.mmTimer=setTimeout(function(){
 showResponse('提示','未找到房间，请检查房间号',[{label:'确定',action:function(){showMP()}}]);
 MP.disconnect()},10000);
@@ -4593,6 +4593,10 @@ if(msg.type==='mp_end')mpHandleEnd(msg);
 function mpStartBattle(){
 SND.init();SND.buttonClick();
 G=newGameState();
+var _savedRaw=localStorage.getItem("xiyousha_save");
+var _savedData=_savedRaw?JSON.parse(_savedRaw):null;
+G.partyUnlocked=(_savedData&&_savedData.partyUnlocked)||G.partyUnlocked||{};
+if(MP.oppSkills)G.partyUnlocked[MP.oppChar]=MP.oppSkills;
 G.level='MP';G.mpMode=true;G.mpIsHost=MP.isHost;G.mpBot=MP.botMode;
 G.battleId=(G.battleId||0)+1;
 if(MP.isHost){
@@ -5047,7 +5051,7 @@ var pi=Math.floor(Math.random()*p.hand.length);
 var pc=p.hand.splice(pi,1)[0];G.discard.push(pc);
 log(e.name+'使用降妖宝杖，你弃1牌','log-enemy');
 SND.skill();fxSkill('enemy');
-renderBattle();mpSendState();
+renderBattle();checkEnd();mpSendState();
 }else if(key==='luohan'){
 if((e.skillUsed.luohan||0)>=1)return;
 e.skillUsed.luohan=1;e._luohanActive=true;
@@ -5249,12 +5253,6 @@ else if(key==='chanshu'){if((e.skillUsed.chanshu||0)>=1||e.hp>=e.maxHp||e.hand.l
 else if(key==='tianming'){if((e.skillUsed.tianming||0)>=1||p.hand.length<1)return;e.skillUsed.tianming=1;var dn2=Math.min(2,p.hand.length);for(var j=0;j<dn2;j++){var pc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(pc4)}log(e.name+'天命：令你弃'+dn2+'牌','log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
 else if(key==='wuzhishan'){if((e.skillUsed.wuzhishan||0)>=1||e.hand.length<2)return;e.skillUsed.wuzhishan=1;for(var w=0;w<2;w++){var wc2=e.hand.splice(0,1)[0];G.discard.push(wc2)}log(e.name+'五指山：弃2牌造2伤！','log-enemy');SND.skill();fxSkill('enemy');fxImpact('player');damage(p,2,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
 else if(key==='chanti'){if((e.skillUsed.chanti||0)>=1)return;e.skillUsed.chanti=1;e._tiedanActive=true;log(e.name+'禅体：下次免疫1伤','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
-// ====== 技能树解锁技能 MP处理 ======
-else if(key==='dunqi'){if((e.skillUsed.dunqi||0)>=1)return;var dqi=e.hand.findIndex(function(c){return c.red});if(dqi<0)return;e.skillUsed.dunqi=1;var dc3=e.hand.splice(dqi,1)[0];G.discard.push(dc3);e.hand.push({id:Math.random(),key:'shan',name:'遁法',type:'basic',basicSubtype:'shan',suit:dc3.suit,rank:dc3.rank,red:dc3.red,desc:'遁气化遁法',cls:'basic-shan'});log(e.name+'遁气护身：将'+dc3.name+'当遁法','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
-else if(key==='shenbing'){if((e.skillUsed.shenbing||0)>=1||e.shaPlayed)return;e.skillUsed.shenbing=1;e._shenbingActive=true;log(e.name+'定海神针：下张降妖无视防具','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
-else if(key==='dachui'){if((e.skillUsed.dachui||0)>=1||e.hand.length<2)return;e.skillUsed.dachui=1;var dc4=e.hand.splice(0,1)[0];G.discard.push(dc4);var dc5=e.hand.splice(0,1)[0];G.discard.push(dc5);log(e.name+'九齿钉耙：弃'+dc4.name+'+'+dc5.name+'造1伤','log-enemy');SND.skill();fxSkillBurst('player','#ff8844');fxSlash();damage(p,1,e);renderBattle();checkEnd();if(G.mpMode&&G.mpIsHost&&!G.mpBot&&MP.connected&&G.player.alive)mpSendState();}
-else if(key==='jinta'){if((e.skillUsed.jinta||0)>=1||e.hand.length<1||p.hand.length<1)return;e.skillUsed.jinta=1;var jc3=e.hand.splice(0,1)[0];G.discard.push(jc3);var jc4=p.hand.splice(Math.floor(Math.random()*p.hand.length),1)[0];G.discard.push(jc4);log(e.name+'降妖宝杖：弃'+jc3.name+'，你弃'+jc4.name,'log-enemy');SND.skill();fxSkill('enemy');renderBattle();checkEnd();mpSendState();}
-else if(key==='luohan'){if((e.skillUsed.luohan||0)>=1)return;e.skillUsed.luohan=1;e._luohanActive=true;log(e.name+'罗汉金身：本回合免疫下一张锦囊','log-enemy');SND.skill();fxSkill('enemy');renderBattle();mpSendState();}
 }
 
 function mpEnemyEndTurn(){
@@ -5409,6 +5407,14 @@ showMP();
 
 // ==================== 更新日志 ====================
 const CHANGELOG=[
+{ver:'v1.9.8',date:'2026-11-20',items:[
+{tag:'fix',text:'修复MP联机模式访客加入时未发送技能树解锁数据(C1)，主机无法获取访客的被动技能(jinbao/tianpeng_up/chanxin等)，同时修复主机自身partyUnlocked被newGameState()重置的问题'},
+{tag:'fix',text:'修复mpEnemyUseSkill中jinta(降妖宝杖)处理器缺少checkEnd()调用的问题(M4)'},
+{tag:'fix',text:'修复mpEnemyUseSkill中dachui/jinta/luohan/shenbing/dunqi存在重复处理器(死代码)的问题(M4)'},
+{tag:'fix',text:'修复resolveSha中2条MP主机伤害路径使用!source.isEnemy而非完整条件!source.isEnemy||(G.mpMode&&source===G.enemy)导致MP bot模式jinbao/tianpeng_up不生效的问题(M1)'},
+{tag:'fix',text:'修复cibei(慈悲为怀)回调缺少mpSendState()导致MP状态不同步的问题(M2)，同时补充摸牌回调缺少的checkEnd()'},
+{tag:'fix',text:'修复doBian/doSanshiliu(七十二变/三十六变)回调缺少mpSendState()导致MP状态不同步的问题(M3)'},
+]},
 {ver:'v1.9.7',date:'2026-11-20',items:[
 {tag:'fix',text:'修复MP联机模式下九头狮子圣威(jiutou2)不可闪避效果未传递给访客端的问题，访客会看到闪避选项但实际无效'},
 ]},
