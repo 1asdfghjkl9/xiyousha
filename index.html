@@ -6,7 +6,7 @@
 <title>西游杀 — 卡牌闯关</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0d0a06;--gold:#c9a84c;--gold-br:#e8c96a;--gold-dim:#7a6438;--red:#c84040;--red-d:#8a2828;--green:#3aa050;--blue:#4a8ac8;--purple:#8850c0;--orange:#c88838;--teal:#2a9890;--gray:#989088;--text:#e8e0d0;--text-dim:#998878;--card-w:56px;--card-h:80px;--glow-gold:0 0 20px rgba(201,168,76,.3);--shadow-card:0 4px 12px rgba(0,0,0,.5);--shadow-panel:0 2px 8px rgba(0,0,0,.4)}
+:root{--gold:#c9a84c;--gold-br:#e8c96a;--gold-dim:#7a6438;--red:#c84040;--red-d:#8a2828;--green:#3aa050;--blue:#4a8ac8;--purple:#8850c0;--orange:#c88838;--teal:#2a9890;--gray:#989088;--text:#e8e0d0;--text-dim:#998878;--card-w:56px;--card-h:80px;--shadow-card:0 4px 12px rgba(0,0,0,.5)}
 body{background:
 repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(201,168,76,.015) 20px,rgba(201,168,76,.015) 21px),
 radial-gradient(ellipse at 50% 0%,#2a1808 0%,transparent 50%),
@@ -18,7 +18,7 @@ color:var(--text);font-family:"Microsoft YaHei","PingFang SC",sans-serif;min-hei
 .screen{min-height:100vh;display:flex;flex-direction:column}
 
 /* Title */
-#title-screen{align-items:center;justify-content:center;text-align:center;padding:20px 16px;overflow-y:auto;overflow-x:hidden;background:
+#title-screen{align-items:center;justify-content:center;text-align:center;padding:20px 16px;background:
 radial-gradient(ellipse at 50% 20%,rgba(201,168,76,.18) 0%,transparent 55%),
 radial-gradient(ellipse at 30% 80%,rgba(138,40,40,.1) 0%,transparent 50%),
 radial-gradient(ellipse at 75% 70%,rgba(74,26,107,.06) 0%,transparent 45%),
@@ -40,15 +40,15 @@ animation:titleParticle 6s ease-in-out infinite;pointer-events:none;z-index:0}
 repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(201,168,76,.012) 20px,rgba(201,168,76,.012) 21px);
 pointer-events:none;z-index:0}
 @keyframes titleParticle{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-.title-avatar{width:100px;height:100px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:3em;margin-bottom:16px;background:radial-gradient(circle,#2a2218,#181208);box-shadow:0 0 40px rgba(201,168,76,.5),inset 0 0 18px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.6);animation:avatarFloat 6s ease-in-out infinite;position:relative;z-index:1;overflow:hidden}.title-avatar::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(201,168,76,.25);animation:avatarRing 3s ease-in-out infinite}@keyframes avatarRing{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.08);opacity:.6}}
+.title-avatar{width:100px;height:100px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:3em;margin-bottom:16px;background:radial-gradient(circle,#2a2218,#181208);box-shadow:0 0 40px rgba(201,168,76,.5),inset 0 0 18px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.6);animation:avatarFloat 6s ease-in-out infinite,elFadeUp .6s ease-out both;position:relative;z-index:1;overflow:hidden}.title-avatar::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(201,168,76,.25);animation:avatarRing 3s ease-in-out infinite}@keyframes avatarRing{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.08);opacity:.6}}
 .title-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 @keyframes avatarFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.game-title{font-size:3.4em;color:var(--gold-br);margin-bottom:8px;letter-spacing:.2em;font-weight:bold;background:linear-gradient(180deg,#f5dc80,#c9a84c 50%,#a08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8));position:relative;z-index:1;animation:titleGlow 3s ease-in-out infinite;will-change:filter}
+.game-title{font-size:3.4em;color:var(--gold-br);margin-bottom:8px;letter-spacing:.2em;font-weight:bold;background:linear-gradient(180deg,#f5dc80,#c9a84c 50%,#a08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8));position:relative;z-index:1;animation:titleGlow 3s ease-in-out infinite,elFadeUp .6s ease-out .1s both;will-change:filter}
 @keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}50%{filter:drop-shadow(0 0 34px rgba(201,168,76,.65)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}}
-.title-glow-line{width:60%;max-width:240px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold-br),var(--gold),transparent);margin:4px auto 12px;position:relative;z-index:1;opacity:.7;animation:lineGlow 3s ease-in-out infinite}
+.title-glow-line{width:60%;max-width:240px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold-br),var(--gold),transparent);margin:4px auto 12px;position:relative;z-index:1;opacity:.7;animation:lineGlow 3s ease-in-out infinite,elFadeUp .6s ease-out .2s both}
 @keyframes lineGlow{0%,100%{opacity:.4;max-width:180px}50%{opacity:.8;max-width:260px}}
-.game-sub{font-size:.88em;color:var(--text-dim);margin-bottom:16px;text-shadow:0 1px 3px rgba(0,0,0,.7);position:relative;z-index:1;letter-spacing:.12em;font-style:italic;opacity:1}
-.card-fan{display:flex;justify-content:center;margin-bottom:24px;position:relative;z-index:1;height:56px;animation:fanSpread .8s ease-out backwards,fansway 6s ease-in-out infinite .8s}@keyframes fanSpread{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes fansway{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.game-sub{font-size:.88em;color:var(--text-dim);margin-bottom:16px;text-shadow:0 1px 3px rgba(0,0,0,.7);position:relative;z-index:1;letter-spacing:.12em;font-style:italic;opacity:1;animation:elFadeUp .6s ease-out .3s both}
+.card-fan{display:flex;justify-content:center;margin-bottom:24px;position:relative;z-index:1;height:56px;animation:fanSpread .8s ease-out both,fansway 6s ease-in-out infinite .8s}@keyframes fanSpread{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes fansway{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .card-fan .fan-card{width:38px;height:54px;border-radius:5px;border:1px solid var(--fan-c,var(--gold-dim));flex-shrink:0;box-shadow:0 0 8px var(--fan-c,transparent),0 3px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:.7em;color:rgba(255,255,255,.85);font-weight:bold;letter-spacing:.1em;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .card-fan .fan-card:nth-child(1){transform:rotate(-20deg) translateY(10px);margin-right:-14px}
 .card-fan .fan-card:nth-child(2){transform:rotate(-7deg) translateY(4px);margin-right:-14px}
@@ -57,7 +57,7 @@ pointer-events:none;z-index:0}
 .title-buttons{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:280px;margin:0 auto}
 #title-screen .btn{position:relative;z-index:1;display:block;width:100%;max-width:280px;margin:8px auto;animation:btnFadeIn .6s ease-out backwards}
 .title-btn-2{animation-delay:.15s}
-@keyframes btnFadeIn{0%{opacity:0;transform:translateY(15px)}100%{opacity:1;transform:translateY(0)}}.title-secondary-btns .btn-sm:nth-child(1){animation:btnFadeIn .5s ease-out .25s backwards}.title-secondary-btns .btn-sm:nth-child(2){animation:btnFadeIn .5s ease-out .3s backwards}.title-secondary-btns .btn-sm:nth-child(3){animation:btnFadeIn .5s ease-out .35s backwards}.title-secondary-btns .btn-sm:nth-child(4){animation:btnFadeIn .5s ease-out .4s backwards}
+@keyframes btnFadeIn{0%{opacity:0;transform:translateY(15px)}100%{opacity:1;transform:translateY(0)}}@keyframes elFadeUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}.title-secondary-btns .btn-sm:nth-child(1){animation:btnFadeIn .5s ease-out .25s backwards}.title-secondary-btns .btn-sm:nth-child(2){animation:btnFadeIn .5s ease-out .3s backwards}.title-secondary-btns .btn-sm:nth-child(3){animation:btnFadeIn .5s ease-out .35s backwards}.title-secondary-btns .btn-sm:nth-child(4){animation:btnFadeIn .5s ease-out .4s backwards}
 .title-secondary-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;width:100%}.title-secondary-btns .btn-sm{margin:0}.title-footer{margin-top:24px;font-size:.76em;color:var(--text-dim);opacity:1;position:relative;z-index:1;line-height:1.8}
 .footer-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:6px auto}
 .btn{padding:11px 34px;font-size:1em;min-height:44px;border:1px solid var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.25),rgba(201,168,76,.1));color:var(--gold-br);border-radius:8px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);margin:5px;letter-spacing:.08em;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -1px 0 rgba(0,0,0,.3),0 3px 10px rgba(0,0,0,.5);text-shadow:0 1px 3px rgba(0,0,0,.7);position:relative;overflow:hidden}
@@ -369,7 +369,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 @media(orientation:landscape) and (max-height:500px){#title-screen{justify-content:flex-start;padding-top:10px}}@media(prefers-reduced-motion:reduce){
 .card,.btn,.event-choice,.char-card{transition:none}
 .card:hover{transform:none}
-.title-avatar,.title-avatar::after,.game-title,.title-glow-line,#title-screen::before,.card-fan{animation:none!important}
+.title-avatar,.title-avatar::after,.game-title,.title-glow-line,#title-screen::before,.card-fan,.game-sub{animation:none!important}.game-title{will-change:auto!important}
 .title-secondary-btns .btn-sm{animation:none!important}
 #title-screen .btn{animation:none!important}
 }
@@ -440,7 +440,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 </div>
 <div class="title-footer">
 <div class="footer-line"></div>
-<span>v2.4.4 · 卡牌闯关 · 取经路上八十一难</span>
+<span>v2.4.5 · 卡牌闯关 · 取经路上八十一难</span>
 <div class="footer-line"></div>
 </div>
 </div>
