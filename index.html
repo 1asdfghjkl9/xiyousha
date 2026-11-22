@@ -18,7 +18,7 @@ color:var(--text);font-family:"Microsoft YaHei","PingFang SC",sans-serif;min-hei
 .screen{min-height:100vh;display:flex;flex-direction:column}
 
 /* Title */
-#title-screen{align-items:center;justify-content:center;text-align:center;padding:20px 16px;background:
+#title-screen{align-items:center;justify-content:center;text-align:center;padding:20px 16px;overflow-y:auto;overflow-x:hidden;background:
 radial-gradient(ellipse at 50% 20%,rgba(201,168,76,.18) 0%,transparent 55%),
 radial-gradient(ellipse at 30% 80%,rgba(138,40,40,.1) 0%,transparent 50%),
 radial-gradient(ellipse at 75% 70%,rgba(74,26,107,.06) 0%,transparent 45%),
@@ -43,12 +43,12 @@ pointer-events:none;z-index:0}
 .title-avatar{width:100px;height:100px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:3em;margin-bottom:16px;background:radial-gradient(circle,#2a2218,#181208);box-shadow:0 0 40px rgba(201,168,76,.5),inset 0 0 18px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.6);animation:avatarFloat 6s ease-in-out infinite;position:relative;z-index:1;overflow:hidden}.title-avatar::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid rgba(201,168,76,.25);animation:avatarRing 3s ease-in-out infinite}@keyframes avatarRing{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.08);opacity:.6}}
 .title-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 @keyframes avatarFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.game-title{font-size:3.4em;color:var(--gold-br);margin-bottom:8px;letter-spacing:.2em;font-weight:bold;background:linear-gradient(180deg,#f5dc80,#c9a84c 50%,#a08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8));position:relative;z-index:1;animation:titleGlow 3s ease-in-out infinite}
-@keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 18px rgba(201,168,76,.4)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}50%{filter:drop-shadow(0 0 32px rgba(201,168,76,.7)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}}
+.game-title{font-size:3.4em;color:var(--gold-br);margin-bottom:8px;letter-spacing:.2em;font-weight:bold;background:linear-gradient(180deg,#f5dc80,#c9a84c 50%,#a08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8));position:relative;z-index:1;animation:titleGlow 3s ease-in-out infinite;will-change:filter}
+@keyframes titleGlow{0%,100%{filter:drop-shadow(0 0 24px rgba(201,168,76,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}50%{filter:drop-shadow(0 0 34px rgba(201,168,76,.65)) drop-shadow(0 2px 4px rgba(0,0,0,.8))}}
 .title-glow-line{width:60%;max-width:240px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold-br),var(--gold),transparent);margin:4px auto 12px;position:relative;z-index:1;opacity:.7;animation:lineGlow 3s ease-in-out infinite}
 @keyframes lineGlow{0%,100%{opacity:.4;max-width:180px}50%{opacity:.8;max-width:260px}}
 .game-sub{font-size:.88em;color:var(--text-dim);margin-bottom:16px;text-shadow:0 1px 3px rgba(0,0,0,.7);position:relative;z-index:1;letter-spacing:.12em;font-style:italic;opacity:1}
-.card-fan{display:flex;justify-content:center;margin-bottom:24px;position:relative;z-index:1;height:56px;animation:fansway 6s ease-in-out infinite}@keyframes fansway{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.card-fan{display:flex;justify-content:center;margin-bottom:24px;position:relative;z-index:1;height:56px;animation:fanSpread .8s ease-out backwards,fansway 6s ease-in-out infinite .8s}@keyframes fanSpread{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes fansway{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .card-fan .fan-card{width:38px;height:54px;border-radius:5px;border:1px solid var(--fan-c,var(--gold-dim));flex-shrink:0;box-shadow:0 0 8px var(--fan-c,transparent),0 3px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:.7em;color:rgba(255,255,255,.85);font-weight:bold;letter-spacing:.1em;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .card-fan .fan-card:nth-child(1){transform:rotate(-20deg) translateY(10px);margin-right:-14px}
 .card-fan .fan-card:nth-child(2){transform:rotate(-7deg) translateY(4px);margin-right:-14px}
@@ -57,12 +57,12 @@ pointer-events:none;z-index:0}
 .title-buttons{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:280px;margin:0 auto}
 #title-screen .btn{position:relative;z-index:1;display:block;width:100%;max-width:280px;margin:8px auto;animation:btnFadeIn .6s ease-out backwards}
 .title-btn-2{animation-delay:.15s}
-@keyframes btnFadeIn{0%{opacity:0;transform:translateY(15px)}100%{opacity:1;transform:translateY(0)}}.title-secondary-btns .btn-sm:nth-child(1){animation:btnFadeIn .5s ease-out .3s backwards}.title-secondary-btns .btn-sm:nth-child(2){animation:btnFadeIn .5s ease-out .4s backwards}.title-secondary-btns .btn-sm:nth-child(3){animation:btnFadeIn .5s ease-out .5s backwards}.title-secondary-btns .btn-sm:nth-child(4){animation:btnFadeIn .5s ease-out .6s backwards}
-.title-secondary-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;max-width:320px}.title-secondary-btns .btn-sm{margin:0}.title-secondary-btns .btn-sm:hover{opacity:1}.title-footer{margin-top:24px;font-size:.76em;color:var(--text-dim);opacity:1;position:relative;z-index:1;line-height:1.8}
+@keyframes btnFadeIn{0%{opacity:0;transform:translateY(15px)}100%{opacity:1;transform:translateY(0)}}.title-secondary-btns .btn-sm:nth-child(1){animation:btnFadeIn .5s ease-out .25s backwards}.title-secondary-btns .btn-sm:nth-child(2){animation:btnFadeIn .5s ease-out .3s backwards}.title-secondary-btns .btn-sm:nth-child(3){animation:btnFadeIn .5s ease-out .35s backwards}.title-secondary-btns .btn-sm:nth-child(4){animation:btnFadeIn .5s ease-out .4s backwards}
+.title-secondary-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px;width:100%}.title-secondary-btns .btn-sm{margin:0}.title-footer{margin-top:24px;font-size:.76em;color:var(--text-dim);opacity:1;position:relative;z-index:1;line-height:1.8}
 .footer-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin:6px auto}
 .btn{padding:11px 34px;font-size:1em;min-height:44px;border:1px solid var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.25),rgba(201,168,76,.1));color:var(--gold-br);border-radius:8px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);margin:5px;letter-spacing:.08em;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -1px 0 rgba(0,0,0,.3),0 3px 10px rgba(0,0,0,.5);text-shadow:0 1px 3px rgba(0,0,0,.7);position:relative;overflow:hidden}
 .btn::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transition:left .5s}
-.btn:hover{background:linear-gradient(180deg,rgba(201,168,76,.42),rgba(201,168,76,.22));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.2),0 0 24px rgba(201,168,76,.5),0 4px 14px rgba(0,0,0,.5);transform:translateY(-2px)}
+.btn:hover{background:linear-gradient(180deg,rgba(201,168,76,.42),rgba(201,168,76,.22));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.2),0 0 24px rgba(201,168,76,.5),0 4px 14px rgba(0,0,0,.5);transform:translateY(-2px) scale(1.02)}
 .btn:hover::before{left:120%}
 .btn:active{transform:translateY(0);box-shadow:inset 0 1px 3px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.4)}
 .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 3px rgba(0,0,0,.3)}
@@ -72,7 +72,7 @@ pointer-events:none;z-index:0}
 .btn-sm:hover::before{left:110%}
 .btn-sm:active{transform:translateY(0)}
 .btn-sm:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
-.btn:focus-visible,.btn-sm:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px;box-shadow:0 0 12px rgba(201,168,76,.4)}
+.btn:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 -1px 0 rgba(0,0,0,.3),0 3px 10px rgba(0,0,0,.5),0 0 12px rgba(201,168,76,.4)}.btn-sm:focus-visible{outline:2px solid var(--gold-br);outline-offset:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 5px rgba(0,0,0,.35),0 0 12px rgba(201,168,76,.4)}
 
 /* Story */
 #story-screen{align-items:center;justify-content:center;text-align:center;padding:30px 20px}
@@ -366,7 +366,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 .card-back{width:18px;height:26px}
 .hp-bar-track{width:60px}
 }
-@media(prefers-reduced-motion:reduce){
+@media(orientation:landscape) and (max-height:500px){#title-screen{justify-content:flex-start;padding-top:10px}}@media(prefers-reduced-motion:reduce){
 .card,.btn,.event-choice,.char-card{transition:none}
 .card:hover{transform:none}
 .title-avatar,.title-avatar::after,.game-title,.title-glow-line,#title-screen::before,.card-fan{animation:none!important}
@@ -418,11 +418,11 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 
 <!-- 标题界面 -->
 <div id="title-screen" class="screen">
-<div class="title-avatar" id="title-avatar">🐵</div>
+<div class="title-avatar" id="title-avatar" aria-hidden="true">🐵</div>
 <h1 class="game-title">西 游 杀</h1>
 <div class="title-glow-line"></div>
 <p class="game-sub">取经路上的八十一难 · 一牌一战皆系天命</p>
-<div class="card-fan">
+<div class="card-fan" aria-hidden="true">
 <div class="fan-card" style="--fan-c:#8b0000;background:linear-gradient(160deg,#1a0000,#8b0000)">降<br>妖</div>
 <div class="fan-card" style="--fan-c:#1a5c1a;background:linear-gradient(160deg,#001a00,#1a5c1a)">蟠<br>桃</div>
 <div class="fan-card" style="--fan-c:#4a1a6b;background:linear-gradient(160deg,#0a0010,#4a1a6b)">锦<br>囊</div>
@@ -440,7 +440,7 @@ linear-gradient(180deg,#1a1208,#0a0806),#0a0806}
 </div>
 <div class="title-footer">
 <div class="footer-line"></div>
-<span>v2.4.3 · 对标三国杀标准版 · 50轮自查零高危</span>
+<span>v2.4.4 · 卡牌闯关 · 取经路上八十一难</span>
 <div class="footer-line"></div>
 </div>
 </div>
